@@ -1,0 +1,33 @@
+git s# explicit dirs #
+###################
+*pipeline_draft/analysis_root/
+*.swp
+*.swo
+
+# autosave #
+###################
+*~
+*asv
+
+# Minimalistic example related files #
+###################
+BCICIV_calib_ds1a.fdt
+BCICIV_calib_ds1a.set
+*example-project
+
+# misc #
+###################
+update_matlab*.m
+*jkor_test
+*ctap/doc/html
+*tmp
+
+# OS generated files #
+######################
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
