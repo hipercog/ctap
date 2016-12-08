@@ -1,6 +1,11 @@
 % Converts a BCICIV dataset to a set-format
-% Note: Only works for the specific dataset due to hardcoded values
+% Note: Only works for this specific dataset due to hardcoded values
 %
+% Arga:
+% 	filename <string>: path to target file
+%
+% Returns:
+% 	eeg: EEG struct
 function eeg = ctaptest_convert_bci(filename)
 	load(filename)
 

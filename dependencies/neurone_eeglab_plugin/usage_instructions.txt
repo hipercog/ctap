@@ -1,0 +1,24 @@
+Using the plugin
+----------------
+
+For installation instructions, please refer to the file installation_instructions.txt.
+
+
+After installation, the plugin can be found in EEGLAB's menus as follows:
+
+
+EEGLAB versions up to 11_0_1_1b:
+     File -> Import data -> From a Mega NeurOne device
+
+EEGLAB version 11_0_2_1b and newer:
+     File -> Import data -> Using EEGLAB functions and plugins -> From a Mega NeurOne device
+
+
+When selecting this plugin, a GUI will present itself.
+
+   (1) Choose the main directory of the NeurOne -recording (typically named e.g.. '2012-06-25T103750').
+       This directory contains e.g. the file  'Protocol.xml' (among other files).
+
+   (2) After the directory has been chosen, a new GUI is presented, allowing you to choose which channels to read.
+       In order to select individual channels, uncheck the checkbox 'Read all channels', after which you can select
+       individual channels. Hold down the [ctrl]-key to select multiple channels.

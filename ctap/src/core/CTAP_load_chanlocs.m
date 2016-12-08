@@ -53,7 +53,7 @@ function [EEG, Cfg] = CTAP_load_chanlocs(EEG, Cfg)
 
 
 %% Set optional arguments
-Arg.file = Cfg.eeg.chanlocs; %this is checked in cfg_ctap_functions()
+Arg.file = Cfg.eeg.chanlocs; %this is checked in ctap_auto_config()
 Arg.types = {}; %user must set this based on his own knowledge!
 Arg.tidy = {};
 

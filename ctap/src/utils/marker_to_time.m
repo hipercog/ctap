@@ -29,16 +29,19 @@ function [time, sample] = marker_to_time(mark, markers)
 sep = '_';
 
 if numel(findstr(sep, mark))
+    %todo: assumes mark string to be of type 'xxx_y' and outputs numeric
+    %values when actually neither is currently used
     mrk_tmp = strsplit(mark, sep);
     mrk     = zeros(2,1);
     mrk(1)  = str2num(mrk_tmp{1});
     mrk(2)  = str2num(mrk_tmp{2});
+    ind = find(markers.code == mrk(1), mrk(2)); %old markers struct
 else
-    mrk = vertcat(str2num(mrk), [1]);
+    mrk = {mark, 1}; %assumes mark to be 'xxx'
+    ind = find(ismember(markers.type, mrk{1}), mrk{2}); %new markers struct
 end
 
 % Determine the location of the marker
-ind = find(markers.code == mrk(1), mrk(2));
 if ~isempty(ind)
     ind = ind(end);
 else

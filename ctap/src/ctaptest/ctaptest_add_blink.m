@@ -2,14 +2,14 @@
 %   eeg = ctaptest_add_blink(eeg,ampl,t_start,dur)
 
 % Args:
-%   eeg: eeg-struct
-%   ampl: blink amplitude (in µV)
-%   t_start: blink start time (in s) 
-%   dur: blink duration (in s)
+%   eeg: EEG struct
+%   ampl <double>: blink amplitude (in µV)
+%   t_start <double>: blink start time (in s) 
+%   dur <double>: blink duration (in s)
 % Returns:
-%   eeg: eeg-struct with blink added to data
-function eeg = ctaptest_add_blink(eeg, ampl, t_start, dur)
-	jittering = false;
+%   eeg: EEG struct with blink added to data
+function eeg = ctaptest_add_blink(eeg, ampl, t_start, dur, jittering)
+	if nargin < 5, jittering = false; end
 	% Find sample-index corresponding to start time
 	[~, start_idx] = min(abs(eeg.times - t_start * 1e3));
 
@@ -19,7 +19,7 @@ function eeg = ctaptest_add_blink(eeg, ampl, t_start, dur)
 	% Generate blink-template
 	% note that gauss distribution is not the best approximation of the blink
 	% maybe try to replace this later with gamma or poisson
-	blink = ampl * blink_shape('exp', blink_dur)
+	blink = ampl * blink_shape('exp', blink_dur);
 	% multiply blink template for each channel
 	blink = repmat(blink, eeg.nbchan, 1);
 

@@ -15,7 +15,7 @@ Cfg.env.paths.projectRoot = project_root_folder;
 Cfg.env.paths.analysisRoot = fullfile(...
     Cfg.env.paths.projectRoot, 'ctap_results', Cfg.id);
 
-% Note: other canonical locations are added in cfg_ctap_functions.m
+% Note: other canonical locations are added in ctap_auto_config.m
 % You should use it in your analysis batch file.
 
 % Location of measurement config file
@@ -89,9 +89,9 @@ out.normalize_data = struct(...
     'scale', false);
 
 % Filtering data
-out.filter_data = struct(...
-    'lowCutOff', 0.5,... %0.5
-    'highCutOff', 30);
+out.fir_filter = struct(...
+    'lowcutoff', 2,...
+    'hicutoff', 30);
 
 % ICA
 out.run_ica = struct(...

@@ -253,9 +253,9 @@ function fig = report_badness(props, hits, index, bounds, iter, cecidx)
         lbwh(1) = 10;   lbwh(2) = 50;   
         lbwh(3) = lbwh(3) - lbwh(1) - 50; 
         lbwh(4) = lbwh(4) - lbwh(2) - 100;
-        fig = figure('Position',lbwh);
+        fig = figure('Position', lbwh, 'Visible', 'off');
     else
-        fig = figure;
+        fig = figure('Visible', 'off');
     end
     
     plot((props(:,1)-mean(props(:,1)))/std(props(:,1)),'r','linewidth',2);

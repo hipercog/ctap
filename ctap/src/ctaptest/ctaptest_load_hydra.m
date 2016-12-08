@@ -1,3 +1,5 @@
+% This thing loads the hydra splash screen logo
+% Currently deprecated
 function load_hydra()
 	fid = fopen('hydra.txt');
 	str = fgetl(fid);

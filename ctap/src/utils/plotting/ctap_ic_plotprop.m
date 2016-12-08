@@ -126,14 +126,14 @@ if ~isempty(Arg.stats)
 %     set(gca, 'XTickLabel', vars)
     
     %uitable display - too ugly
-%     varstr = cellstr2str(tp.Properties.VariableNames, 'sep', '    ');
+%     varstr = catcellstr(tp.Properties.VariableNames, 'sep', '    ');
 %     uitable(gcf, 'Data', data, 'ColumnName', vars)
 
     %set the subplotting value for the remaining bottom row ERP image
     stat_inset = 3;
 else
     %GET METHOD NAMES
-    mtd = cellstr2str(EEG.CTAP.badcomps.detect.src(:,1)');
+    mtd = catcellstr(EEG.CTAP.badcomps.detect.src(:,1)');
     text(0, 0, sprintf('Bad IC by method(s): %s', mtd))
     %set the subplotting value for the remaining bottom row ERP image
     stat_inset = [3 4];
@@ -148,7 +148,7 @@ subplot(2, 2, 1, 'Visible', Arg.visible)
 tp = topoplot( EEG.icawinv(:, ICidx), EEG.chanlocs...
     , Arg.topoplot{:}...
     , 'chaninfo', EEG.chaninfo...
-    , 'whitebk', 'on', 'verbose', 'off'); %#ok<*NASGU>
+    , 'whitebk', 'on', 'verbose', 'off', 'conv', 'on'); %#ok<*NASGU>
 
 basename = sprintf('IC%d', ICidx);
 title(basename, 'fontsize', 14); 
@@ -170,8 +170,9 @@ try
     [spectra, freq_outs] = spectopo(EEG.icaact(ICidx, :), EEG.pnts, EEG.srate...
         , Arg.spectopo{:}...
         , 'mapnorm', EEG.icawinv(:, ICidx)...
-        , 'plot', 'off' );
-	plot(freq_outs(freqs(1)*2:freqs(2)*2), spectra(freqs(1)*2:freqs(2)*2))
+        , 'plot', 'off');
+	plot(freq_outs(freqs(1):freqs(2)), spectra(freqs(1):freqs(2)))
+%     plot(freq_outs(freqs(1)*2:freqs(2)*2), spectra(freqs(1)*2:freqs(2)*2))
     xlabel('Frequency (Hz)')
 	ylabel('Power: 10*log_{10}(\muV^{2}/Hz)')
 	title('Activity power spectrum')

@@ -70,6 +70,8 @@ end
 
 %% CORE
 % Find bad epochs, from regular epoched data, for defined non-bad channels
+%todo: not all epoch rejection methods require channels, e.g. event based
+%methods.
 EEGep = pop_select(EEG, 'channel', Arg.channels);
 Arg.channels = get_eeg_inds(EEGep, {'EEG'});
 % If not yet epoched, fail
@@ -121,10 +123,10 @@ EEG.CTAP.badepochs.detect.prc = prcbad;
 
 
 %% ERROR/REPORT
-Cfg.ctap.detect_bad_epochs = Arg;
+Cfg.ctap.detect_bad_epochs = params;
 
 msg = myReport({repstr1 repstr2 repstr3}, Cfg.env.logFile);
 
-EEG.CTAP.history(end+1) = create_CTAP_history_entry(msg, mfilename, Arg);
+EEG.CTAP.history(end+1) = create_CTAP_history_entry(msg, mfilename, params);
 
 end %EOF

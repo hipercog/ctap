@@ -2,7 +2,7 @@ function [Cfg, out] = cfg_minimal(dataRoot, analysisRoot, branchID)
 
 
 %% Define directories
-% Note: other canonical locations are added in cfg_ctap_functions.m
+% Note: other canonical locations are added in ctap_auto_config.m
 % You should use it in your analysis batch file.
 
 Cfg.env.paths.analysisRoot = fullfile(analysisRoot,'ctap_analysis',branchID);
@@ -73,9 +73,9 @@ out.normalize_data = struct(...
     'scale', false);
 
 % Filtering data
-out.filter_data = struct(...
-    'lowCutOff', 0.5,... %0.5
-    'highCutOff', 45);
+out.fir_filter = struct(...
+    'lowcutoff', 2,...
+    'hicutoff', 30);
 
 % ICA
 out.run_ica = struct(...

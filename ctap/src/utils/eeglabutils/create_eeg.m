@@ -57,7 +57,7 @@ function EEG = create_eeg(data, varargin)
 %% Default parameter values
 % Field names of 'Arg' can be used as keywords.
 
-Arg.channel_labels = {}; % 1-by-m cell of strings, channel names
+Arg.channel_labels = strcat('ch', cellstr(num2str(transpose( 1:size(data,1) ))) ); % 1-by-m cell of strings, channel names
 Arg.fs = []; %1-by-1 numeric, sample rate
 
 Arg.icaweights = []; % [k,m] numeric, Matrix H or W (if Q = I)

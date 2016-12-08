@@ -98,7 +98,7 @@ if ~(sum(strcmpi('events', fieldnames(MC))))
     warning('No events in measurement configuration. Using 0 as the zerotime.')
     events = [];
 else
-    mc_filter.eventname = 'zerotime';
+    mc_filter.eventtype = 'zerotime';
     events = struct_filter(MC.events, mc_filter);
 end
 
@@ -107,7 +107,7 @@ if numel(events) == 0
     zerotime = 0;
 else
     [zerotime, zerosample] = ...
-        event_to_time(events.eventtype, events.timestamp, 0, recording);
+        event_to_time(events.markertype, events.timestamp, 0, recording);
 end
 
 % =========================================================================
@@ -144,9 +144,11 @@ for i = 1:nblocks
     
     % Start and stop times of the blocks
     [start_time, start_sample] = ...
-        event_to_time(starttype, startmark, zerotime, recording);
+    event_to_time(starttype, startmark, zerotime, recording);
+
     [stop_time, stop_sample] = ...
-        event_to_time(stoptype, stopmark, zerotime, recording);
+    event_to_time(stoptype, stopmark, zerotime, recording);
+
     
     % Check that starttime/sampe is smaller than stoptime/sample
     if (start_time < stop_time) && (start_sample < stop_sample)

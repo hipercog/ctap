@@ -1,14 +1,14 @@
 % Generates a synthetic EEG based on the BCICIV data file.
 %
 % Args:
-%   datafile      = an EEGLAB set-file used as input
-%   ch_file       = channel location file for the target EEG
-%   eeg_length    = length of the target EEG (in seconds)
-%   srate         = sampling rate for the target EEG
-%   model_order   = AR model order for the target EEG
+%   datafile <string>: path to an EEGLAB set-file
+%   ch_file <string>: path to a channel location file for the target EEG
+%   eeg_length <double>: length of the target EEG (in seconds)
+%   srate <double>: desired sampling rate for the target EEG
+%   model_order <int>: AR model order for the target EEG
 %
 % Returns:
-%   eeg           = EEG-struct containing the generated data
+%   eeg: EEG-struct containing the generated data
 %
 function eeg = ctaptest_generate_data(datafile, ch_file, eeg_length, srate, model_order)
 

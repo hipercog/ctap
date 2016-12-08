@@ -1,4 +1,11 @@
-function eeg = ctaptest_modify_variance(eeg,ch,multiplier)
+% Modifies variance of channels
+%
+% Args:
+% 	eeg: EEG struct
+% 	ch <mat>: vector of channel indices
+% 	multiplier <double>: multiplying coeficient
+%
+function eeg = ctaptest_modify_variance(eeg, ch, multiplier)
 
 if isempty(ch)
     ch = 1:size(eeg.data,1);

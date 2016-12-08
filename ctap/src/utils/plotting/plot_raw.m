@@ -1,4 +1,4 @@
-function [figH, startSamp] = plot_raw(EEG, varargin)
+function [figh, startSamp] = plot_raw(EEG, varargin)
 %PLOT_RAW - Plot EEG data to a static 2D figure
 %
 % Description:
@@ -11,18 +11,19 @@ function [figH, startSamp] = plot_raw(EEG, varargin)
 %   'EEG'       struct, EEGLAB structured data
 % 
 % varargin:
-%   'dataname'      string, what to call data, default = 'Channels'
+%   'dataname'      string, what to call data rows, default = 'Channels'
 %   'startSample'   integer, first sample to plot, default = NaN
-%   'secs'          integer, seconds to plot, default = 16
+%   'secs'          integer, seconds to plot from min to max, default = [0 16]
 %   'channels'      cell string array, labels, default = {EEG.chanlocs.labels}
 %   'markChannels'  cell string array, labels of bad channels, default = {}
-%   'plotEvents'    boolean, plot event labels & vertical marker lines,
-%                   default = true
+%   'plotEvents'    boolean, add labels & vertical dash lines, default = true
 %   'figVisible'    on|off, default = off
 %   'eegname'       string, default = EEG.setname
-%   'fdims'         vector, default = get(0,'ScreenSize')
+%   'paperwh'       vector, output dimensions in cm - if set to 0,0 uses screen 
+%                           dimensions, if either dimension is negative then
+%                           calculates from data, default = [0 0]
 %   'shadingLimits' vector, beginning and end sample to be shaded, 
-%                   default = [NaN NaN]
+%                           default = [NaN NaN]
 % 
 %
 % See also:
@@ -42,20 +43,22 @@ p.addRequired('EEG', @isstruct);
 
 p.addParameter('dataname', 'Channels', @isstr); %what is data called?
 p.addParameter('startSample', NaN, @isnumeric); %start of plotting in samples
-p.addParameter('secs', 16, @isnumeric); %how much to plot
+p.addParameter('secs', [0 16], @isnumeric); %how much to plot
 p.addParameter('channels', {EEG.chanlocs.labels}, @iscellstr); %channels to plot
 p.addParameter('markChannels', {}, @iscellstr); %channels to plot in red
 p.addParameter('plotEvents', true, @islogical);
 p.addParameter('figVisible', 'on', @isstr);
 p.addParameter('eegname', EEG.setname, @isstr);
-p.addParameter('fdims', get(0,'ScreenSize'), @isnumeric);
+p.addParameter('paperwh', [0 0], @isnumeric);
 p.addParameter('shadingLimits', [NaN NaN], @isnumeric); % in samples
 
 p.parse(EEG, varargin{:});
 Arg = p.Results;
 
 
-%% Initialize 
+%% Initialize
+if isscalar(Arg.secs), Arg.secs = [0 Arg.secs]; end
+Arg.secs = sort(Arg.secs);
 % get rid of missing channels
 missingChannels = setdiff(Arg.channels, {EEG.chanlocs.labels});
 if ~isempty(missingChannels)
@@ -79,13 +82,14 @@ switch ndims(EEG.data)
     case 3
         [~, col, eps] = size(EEG.data);
         eegdata = EEG.data(CHANIDX, 1:col * eps);
-        Arg.secs = min([Arg.secs (col * eps) / EEG.srate]);
+        Arg.secs(2) = min([Arg.secs(2) (col * eps) / EEG.srate]);
     case 2
         eegdata = EEG.data(CHANIDX, :);
-        Arg.secs = min([Arg.secs EEG.xmax]);
+        Arg.secs(2) = min([Arg.secs(2) EEG.xmax]);
 end
 
-dur = floor(min([EEG.srate * Arg.secs,...
+%get the data duration
+dur = floor(min([EEG.srate * diff(Arg.secs),...
                  size(eegdata, 2) - min(Arg.shadingLimits)]));
 if dur == 0
     warning('plot_raw:duration_zero', 'Duration was 0 - no plot made')
@@ -98,7 +102,7 @@ elseif ~isinteger(Arg.startSample)
     Arg.startSample = int64(Arg.startSample);
 end
 
-t = linspace(0, Arg.secs, dur);
+t = linspace(0, diff(Arg.secs), dur);
 sig = eegdata(:, Arg.startSample:Arg.startSample + dur - 1);
 % calculate shift
 mi = min(sig, [], 2);
@@ -114,46 +118,69 @@ shift = repmat(shift, 1, round(dur));
 sig = sig + shift;
 
 
+%% fix page size and associated dimensions
+% IF paper width+height has been specified as 0,0 then use screen dims
+if sum(Arg.paperwh) == 0
+    %ScreenSize is a four-element vector: [left, bottom, width, height]:
+    figh = figure('Position', get(0,'ScreenSize'),...
+                  'Visible', Arg.figVisible);
+else
+    %IF paper width or height is set as negative, estimate from data dimensions
+    if Arg.paperwh(1) < 0
+        Arg.paperwh(1) = ceil((log2(diff(Arg.secs)) + 1) .* 4);
+    end
+    if Arg.paperwh(2) < 0
+        Arg.paperwh(2) = numel(CHANNELS) * 0.8;
+    end
+    figh = figure('PaperType', '<custom>',...
+                  'PaperUnits', 'centimeters',...
+                  'PaperPositionMode', 'manual',...
+                  'PaperPosition', round([0 0 Arg.paperwh]),...
+                  'Visible', Arg.figVisible);
+end
+
+
 %% plot EEG data
-figH = figure('Position', Arg.fdims, 'Visible', Arg.figVisible);
+% rows must be plotted one by one, otherwise ordering information is lost!
 hold on;
 for i = 1:size(eegdata, 1)
-    % have to be plotted one by one, otherwise ordering information is lost!
-    h = plot(t, sig(i, :), 'b');
+    ploh = plot(t, sig(i, :), 'b');
     if ismember(CHANNELS{i}, Arg.markChannels)% color marked channels
-        set(h, 'Color', [1 0 0]);
+        set(ploh, 'Color', [1 0 0]);
     end
 end
 hold off;
-title( sprintf('%s \n raw data - samples=%d:%d - secs=%1.0f:%1.0f',...
-    Arg.eegname, Arg.startSample,...
-    Arg.startSample+dur, Arg.startSample / (EEG.srate),...
-    (Arg.startSample+dur) / (EEG.srate)),...
-    'Interpreter', 'none')
 
 
 %% edit axes & prettify
-set(gca, 'YTick', mean(sig, 2), 'YTickLabel', CHANNELS);
-xlabel('Seconds')
-ylabel(Arg.dataname)
+set(gca, 'YTick', mean(sig, 2), 'YTickLabel', CHANNELS)
 grid on
-ylim([mi(1) max(max(sig))])
-xlim([0 Arg.secs])
+if Arg.plotEvents && ~isempty(EEG.event)
+    ylim([mi(1) 1.1*max(max(sig))])
+else
+    ylim([mi(1) max(max(sig))])
+end
+xlim(Arg.secs)
 xbds = double(get(gca, 'xlim'));
 ybds = double(get(gca, 'ylim'));
+top = ybds(2);
  
 %draw a y-axis scalebar at 10% of the total range of the y-axis
-sbar = (ybds(2) - ybds(1)) / 10;
-sbarh = ybds(1) + sbar;
-line(xbds(2) .* [1.02 1.02], [ybds(1) sbarh], 'color', 'b', 'clipping', 'off')
+sbar = ybds(1) + (ybds(2) - ybds(1)) / 10;
+sbr100 = ybds(1) + 100; %plus another one at 100 uV
+line(xbds(2) .* [1.02 1.02], [ybds(1) sbar], 'color', 'b', 'clipping', 'off')
 line(xbds(2) .* [1 1.04], [ybds(1) ybds(1)], 'color', 'b', 'clipping', 'off')
-line(xbds(2) .* [1 1.04], [sbarh sbarh], 'color', 'b', 'clipping', 'off')
-text(xbds(2) * 1.022, ybds(1) + sbar / 2, sprintf('%d uV', round(sbar)))
-
-
-set(figH, 'Color', 'w');
+line(xbds(2) .* [1 1.04], [sbar sbar], 'color', 'b', 'clipping', 'off')
+line(xbds(2) .* [1 1.04], [sbr100 sbr100], 'color', 'r', 'clipping', 'off')
+text(xbds(2) * 1.02, sbar, '\muV', 'VerticalAlignment', 'bottom')
+text(xbds(2) * 1.022, sbar, num2str(round(sbar)), 'VerticalAlignment', 'top')
+if sbar < 90 || sbar > 110
+    text(xbds(2) * 1.022, ybds(1) + 100, '100', 'color', 'r'...
+        , 'VerticalAlignment', 'bottom')
+end
 
 % make shaded area
+set(figh, 'Color', 'w')
 if ~isnan(Arg.shadingLimits(1))
     x = (Arg.shadingLimits(1) - Arg.startSample) / EEG.srate;
     y = ybds(1);
@@ -165,25 +192,64 @@ end
 
 %% plot events
 if Arg.plotEvents && ~isempty(EEG.event)
-    peek = ['peek-at-' num2str(Arg.startSample)];
     evlat = int64(cell2mat({EEG.event.latency}));
-    evlatidx = evlat > Arg.startSample & evlat < Arg.startSample + dur - 1;
-    evplot = EEG.event(evlatidx);
-    if sum(evlatidx)
-        evplotlat = [[evplot.latency] Arg.startSample + 1];
-        evplottyp = {evplot.type peek};
-    else
-        evplotlat = Arg.startSample + 1;
-        evplottyp = peek;
-    end
-    evplotlat = double(evplotlat - Arg.startSample) ./ EEG.srate;
-    for i = 1:numel(evplot)
-        line([evplotlat(i) evplotlat(i)], ybds...
-                , 'color', 'k', 'LineWidth', 1, 'LineStyle', '--')
-        text(evplotlat(i), double(max(ybds)), evplottyp{i}...
-                , 'BackgroundColor', [0.9 0.9 0.9], 'Interpreter', 'none')
+    evlatidx = (evlat >= Arg.startSample) & ...
+               (evlat < Arg.startSample + dur - 1);
+
+    if any(evlatidx) %note: to plot, we need events in range to plot
+        evplot = EEG.event(evlatidx);
+        peek = evplot(find(ismember({evplot.type}, 'peeks'),1));
+        evplot = evplot(~ismember({evplot.type}, 'peeks'));
+        evplottyp = {evplot.type peek.label};
+        evplotlat = (double([[evplot.latency] peek.latency]) -...
+            double(Arg.startSample)) ./ EEG.srate;
+        for i = 1:numel(evplotlat)
+            line([evplotlat(i) evplotlat(i)], ybds...
+                    , 'color', 'k', 'LineWidth', 1, 'LineStyle', '--')
+            t = text(evplotlat(i), double(max(ybds)), evplottyp{i}...
+                    , 'BackgroundColor', 'none' ... %[0.9 0.9 0.9]...
+                    , 'Rotation', -90 ...
+                    , 'Interpreter', 'none'...
+                    , 'VerticalAlignment', 'bottom'...
+                    , 'HorizontalAlignment', 'left');
+        end
+        top = t.Extent;
+        top = top(2) + top(4);
     end
 end
 startSamp = Arg.startSample;
+
+
+%% TITLE
+title( sprintf('%s -\n raw %s', Arg.eegname, Arg.dataname),...
+    'Position', [xbds(2)/2 top],...
+    'VerticalAlignment', 'bottom', ...
+    'Interpreter', 'none');
+
+
+%% FONT ELEMENTS
+%Determine y-axis-relative proportion & fix size of everything
+fsz = 0.5 * (1 / Arg.paperwh(2));
+set(findall(figh, '-property', 'FontUnits'), 'FontUnits', 'normalized')
+set(findall(figh, '-property', 'FontSize'), 'FontSize', fsz)
+
+% do the axis tick-labels so there is no overlap
+if length(CHANIDX) > 1
+    %todo (ben): The follwing can be done only if there are more than one 
+    % channel to plot. Is this hacky fix ok?
+    fsz = 1 / ((ybds(2) - ybds(1)) / min(diff(mean(sig, 2))));
+    set(gca, 'FontSize', fsz)
+end
+%ONLY IN r2016:: do the Y-AXIS tick-labels so there is no overlap
+% ax = ancestor(ploh, 'axes');
+% yrule = ax.YAxis;
+% yrule.FontSize = fsz;
+
+%AXIS LABELS
+xlabel( sprintf('Time\n[samples=%d:%d - seconds=%1.0f:%1.0f]'...
+    , Arg.startSample, Arg.startSample+dur...
+    , Arg.startSample / (EEG.srate), (Arg.startSample+dur) / (EEG.srate)) )
+ylabel(Arg.dataname)
+
 
 end % plot_raw()

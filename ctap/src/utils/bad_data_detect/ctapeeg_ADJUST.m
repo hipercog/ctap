@@ -86,7 +86,7 @@ Arg = p.Results;
 % |  Initial message to user:                        |
 % ----------------------------------------------------
 fprintf('ADJUST detecting bad ICA components in dataset: %s\n', EEG.filename)
-fprintf('Extracting features for: %s\n', cellstr2str(Arg.detect, 'sep', '    '))
+fprintf('Extracting features for: %s\n', catcellstr(Arg.detect, 'sep', '    '))
 % ----------------------------------------------------
 % |  Collect useful data from EEG structure          |
 % ----------------------------------------------------

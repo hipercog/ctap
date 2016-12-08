@@ -61,8 +61,13 @@ try result.meta; catch, result.meta = 'No meta data'; end
 try result.time; catch, result.time = {now()}; end
 
 % Add block definitions if any
+% TODO: this step is rather non-general. A basic implementation could be
+% here, users should implement their own custom selections if needed.
 if isfield(Cfg, 'MC')
     if isfield(Cfg.MC, 'blocks')
+        % todo: This loads data again from source file. Could be based on
+        % MC and EEG alone. Different block sources give markers in
+        % different formats (string vs numeric, string correct).
         blocks = parse_blocks(Cfg.MC, Arg.casename);
         %Throws error if measurement start event is not found.
         
@@ -75,6 +80,7 @@ if isfield(Cfg, 'MC')
             regions(2,1) = min(EEG.pnts-1, blocks.limits_sample(2)+1);
             regions(2,2) = EEG.pnts;
         else
+           %todo: Assumes one block per measurement. Quite a restriction.
            error('CTAP_load_data:block_fail', 'dimension err: check Cfg.MC.blocks');
         end
         

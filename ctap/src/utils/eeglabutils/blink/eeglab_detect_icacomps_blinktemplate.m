@@ -28,8 +28,8 @@ end
 
 % Make zero mean and unit variance to avoid false result due to baseline
 % offset and such
-blinkTemplate = blinkTemplate/std(blinkTemplate);
-blinkTemplate = blinkTemplate-mean(blinkTemplate);
+blinkTemplate = blinkTemplate / std(blinkTemplate);
+blinkTemplate = blinkTemplate - mean(blinkTemplate);
     
 %% Compare the vector angle between blink template and component scalp 
 %% projection (i.e. ICA "mixing matrix" = A = EEG.icawinv).

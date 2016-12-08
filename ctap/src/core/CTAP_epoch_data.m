@@ -39,16 +39,16 @@ if isfield(Cfg.ctap, 'epoch_data')
     Arg = joinstruct(Arg, Cfg.ctap.epoch_data); %override with user params
 end
 
-%% ASSIST
 
 %% CORE
 [EEG, params, result] = ctapeeg_epoch_data(EEG, Arg);
 
 EEG.CTAP.badepochs.events = result;
 
+
 %% ERROR/REPORT
 Arg = joinstruct(Arg, params);
-Cfg.ctap.epoch_data = Arg;
+Cfg.ctap.epoch_data = params;
 
 
 if strcmp(Arg.method, 'depoc')
@@ -59,4 +59,4 @@ else
         , Arg.method, EEG.setname), Cfg.env.logFile);
 end
 
-EEG.CTAP.history(end+1) = create_CTAP_history_entry(msg, mfilename, Arg);
+EEG.CTAP.history(end+1) = create_CTAP_history_entry(msg, mfilename, params);

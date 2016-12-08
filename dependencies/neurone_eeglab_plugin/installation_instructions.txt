@@ -1,0 +1,74 @@
+===================================================
+Installation instructions for NeurOne EEGLAB Plugin
+===================================================
+
+Requirements
+------------
+(1) EEGLAB
+http://sccn.ucsd.edu/eeglab/
+The plugin has been tested with EEGLAB version 11 (version 11_0_2_1b).
+
+(2) NeurOne Tools for Matlab
+http://www.megaemg.com/products/neurone-eeg-system/
+
+(3) NeurOne EEGLAB Plugin (this package)
+http://www.megaemg.com/products/neurone-eeg-system/
+
+
+
+Installation
+------------
+General instructions for the installation of EEGLAB plugins are available here:
+http://sccn.ucsd.edu/wiki/EEGLAB_Plugins#To_install_or_update_a_plug-in:
+
+
+
+Specific instuctions for the NeurOne EEGLAB plugin are as follows.
+
+(1) Copy the directory neurone_eeglab_plugin into EEGLAB's plugin directory, e.g.
+
+~/eeglab11_0_0_0b/plugins/
+
+so that you will have the directory
+
+~/eeglab11_0_0_0b/plugins/neurone_eeglab_plugin/
+
+
+
+(2) Now copy the package 'NeurOne Tools for Matlab' into an appropriate directory on your computer, e.g.
+
+~/matlab_tools/neurone_tools_for_matlab/
+
+
+You should now have the following directory tree:
+
+/home/username
+     |
+     |---/eeglab11_0_0_0b/
+     |        |
+     |        |---/plugins/
+     |                |
+     |                |---/neurone_eeglab_plugin/
+     |
+     |---/matlab_tools/neurone_tools_for_matlab/
+
+
+
+(3) Add the directory neurone_tools_for_matlab to Matlab's path as follows from Matlab's command line:
+
+addpath(genpath('/home/username/matlab_tools/neurone_tools_for_matlab/'))
+
+Alternatively you can add this directory permanently to Matlab's path using Matlab's GUI:
+
+'File' --> 'Set Path'
+
+then click the 'Add Folder' -button, select the appropriate directory and save the settings.
+
+
+
+(4) Restart EEGLAB.
+When EEGLAB is starting you should get the following output:
+
+EEGLAB: adding "NeurOne Data Import 1.0" plugin (see >> help eegplugin_neurone)
+
+Please refer to the file usage_instructions.txt for information on how to use the plugin.

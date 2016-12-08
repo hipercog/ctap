@@ -50,7 +50,7 @@ end
 
 %% CORE
 
-% Extract latencies of eventsget_savepath
+% Extract latencies of events
 event_match = ismember({EEG.event.type}, Arg.evtype);
 if isempty(event_match)
     error(  'CTAP_select_evdata:selectedEventError',...
@@ -92,13 +92,18 @@ EEG.CTAP.history(end+1) = create_CTAP_history_entry(msg, mfilename, Arg);
         evdata = sortrows(evdata, 2); %just to make sure
         evdata(:,1) = 1:size(evdata,1);
 
-        savedir = fullfile(Cfg.env.paths.logRoot, mfilename);
-        if ~isdir(savedir), mkdir(savedir); end
-        qcfile = fullfile(savedir, sprintf(...
-            'regions_%s.txt', EEG.CTAP.measurement.casename));
-        cell2txtfile(qcfile, header, num2cell(evdata),...
-            horzcat('%-4.0d',repmat({'%-12.1f'},1,4)), 'delimiter',';');
-        
+%         OLD APPROACH SAVES 1 .txt FILE PER DATAFILE, annoying to read/parse
+%         savedir = fullfile(Cfg.env.paths.logRoot, mfilename);
+%         if ~isdir(savedir), mkdir(savedir); end
+%         qcfile = fullfile(savedir, sprintf(...
+%             'regions_%s.txt', EEG.CTAP.measurement.casename));
+%         cell2txtfile(qcfile, header, num2cell(evdata),...
+%             horzcat('%-4.0d',repmat({'%-12.1f'},1,4)), 'delimiter',';');
+
+        qcf = fullfile(Cfg.env.paths.logRoot, sprintf('%s_times.txt', mfilename));
+        myReport(sprintf('%s_selected:', EEG.CTAP.measurement.casename), qcf);
+        cell2txtfile(qcf, header, num2cell(evdata), horzcat('%-4.0d'...
+            , repmat({'%-12.1f'},1,4)), 'delimiter',';', 'writemode', 'at');        
     end
 
 

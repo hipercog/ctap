@@ -1,5 +1,14 @@
 % Adds artifacts to the EEG struct given as input
 % artifact parameter ranges are hard coded for now
+%
+% Args:
+% 	eeg: input EEG struct
+% 	n_blinks <int>: number of blinks (default 20)
+% 	n_emg <int>: number of EMG bursts (default 10)
+% 	n_wrecks <int>: number of channels to break (default 5)
+%
+% Returns:
+% 	eeg: EEG struct with artifacts added
 function eeg = ctaptest_add_artifacts(eeg,n_blinks,n_emg,n_wrecks)
 
 if n_blinks == 0 || isempty(n_blinks)
@@ -51,4 +60,3 @@ for a=1:randi([1 n_emg])
                            w...                           % frequency profile
                            );
 end
-

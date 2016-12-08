@@ -103,17 +103,25 @@ switch Arg.method
             , 'VariableNames', {'recursiveFASTER'});
 
     case 'eegthresh'
-        % NOTE: 'eps_match' contains indices of epochs that have an exceeding
-        % amplitude in one or more electrodes. 'badelec' is of size
-        % [nchan, numel(result)]. Epochs without large amplitudes not reported.
+        % NOTE: 'bad_eps_match' contains indices of epochs that have an 
+        % exceeding amplitude in one or more electrodes.
+        % 'badelec' is a zero-one matrix of size [nchan, numel(bad_eps_match)].
+        % Epochs without large amplitudes are not reported.
         [~, bad_eps_match, ~, badelec] = eegthresh(...
             EEG.data, EEG.pnts, Arg.channels,...
             Arg.uV_thresh(1), Arg.uV_thresh(2),...
             [EEG.xmin EEG.xmax],...
             Arg.sec_lim(1), Arg.sec_lim(2) );
-        result.scores = table(badelec...
-            , 'RowNames', cellstr(num2str(epochs'))...
-            , 'VariableNames', {'uVthreshold'});
+        
+        scores = zeros(numel(Arg.channels), EEG.trials);
+        if ~isempty(badelec)
+            scores(Arg.channels, bad_eps_match) = badelec;
+        end
+        
+        result.scores = array2table(scores...
+            , 'RowNames', {EEG.chanlocs(Arg.channels).labels}...
+            , 'VariableNames', strcat({'ep'}, strtrim(cellstr(num2str((1:EEG.trials)'))) ) );
+
 
     case 'rejspec'
         [~, bad_eps_match] = pop_rejspec(EEG, 1, 'elecrange', Arg.channels,...
@@ -123,6 +131,29 @@ switch Arg.method
             , 'RowNames', {'ALL'}...
             , 'VariableNames', {'spectralThresh'});
         
+    case 'hasEvent'
+        
+        % Identify epochs with blinks
+        if iscell(EEG.epoch(1).eventtype)
+            epoch_eventtypes = {EEG.epoch(:).eventtype};
+        else
+           % if EEG.epoch.eventtype is not cell array things get complicated
+           % this is a very rare occasion ...
+           % make epoch_eventtypes a cell array of cell arrays of strings.
+           for i=1:numel(EEG.epoch)
+               epoch_eventtypes{i} = {EEG.epoch(i).eventtype};
+           end
+        end
+
+        bl_ind_cell = cellfun( @(x) ismember(Arg.event, x),...
+                                epoch_eventtypes,...
+                                'UniformOutput',false);
+        bad_eps_match = cellfun(@(x) x==true, bl_ind_cell);
+
+        result.scores = array2table(bad_eps_match...
+            , 'RowNames', {EEG.chanlocs(Arg.channels).labels}...
+            , 'VariableNames', strcat({'ep'}, strtrim(cellstr(num2str((1:EEG.trials)')))) );
+       
 end
 
 
@@ -199,13 +230,16 @@ varargout{2} = result;
                 Arg.freq_lim = [0 2; 20 40];
                 Arg.dB_thresh = [-50 50; -100 55];
                 Arg.spec_meth = 'multitaper';
-
+                
+            case 'hasEvent'
+                Arg.event = '';
+                
             otherwise
                 error('ctapeeg_detect_bad_epochs:bad_method',...
                     'Method %s not recognised, aborting', Arg.method)
         end
         
-        % Arg fields are canonical, vargs data is canonical: intersect-join
+        % Arg fields are canonical, vargs values are canonical: intersect-join
         Arg = intersect_struct(Arg, vargs);
     end
 

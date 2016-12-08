@@ -1,17 +1,19 @@
-function cmap = load_bwrc_colors(mapnum)
+function load_bwrc_colors(mapnum)
 %FUNCTION LOAD_BWRC_COLORS returns a color map based on BWRC color palette.
 % Options are 1 to 6, test to see.
 %
 % INPUT
-%   'mapnum'    : integer, from 1 to 6 inclusive. 
+%   'mapnum'    : integer, from 1 to 6 inclusive, default = 6
 
+if nargin < 1, mapnum = 6; end
 if 6 < mapnum || mapnum < 1
-    error('load_bwrc_colors:bad_param', 'Colormap %d not defined', mapnum);
+    warning('Colormap %d not defined - using 6', mapnum);
+    mapnum = 6;
 end
 
-BWRC_ORANGE = [240/255 170/255 0];
-BWRC_LBLUE = [0 160/255 190/255];
-BWRC_DBLUE = [0 60/255 120/255];
+assignin('caller', 'BWRC_LBLUE', [0 160/255 190/255])
+assignin('caller', 'BWRC_DBLUE', [0 60/255 120/255])
+assignin('caller', 'BWRC_ORANGE', [240/255 170/255 0])
 
 BWRC_MAP1 = ...
 [0,67,126;
@@ -529,7 +531,6 @@ BWRC_MAP2 = ...
 255,255,255;
 255,255,255]/255;
 
-
 BWRC_MAP3 = ...
 [0,160,190;
 1,160,190;
@@ -787,7 +788,6 @@ BWRC_MAP3 = ...
 254,255,255;
 255,255,255;
 255,255,255]/255;
-
 
 BWRC_MAP4 = ...
 [0,160,190;
@@ -1047,7 +1047,7 @@ BWRC_MAP4 = ...
 255,255,255;
 255,255,255]/255;
 
-BWRC_MAP5 =...
+BWRC_MAP5 = ...
 [0,67,126;
 0,69,128;
 0,70,129;
@@ -1563,4 +1563,11 @@ BWRC_MAP6 = ...
 240,172,0;
 240,171,0] / 255;
 
-cmap = eval(['BWRC_MAP' num2str(mapnum)]);
+assignin('caller', 'BWRC_MAP1', BWRC_MAP1)
+assignin('caller', 'BWRC_MAP2', BWRC_MAP2)
+assignin('caller', 'BWRC_MAP3', BWRC_MAP3)
+assignin('caller', 'BWRC_MAP4', BWRC_MAP4)
+assignin('caller', 'BWRC_MAP5', BWRC_MAP5)
+assignin('caller', 'BWRC_MAP6', BWRC_MAP6)
+
+colormap(eval(['BWRC_MAP' num2str(mapnum)]));

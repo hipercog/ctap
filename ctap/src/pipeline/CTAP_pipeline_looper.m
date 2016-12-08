@@ -47,6 +47,7 @@ function CTAP_pipeline_looper(Cfg, varargin)
 % Please see the file LICENSE for details.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+
 %% Parse input arguments and set varargin defaults
 p = inputParser;
 p.addRequired('Cfg', @isstruct);
@@ -60,11 +61,13 @@ if ~Arg.debug
     warning('OFF', 'BACKTRACE')
 end
 
-%% Create needed directories
+
+%% Create the directories needed
 fnames = fieldnames(Cfg.env.paths);
 for fn = 1:numel(fnames)
-    if ~isdir(Cfg.env.paths.(fnames{fn}))
-        mkdir(Cfg.env.paths.(fnames{fn}))
+    if ~isdir(Cfg.env.paths.(fnames{fn})) && ...
+       ~isempty(Cfg.env.paths.(fnames{fn}))
+        mkdir(Cfg.env.paths.(fnames{fn}));
     end
 end
 
@@ -72,10 +75,10 @@ myReport({
     sprintf('Begin analysis run at %s with stepSets:\n', datestr(now))
     sprintf('%s\n', char(Cfg.pipe.runSets)')},...
     Cfg.env.logFile);
+EEG = struct;
 
 
 %% Run step sets
-
 % Find indices of sets to run
 if strcmp(Cfg.pipe.runSets{1},'all')
     runSets = 1:numel(Cfg.pipe.stepSets);
@@ -107,7 +110,7 @@ MCbad = false(numMC, 1);
 if numMC == 0
    disp('No measurements matching the filter: ')
    disp(strucFilt)
-   disp('Try specifying a different set of measurements.')
+   disp('WHY DON''T YOU TRY: specifying a different set of measurements.')
 end
 % get the index of the start stepSet - i.e. where the first data was loaded
 % using this approach, runSets can jump around, jump around
@@ -116,37 +119,79 @@ idx_start_sets = find([Cfg.pipe.stepSets.save], 1, 'first');
 
 %% Run sets
 for n = 1:numMC %over measurements
-    myReport(sprintf('\n================\nProcessing %s ...',...
+    myReport(sprintf('\n\n\n================\nProcessing %s ...',...
         MCSub.measurement(n).casename), Cfg.env.logFile);
     Cfg.measurement = MCSub.measurement(n);
     SbjFilt.subject = Cfg.measurement.subject;
     Cfg.subject = struct_filter(Cfg.MC.subject, SbjFilt);
     tmp_Cfg = Cfg; %hold a copy of Cfg as it may be edited during Sets
-
+    clear('SbjFilt');
+    
+    %{
+    % Add extra information structures to Cfg if they exist
+    TmpFilt.casename = Cfg.measurement.casename;
+    
+    if isfield(MCSub, 'events')
+       Cfg.events = struct_filter(MCSub.events, TmpFilt);
+    else
+       Cfg.events = struct([]);
+    end
+    
+    if isfield(MCSub, 'blocks')
+       Cfg.blocks = struct_filter(MCSub.blocks, TmpFilt);
+       Cfg.blocks = struct([]);
+    end
+    
+    clear('TmpFilt');
+    %}
+    
+    
     for i = runSets %over stepSets
         myReport(sprintf('\n\nSTEP SET %s', Cfg.pipe.stepSets(i).id),...
             Cfg.env.logFile);
         %respect prior run of this stepSet - don't overwrite (if save is true)
+        
         if ~Arg.overwrite && Cfg.pipe.stepSets(i).save
-            src_subdir = fullfile(Cfg.env.paths.analysisRoot...
+            thisfile = fullfile(Cfg.env.paths.analysisRoot...
                 , Cfg.pipe.stepSets(i).id, [Cfg.measurement.casename, '.set']);
-            if exist(src_subdir, 'file')
+            if exist(thisfile, 'file')
                 myReport(sprintf('Overwrite is OFF and %s exists already.%s',...
-                    src_subdir, ' Skipping this STEP SET'), Cfg.env.logFile);
+                    thisfile, ' Skipping this STEP SET'), Cfg.env.logFile);
                 continue;
             end
         end
         i_ctap_hist_sz = 0;
-        % Load source dataset
-        if (i ~= idx_start_sets) %(i ~= 1) %
-            i_EEG = pop_loadset(...
-                'filepath', sbf_get_src_subdir(Cfg, i),...
-                'filename', [Cfg.measurement.casename, '.set']);
-        else
-            i_EEG = struct();
+        
+        
+        %% Load source data for current step set
+        try
+            % Load source dataset
+            if (i ~= idx_start_sets) %(i ~= 1) %
+                % middle of pipe, load from previous step set
+                i_EEG = pop_loadset(...
+                    'filepath', sbf_get_src_subdir(Cfg, i),...
+                    'filename', [Cfg.measurement.casename, '.set']);
+            else
+                % start of pipe: data comes from preceding branch OR raw EEG file
+                if ~isempty(Cfg.env.paths.branchSource)
+                    % load from preceding branch
+                    i_EEG = pop_loadset(...
+                        'filepath', Cfg.env.paths.branchSource,...
+                        'filename', [Cfg.measurement.casename, '.set']);
+                else
+                    % assuming CTAP_load_data() and loading based on
+                    % MC.measurement.physiodata
+                    i_EEG = struct();
+                end
+            end
+        catch ME,
+            funStr = 'intermediate_data_load';
+            fun_args = struct('thisIsDummy', true);
+            sbf_report_error(ME);
+            break;
         end
 
-        % Perform analysis steps
+        %% Perform analysis steps in current step set
         for k = 1:numel(Cfg.pipe.stepSets(i).funH) %over analysis steps
             if (i + k > idx_start_sets + 1)
                 if ~is_valid_CTAPEEG(i_EEG)
@@ -167,23 +212,14 @@ for n = 1:numMC %over measurements
                 i_tmp_ctap = Cfg.ctap.(ctapFun)(2:end);
                 Cfg.ctap.(ctapFun) = Cfg.ctap.(ctapFun)(1);
             end
-            % Call function vCTAP_reject_dataia handle
+            % Call function via handle
             if Arg.debug
                 sbf_execute_pipefun
             else
                 try
                     sbf_execute_pipefun
                 catch ME,
-                    % Error handling
-                    myReport(sprintf([...
-                        'WARN\n~~~~/#~~~~/#~~~~/#~~~~/#~~~~/#~~~~'...
-                        '\nProcessing failed on %s \nbecause: %s \n@ %s : %s'...
-                        '\n~~~~/#~~~~/#~~~~/#~~~~/#~~~~/#~~~~']...
-                        , MCSub.measurement(n).casename...
-                        , ME.message...
-                        , Cfg.pipe.stepSets(i).id...
-                        , funStr)...
-                        , Cfg.env.logFile);
+                    sbf_report_error(ME);
                     if isfield(i_EEG, 'CTAP')
                         i_EEG.CTAP.history(end+1) = create_CTAP_history_entry(...
                             ['FAIL_' Cfg.pipe.stepSets(i).id], funStr, fun_args);
@@ -207,9 +243,11 @@ for n = 1:numMC %over measurements
                 Cfg.ctap.(ctapFun) = i_tmp_ctap;
             end
         end
-        %make stepSet directory whatever happens
+        %actions to take whatever happened during ananlysis steps
         i_sv = fullfile(Cfg.env.paths.analysisRoot, Cfg.pipe.stepSets(i).id);
-        if ~isdir(i_sv), mkdir(i_sv); end
+        if ~isdir(i_sv), mkdir(i_sv); end %make stepSet directory 
+        EEG = i_EEG; %store EEG state to write out history after loops
+        
         % if stepSet loop didn't complete, measurement is no longer processed.
         if MCbad(n)
             if Arg.trackfail%if requested then save the unfinished EEG file
@@ -218,7 +256,7 @@ for n = 1:numMC %over measurements
             end
             clear('i_*')%remove temp vars
             break;
-            
+
         elseif Cfg.pipe.stepSets(i).save%save stepSet result
             i_savefile = fullfile(i_sv, [Cfg.measurement.casename, '.set']);
             i_EEG.CTAP = add_pipe_dataloc(i_EEG.CTAP,...
@@ -227,25 +265,27 @@ for n = 1:numMC %over measurements
             i_savefile = [Cfg.measurement.casename...
                 , badFlag{MCbad(n) & Arg.trackfail}, '.set'];
             pop_saveset(i_EEG, 'filepath', i_sv, 'filename', i_savefile);
-            
+
         else
             myReport(sprintf('\nSTEP SET %s SAID: "DON''T SAVE ME!!"\n'...
                 , Cfg.pipe.stepSets(i).id), Cfg.env.logFile);
-            
+
         end
         %cleanup: delete existing _BAD_FILEs, remove temp vars
         warning('OFF', 'MATLAB:DELETE:FileNotFound')
         delete(fullfile(i_sv, [Cfg.measurement.casename, badFlag{1}, '.*']));
         warning('ON', 'MATLAB:DELETE:FileNotFound')
         clear('i_*')
-        
+
     end %over stepSets
     Cfg = tmp_Cfg; %reassign original ctap
 
-    suxes = {'successfully! :)' 'unsuccessfully :('};
-    myReport(sprintf(...
-    '\n================\nMeasurement ''%s'' analyzed %s\n\n',...
-        Cfg.measurement.casename, suxes{MCbad(n) + 1}), Cfg.env.logFile);
+    suxes = {'successfully! :)' 'unsuccessfully :''('};
+    suxes = sprintf('\n================\nMeasurement ''%s'' analyzed %s\n',...
+        Cfg.measurement.casename, suxes{MCbad(n) + 1});
+    myReport(suxes, Cfg.env.logFile);
+    myReport(suxes, fullfile(Cfg.env.paths.logRoot, 'history.txt'));
+    ctap_check_hist(EEG, fullfile(Cfg.env.paths.logRoot, 'history.txt'));
 
 end %over measurements
 
@@ -255,7 +295,7 @@ myReport(sprintf('\nAnalysis run ended at %s.\n', datestr(now, 30)),...
     Cfg.env.logFile);
 if any(MCbad)
     myReport({'Analysis failed for: ' MCSub.measurement(MCbad).casename},...
-        Cfg.env.logFile);
+        Cfg.env.logFile, sprintf('\n'));
 else
     myReport('All Analysis Successful!', Cfg.env.logFile);
 end
@@ -292,7 +332,26 @@ if ~Arg.debug
     warning('ON', 'BACKTRACE')
 end
 
+
 %% EMBEDDED FUNCTIONS
+
+% A function to report errors
+function sbf_report_error(ME)
+    % Error handling
+    logfile = fullfile(Cfg.env.paths.crashLogRoot,...
+                sprintf('crashlog_%s.txt', datestr(now(),30)) );
+    
+    myReport(sprintf([...
+        'WARN\n~~~~/#~~~~/#~~~~/#~~~~/#~~~~/#~~~~'...
+        '\nProcessing failed on %s \nbecause: %s \n@ %s : %s'...
+        '\n~~~~/#~~~~/#~~~~/#~~~~/#~~~~/#~~~~']...
+        , MCSub.measurement(n).casename...
+        , ME.message...
+        , Cfg.pipe.stepSets(i).id...
+        , funStr)...
+        , logfile);
+end
+
 
 % embedded function calls the next pipe function
 function sbf_execute_pipefun()
@@ -326,8 +385,18 @@ end
 
 % Get source directory of loadable files
 function src_subdir = sbf_get_src_subdir(Cfg, idx)
+    %todo: logic here will fail if step set is part of a branched pipe;
+    %maybe remove this rivalling branching option completely (i.e. do not
+    %allow .srcID to contain other that in pipe references.
     if ~isempty(Cfg.pipe.stepSets(idx).srcID)
-        src_subdir = Cfg.pipe.stepSets(idx).srcID; 
+        parts = strsplit(Cfg.pipe.stepSets(idx).srcID,'#');
+        
+        if numel(parts)==2
+            src_subdir = fullfile(Cfg.env.paths.ctapRoot, parts{1}, parts{2});
+        else 
+            src_subdir = fullfile(Cfg.env.paths.analysisRoot, parts{1});      
+        end
+        
     else
         %get first stepSet index with saved data
         idx = find([Cfg.pipe.stepSets(1:idx - 1).save], 1, 'last' );
@@ -336,9 +405,8 @@ function src_subdir = sbf_get_src_subdir(Cfg, idx)
             'NO SAVE POINT FOUND TO LOAD DATA - check your save specification');
         end
         src_subdir = Cfg.pipe.stepSets(idx).id;
+        src_subdir = fullfile(Cfg.env.paths.analysisRoot, src_subdir);
     end
-    src_subdir = fullfile(Cfg.env.paths.analysisRoot, src_subdir);
-
 end
 
 end% CTAP_pipeline_looper()

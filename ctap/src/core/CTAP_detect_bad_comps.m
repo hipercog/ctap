@@ -100,11 +100,11 @@ EEG.CTAP.badcomps.detect.prc = prcbad;
 
 
 %% ERROR/REPORT
-Cfg.ctap.detect_bad_comps = Arg;
+Cfg.ctap.detect_bad_comps = params;
 
 msg = myReport({repstr1 repstr2 repstr3}, Cfg.env.logFile);
 
-EEG.CTAP.history(end+1) = create_CTAP_history_entry(msg, mfilename, Arg);
+EEG.CTAP.history(end+1) = create_CTAP_history_entry(msg, mfilename, params);
 
 
 %% DIAGNOSTICS
@@ -119,7 +119,7 @@ end
 
 % Visualize component rejections as contact sheet of scalp maps
 function sbf_plot_bad_comps()
-    savepath = get_savepath(Cfg, mfilename);
+    savepath = get_savepath(Cfg, mfilename, 'qc');
     myReport(sprintf('Plotting diagnostics to ''%s''...\n', savepath)...
         , Cfg.env.logFile);
     EEGname = strrep(EEG.CTAP.measurement.casename, '_', '-');

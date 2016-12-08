@@ -41,7 +41,7 @@ stepSet(i).funH = { @CTAP_load_data,...
 stepSet(i).id = [num2str(i) '_load'];
 
 i = i+1;  %stepSet 2
-stepSet(i).funH = { @CTAP_filter_data };
+stepSet(i).funH = { @CTAP_fir_filter };
 stepSet(i).id = [num2str(i) '_filter'];
 
 i = i+1;  %stepSet 3
@@ -83,7 +83,7 @@ Cfg.pipe.runSets = {'all'}; %whole thing
 
 
 %% Assign arguments to the selected functions, perform various checks
-Cfg = cfg_ctap_functions(Cfg, ctap_args);
+Cfg = ctap_auto_config(Cfg, ctap_args);
 
 
 %% Run the pipe

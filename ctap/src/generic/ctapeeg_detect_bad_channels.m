@@ -136,6 +136,8 @@ switch Arg.method
         result.scores = table(res.variance(Arg.channels)' ...
             , 'RowNames', {EEG.chanlocs(Arg.channels).labels}'...
             , 'VariableNames', {'variance'});
+        result.method_data.th = res.th;
+        
         
     case 'recuvari'
         recu_out = recurse_variance_bad_chans(...
@@ -236,7 +238,7 @@ varargout{2} = result;
                 Arg.outdir = '';
 
             case 'variance'
-                Arg.bounds = [-1 1];
+                Arg.bounds = 3; % MEDIAN +- 3*MAD
 
             case 'rejspec'
                 Arg.freq_lim = [0 5]; 
@@ -247,7 +249,7 @@ varargout{2} = result;
                     'Method %s not recognised, aborting', Arg.method)
         end
         
-        % Arg fields are canonical, vargs data is canonical: intersect-join
+        % Arg fields are canonical, vargs values are canonical: intersect-join
         Arg = intersect_struct(Arg, vargs);
     end
 

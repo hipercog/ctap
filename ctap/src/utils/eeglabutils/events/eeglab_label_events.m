@@ -1,5 +1,5 @@
 function EEG = eeglab_label_events(EEG, lablerEvArr)
-%EEG_LABEL_EVENTS - Mark events in EEGLAB event table based on other events
+%EEGLAB_LABEL_EVENTS - Mark events in EEGLAB event table based on other events
 %
 % Description:
 %   Can be used to mark events in EEGLAB event table as coexisting with
@@ -8,7 +8,7 @@ function EEG = eeglab_label_events(EEG, lablerEvArr)
 %   signal segment with artefacts.
 %
 % Syntax:
-%   EEG = eeg_label_events(EEG, lablerEvArr);
+%   EEG = eeglab_label_events(EEG, lablerEvArr);
 %
 % Inputs:
 %   EEG             struct, EEGLAB data struct

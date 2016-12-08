@@ -67,11 +67,11 @@ p = inputParser;
 p.addRequired('EEG', @isstruct);
 p.addParamValue('rejectionChannels', {EEG.chanlocs(:).labels}, @iscellstr);
 p.addParamValue('filter', false, @islogical);
-p.addParamValue('rejectionMaskWidth', 3, @isnumeric); %in seconds
+p.addParamValue('rejectionMaskWidth', 2, @isnumeric); %in seconds
 p.addParamValue('tailPercentage', 0.001, @isnumeric); %percentage in [0...1]
 % Small probability on each channel but alltogether might result in a high
-% proportion of data marked as bad. See also defaultAmpLimits.
-p.addParamValue('defaultAmpLimits', [-75,75], @isnumeric); %in muV
+% proportion of data marked as bad. See also normalEEGAmpLimits.
+p.addParamValue('normalEEGAmpLimits', [-75, 75], @isnumeric); %in muV
 p.addParamValue('coOcurrencePrc', 0.25, @isnumeric); %percentage in [0...1]
 p.addParamValue('eventIDStr', 'artefactAmpTh', @ischar);
 
@@ -138,10 +138,8 @@ for i = 1:size(rej_match,1) %over channels
                     %[low, high]
     
     % Select default or quantile based limit (more extreme selected)
-    i_rej_low = min(Arg.defaultAmpLimits(1), qnt_th(i,1));   
-    i_rej_high  = max(Arg.defaultAmpLimits(2), qnt_th(i,2)); 
-
-
+    i_rej_low = min(Arg.normalEEGAmpLimits(1), qnt_th(i,1));
+    i_rej_high = max(Arg.normalEEGAmpLimits(2), qnt_th(i,2));
     
     rej_match(i,:) = ((eegdata(i,:) <= i_rej_low) | ...
                       (eegdata(i,:) >= i_rej_high));
@@ -152,14 +150,15 @@ for i = 1:size(rej_match,1) %over channels
     %{
     % Plotting related
     %hist(eegdata(i,:), N_hist_bins);
+    N_hist_bins = 100;
     rej_prc = sum(rej_match(i,:))/EEG.pnts*100;
     [i_n, i_binc] = hist(eegdata(i,:), N_hist_bins);
     ydata(i,1,:) = i_n;
     xdata(i,:) = i_binc;
     
     vert_line_pos(i) = {rej_th(i,:)}; 
-    legendstrs{i} = {[chan_names{i} ': rejected ' num2str(rej_prc,'%2.3f') ' %']};
-    plotorder(i) = find(ismember(channelOrder, chan_names{i}));
+    legendstrs{i} = {[Arg.rejectionChannels{i} ': rejected ' num2str(rej_prc,'%2.3f') ' %']};
+    plotorder(i) = find(ismember(channelOrder, Arg.rejectionChannels{i}));
     ylabels(i) = {'Hist bin count'};
     xlabels = {'Amplitude muV'};
     %}
@@ -225,7 +224,7 @@ end
 %% Set output
 % Channel specific 
 Rej.th = rej_th;
-Rej.defaultTh = Arg.defaultAmpLimits;
+Rej.defaultTh = Arg.normalEEGAmpLimits;
 Rej.qntTh = qnt_th;
 Rej.match = rej_match;
 

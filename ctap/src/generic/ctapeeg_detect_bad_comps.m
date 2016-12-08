@@ -19,12 +19,19 @@ function [EEG, varargout] = ctapeeg_detect_bad_comps(EEG, varargin)
 %             'abnormal_spectra' - detect abnormal spectra
 %             'blink_template' - detect blink related IC's based on "blink ERP"
 %
-%   FOR 'recufast' recursive FASTER method
-%   'report'      false (def) or true, produce/save visuals of bad comps
-%   'bounds'      sigma thresholds to detect bad components with recufast method
+%   FOR 'FASTER' method
+%   'bounds'      sigma thresholds to detect bad components with FASTER method
 %                 Default = [-2 2]
+% 
+%   FOR 'recufast' recursive FASTER method
+%   'bounds'      sigma thresholds to detect bad components with recufast method
+%                 Default = [-3 3]
 %   'iters'       number of iterations to use in 'recufast' method
-%                 Default = 10
+%                 Default = 5
+%   'report'      false or true, produce/save visuals of bad comps
+%                 Default = false
+%   'outdir'      directory to save report outputs
+%                 Default = ''
 % 
 %   FOR 'adjust' method
 %   'adjustargs'  cell array of ADJUST specific arguments
@@ -68,6 +75,12 @@ function [EEG, varargout] = ctapeeg_detect_bad_comps(EEG, varargin)
 %   Delorme, A., Sejnowski, T., & Makeig, S. (2007). Enhanced detection of 
 %   artifacts in EEG data using higher-order statistics and independent 
 %   component analysis. NeuroImage, 34(4), 1443-9.
+%   Nolan, H., Whelan, R., & Reilly, R. B. (2010). FASTER: Fully Automated 
+%   Statistical Thresholding for EEG artifact Rejection. Journal of Neuroscience 
+%   Methods, 192(1), 152–162.
+%   Mognon, A., Jovicich, J., Bruzzone, L., & Buiatti, M. (2011). ADJUST: An 
+%   automatic EEG artifact detector based on the joint use of spatial and
+%   temporal features. Psychophysiology, 48(2), 229–240.
 %
 % Version History:
 % 20.10.2014 Created (Benjamin Cowley, FIOH)
@@ -188,9 +201,9 @@ varargout{2} = result;
 
         switch Arg.method %#ok<*ALIGN>
             case 'recufast'
-                Arg.report = false;
                 Arg.bounds = [-3 3];
                 Arg.iters  = 5;
+                Arg.report = false;
                 Arg.outdir = '';
                 
             case 'faster'
@@ -212,14 +225,15 @@ varargout{2} = result;
                 Arg.cmpSpcMethod = 'multitaper';
                 
             case 'blink_template'
-                % no defaults
+                Arg.thr = 0.7; %threshold value (def=radians)
+                
             otherwise
                 error('ctapeeg_detect_bad_comps:bad_method',...
                     'Method %s not recognised, aborting', Arg.method)
 
         end
         
-        % Arg fields are canonical, vargs data is canonical: intersect-join
+        % Arg fields are canonical, vargs values are canonical: intersect-join
         Arg = intersect_struct(Arg, vargs);
     end
 
@@ -232,7 +246,8 @@ varargout{2} = result;
                 ' blink template matching. Run CTAP_blink2event() to fix.'])
         end
         % Detect components
-        [comp_match, th_arr] = eeglab_detect_icacomps_blinktemplate(EEG);
+        [comp_match, th_arr] = eeglab_detect_icacomps_blinktemplate(EEG...
+            , 'leqThreshold', Arg.thr);
 
         % Compute blink ERP for future reference
         EEGbl = pop_epoch( EEG, {'blink'}, [-0.3, 0.3]);

@@ -25,8 +25,9 @@ function eegviz(dataset, varargin)
 
 	dataset = bsxfun(@plus, dataset, (1:size(dataset, 2)) * scale);
 
-	figure();
-		plot(dataset, 'k');
-		axis tight;
-		set(gca, 'ytick', []);
+	fg = figure();
+    plot(dataset, 'k');
+    axis tight;
+    set(gca, 'ytick', []);
+    close(fg);
 end

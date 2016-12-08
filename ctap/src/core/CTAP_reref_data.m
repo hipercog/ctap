@@ -44,15 +44,14 @@ end
 
 
 %% ASSIST
-% chaninds = find(ismember({EEG.chanlocs.labels}, Arg.reference));
 chaninds = get_refchan_inds(EEG, Arg.reference);
-
+% if the requested reference is from the EEG.chanlocs.type field...
 if isempty(chaninds)
     if sum(ismember(Arg.reference, {'EEG', 'REF'})) > 0
         chaninds = find(ismember({EEG.chanlocs.type}, Arg.reference));
     end
 end
-
+% proceed if some reference was found
 if isempty(chaninds)
     error('CTAP_reref_data:channelsNotFound',...
        'Reference channels ''%s'' not found.', strjoin(Arg.reference,', '));
@@ -62,8 +61,12 @@ end
 %% CORE
 EEG = pop_reref(EEG, chaninds, 'keepref','on');
 % EEG.ref = {EEG.chanlocs(chaninds).labels}; %this fails for, e.g cellstr arrays
-
-EEG.CTAP.reference = {EEG.chanlocs(chaninds).labels};
+% record the reference
+if strcmp(Arg.reference, 'average')
+    EEG.CTAP.reference = 'average';
+else
+    EEG.CTAP.reference = {EEG.chanlocs(chaninds).labels};
+end
 
 
 %% ERROR/REPORT

@@ -93,7 +93,8 @@ switch file.ext
     case {'neurone' 'xml'}
         % Loads whole datafile, all events from all tasks - BWRC utils!
         neur1 = read_data_gen(file.path);
-        EEG = recording_neurone_to_eeglab(neur1);
+        EEG = recording_neurone_to_eeglab(neur1); %old NeurOne-approved syntax
+%         EEG = recording2eeglab(neur1); %even older syntax
         % return meta-data and timing for this recording 
         res.meta = struct;
         res.meta.device = neur1.device;
@@ -101,6 +102,12 @@ switch file.ext
         res.meta.identifier = neur1.identifier;
         res.time = {datetime(datestr(datenum(...
             neur1.properties.start.time,'yyyymmddTHHMMSS')))};
+
+
+% % TODO (BC): THIS OFFICIAL MEGAELECTRONICS readneurone() function calls
+% % pop_chanedit() and results in a pop-up which prevents batching
+%         EEG = readneurone(fullfile(file.path,'/'));
+  
 end
 
 varargout{1} = Arg;

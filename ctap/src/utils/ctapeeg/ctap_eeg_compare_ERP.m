@@ -61,6 +61,7 @@ p.addParameter('rmbaseWindow', [-0.5,0], @isnumeric); %in sec
 p.addParameter('channels', {EEG1.chanlocs.labels}, @iscellstr); %in sec
 p.addParameter('idArr', {'EEG1','EEG2'}, @iscellstr); %in sec
 p.addParameter('visible', 'on', @isstr); %in sec
+p.addParameter('reverseYAxis', true, @islogical);
 
 p.parse(EEG1, EEG2, eventTypeString, varargin{:});
 Arg = p.Results;
@@ -78,4 +79,5 @@ EEG2 = pop_rmbase( EEG2, 1000*Arg.rmbaseWindow);
 figH = plot_epoched_EEG({EEG1, EEG2},...
                         'channels', Arg.channels,...
                         'idArr', Arg.idArr,...
+                        'reverseYAxis', Arg.reverseYAxis,...
                         'visible', Arg.visible);

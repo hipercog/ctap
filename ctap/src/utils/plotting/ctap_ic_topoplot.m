@@ -67,7 +67,7 @@ Arg = p.Results;
 %% PLOT
 if isempty(Arg.figdims)
     Arg.figdims = get(0, 'ScreenSize');
-    Arg.figdims = ceil(Arg.figdims/6*5);
+    Arg.figdims = ceil(Arg.figdims / 6 * 5);
 end
 
 %find number of ICs per figure that can have 200x200 pixels each
@@ -88,7 +88,6 @@ if ~isempty(Arg.savepath) && ~isempty(Arg.savename)
     if ICx200 < numIC %if more ICs than available display space for 1 image => 
                       %many figs => make own dir for this subject
         savepath = fullfile(Arg.savepath, Arg.savename);
-        if ~isdir(savepath), mkdir(savepath); end
         saveid = '';
     else %else just put the subject name in the fig file name
         savepath = Arg.savepath;
@@ -98,6 +97,7 @@ if ~isempty(Arg.savepath) && ~isempty(Arg.savename)
 else
     output = false;
 end
+if ~isdir(savepath), mkdir(savepath); end
 
 for i = 1:length(ICs) - 1
     %subset ICs for a figure

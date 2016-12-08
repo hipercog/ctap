@@ -241,6 +241,10 @@ for i=1:numel(sourcefiles)
     query = sprintf('REPLACE INTO subject VALUES (%i, ''%s'', ''%s'', %f)',...
         i_Meta.subjectnr, i_Meta.subject, i_Meta.sex, i_Meta.age);
     mksqlite(dbid, query);
+    
+    % TODO: If a numeric input happens to be text, query becomes very odd.
+    % Implement some argument checking for all query making.
+    
     % TODO (feature-addition)(jkor): Separate subject and measurement 
     % related data in M.INFO
     % and add all subject related data dynamically to table 'subject'. That

@@ -1,17 +1,19 @@
-% This must be changed so it passes is_valid_CTAP functions
+% Adds correct CTAP-fields to the dataset so it passes analysis steps
+% TODO: Check if this is still needed
+%
 function eeg = ctaptest_add_ctap(eeg)
     eeg.CTAP.subject = char(randi([65 90], 1, 10));
-    eeg.CTAP.measurement.casename = 'kakk';
-    eeg.CTAP.files.eegFile = 'asdf';
-    eeg.CTAP.files.channelLocationsFile = 'moi';
+    eeg.CTAP.measurement.casename = 'kakka';
+    eeg.CTAP.files.eegFile = 'kakka';
+    eeg.CTAP.files.channelLocationsFile = 'kakka';
     eeg.CTAP.time.fileStart = 1924;
     eeg.CTAP.time.dataStart = 2540;
-    eeg.CTAP.meta = 'this might be meta';
+    eeg.CTAP.meta = 'kakka';
     eeg.CTAP.date = date;
-    eeg.CTAP.protocol = '#yolo';
-    eeg.CTAP.history(1).msg = ['step_' datestr(now, 'yymmddHHMM')];
-	eeg.CTAP.history(1).fun = 'fu';
-	eeg.CTAP.history(1).args = 'so done';
+    eeg.CTAP.protocol = 'kakka';
+    eeg.CTAP.history(1).msg = ['kakka_' datestr(now, 'yymmddHHMM')];
+	eeg.CTAP.history(1).fun = 'kakka';
+	eeg.CTAP.history(1).args = 'kakka';
     eeg.CTAP.artifact = [];
     eeg.CTAP.reference = eeg.ref;
 
@@ -31,6 +33,7 @@ function eeg = remove_peripherals(eeg)
         error('No channels left!')
     end
 end
+
 
 % Make sure channel types are correct
 function eeg = update_channel_types(eeg)

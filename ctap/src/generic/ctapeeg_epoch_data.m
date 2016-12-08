@@ -7,6 +7,7 @@ function [EEG, varargout] = ctapeeg_epoch_data(EEG, varargin)
 % INPUT
 %   'EEG'       :   eeglab data struct
 % VARARGIN
+%   'erpid'     : ID string for the associated ERP
 %   'method'    : operation to take (Default=regep):
 %                 'regep' - epoching to new periodic dummy events
 %                 'epoch' - epoching to existing events
@@ -108,6 +109,9 @@ switch Arg.method
         
 end
 
+%todo: The following fails if EEX.xmin = 0. Fix.
+[EEG, com] = pop_rmbase( EEG, [EEG.xmin, 0]*1000);
+EEG.CTAP.ERP.id = Arg.erpid; %store for later reference
 
 %% wrap up
 varargout{1} = Arg;
@@ -131,6 +135,7 @@ varargout{2} = event;
             Arg.method = 'regep';
         end
         
+        Arg.erpid = '';
         Arg.name = [EEG.setname '_epochs'];
         Arg.valulim = [];
         Arg.timelim = [-500 500];

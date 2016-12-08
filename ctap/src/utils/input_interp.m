@@ -84,7 +84,7 @@ if check_keys && Arguments.useKeyChecking
     keys_with_missing_default = setdiff(vararginArray(keyword_inds), common_keys);
 
     if ~isempty(keys_with_missing_default)
-        msg = ['Varargin keys ''', cellstr2str(keys_with_missing_default, 'sep', ''', '''),...
+        msg = ['Varargin keys ''', catcellstr(keys_with_missing_default, 'sep', ''', '''),...
                ''' have no default value set. Check that these keys are not misspelled!'];
        warning('intput_interp:keysLackDefaults', msg); 
     end

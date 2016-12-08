@@ -177,8 +177,9 @@ for k = 1:length(chaninds) %over channels
             case 'welch-matlab'
                 % PSD estimation using Matlab's version of Welch's method
                 [Psd.data(k,i,:), ~] = psdest_welch_matlab(...
-                    EEG.data(chaninds(k),low:up),...
-                    uint32(fix(Arg.m*EEG.srate)), Arg.overlap, Arg.nfft);
+                    EEG.data(chaninds(k),low:up)...%data
+                    , uint32(fix(Arg.m*EEG.srate))...%subsegment length, samples
+                    , Arg.overlap, Arg.nfft);
                 if i==1 && k==1
                     report_parameters(...
                         cs_length_mode, Arg.m, Arg.nfft, Arg.overlap);

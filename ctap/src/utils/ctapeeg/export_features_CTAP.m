@@ -53,6 +53,8 @@ end
 
 
 %% Create an array of source files
+disp(sprintf('Exporting features from: %s', Cfg.env.paths.featuresRoot));
+
 sourcefile_arr={};
 if isempty(measFilt)
     % Load all measurements available
@@ -101,5 +103,4 @@ savefile = fullfile(Cfg.env.paths.exportRoot, sprintf('%s.sqlite',id));
 dataexport_sqlite(sourcefile_arr, savefile,...
         'cseg_meta_variable_names', Cfg.export.csegMetaVariableNames,...
         'factorsVariable', 'SEGMENT',...
-        'outputFormat', 'long');              
-                
+        'outputFormat', 'long');

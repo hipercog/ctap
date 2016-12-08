@@ -1,5 +1,5 @@
 function inds = eeglab_event_overlap(event, target, neighbour, varargin)
-%EVENT_OVERLAP - Detects overlaps between events (EEGLAB compatible) 
+%EEGLAB_EVENT_OVERLAP - Detects overlaps between events (EEGLAB compatible) 
 %
 % Description:
 %   Can be used to detect overlaps between events. Input strings 'target'
@@ -8,7 +8,7 @@ function inds = eeglab_event_overlap(event, target, neighbour, varargin)
 %   'neighbour' events (see varargin).
 %
 % Syntax:
-%   inds = event_overlap(event, target, neighbour, varargin);
+%   inds = eeglab_event_overlap(event, target, neighbour, varargin);
 %
 % Inputs:
 %   event      struct, Event structure from EEG.event. Supports only event
@@ -32,8 +32,8 @@ function inds = eeglab_event_overlap(event, target, neighbour, varargin)
 %
 % References:
 %
-% Example: inds = event_overlap(EEG.event, 'seg', 'boundary'...
-%                               'searchDirections', {'forward'});
+% Example: inds = eeglab_event_overlap(EEG.event, 'seg', 'boundary'...
+%                                      'searchDirections', {'forward'});
 %
 % Notes:
 %   Supports only event tables (EEG.event) whose .type field contains only 

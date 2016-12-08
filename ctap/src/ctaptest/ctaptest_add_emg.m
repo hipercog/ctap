@@ -2,16 +2,16 @@
 %   function eeg = ctaptest_add_EMG(eeg,ampl,t_start,dur,loc,rad,F)
 %
 % Args:
-%   eeg: eeg struct
-%   ampl: EMG signal amplitude
-%   t_start: start time of the artifact (in seconds)
-%   dur: duration of the burst (in seconds)
-%   loc: epicenter of the burst ([X Y Z])
-%   rad: radius of the EMG source
-%   F: frequency band of the EMG burst ([lower_edge upper_edge transition_band])
+%   eeg: EEG struct
+%   ampl <double>: EMG signal amplitude
+%   t_start <double>: start time of the artifact (in seconds)
+%   dur <double>: duration of the burst (in seconds)
+%   loc <mat>: epicenter of the burst ([X Y Z])
+%   rad <double>: radius of the EMG source
+%   F <mat>: frequency band of the EMG burst ([lower_edge upper_edge transition_band])
 %
 % Returns:
-%   eeg: eeg struct with EMG burst added. Artifact logged in 
+%   eeg: EEG struct with EMG burst added. Artifact logged in 
 %        eeg.CTAP.artifact.EMG   
 function eeg = ctaptest_add_emg(eeg,ampl,t_start,dur,loc,rad,F)
 
@@ -28,7 +28,7 @@ rp = 1;
 rs = 40;
 
 [n,Wp] = cheb1ord(wp,ws,rp,rs);
-[b,a] = cheby1(n,rp,Wp);
+[b,a] = cheby1(n,rp,Wp); %#ok<ASGLU>
 
 fprintf(1,'Adding %0.2fs %0.2f-%0.2fHz (A=%0.2f) EMG burst at t=%0.2fs\n',...
             dur,F(1),F(2),ampl,t_start);

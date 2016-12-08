@@ -1,13 +1,17 @@
 function figh = eeglab_plot_channel_properties(EEG, chans, fixplots, varargin)
+% eeglab_plot_channel_properties - Plots EEG dataset channel properties (histogram)
+
 
 %% Parse input arguments and set varargin defaults
 p = inputParser;
-p.addRequired('EEG', @isstruct);  
-p.addRequired('chans', @isnumeric);  
-p.addRequired('fixplots', @isnumeric);  
+p.addRequired('EEG', @isstruct);
+p.addRequired('chans', @isnumeric);
+p.addRequired('fixplots', @isnumeric);
+
+p.addParameter('paperwh', [42 42], @isnumeric);
 p.addParameter('figVisible', 'off', @isstr);
-xlimArr = [max(-100, min(min(EEG.data))),...
-           min(100, max(max(EEG.data)))];
+xlimArr = [max(-150, min(min(EEG.data))),...
+           min(150, max(max(EEG.data)))];
 p.addParameter('xlim', xlimArr, @isnumeric);
 
 p.parse(EEG, chans, fixplots, varargin{:});
@@ -27,30 +31,50 @@ end
 nh = floor(sqrt(fixplots));
 nv = ceil(fixplots/nh);
 
-%ScreenSize is a four-element vector: [left, bottom, width, height]:
-scrsz = get(0,'ScreenSize');
-figh = figure('Position',[1 scrsz(4) scrsz(3) scrsz(4)],...
-              'Visible', Arg.figVisible);
+
+%% Plot
+% IF paper width+height has been specified as 0,0 then use screen dims
+if sum(Arg.paperwh) == 0
+    %ScreenSize is a four-element vector: [left, bottom, width, height]:
+    figh = figure('Position', get(0,'ScreenSize'),...
+                  'Visible', Arg.figVisible);
+else
+    figh = figure('PaperType', '<custom>',...
+                  'PaperUnits', 'centimeters',...
+                  'PaperPosition', [0 0 Arg.paperwh],...
+                  'Visible', Arg.figVisible);
+end
 
 % loop
 for i = 1:nchan
-   h = subplot(nv, nh, i);
-%    if mod(i, nv) == 0
-%        leftedge = true;
-%    end
-   plot_histogram(  EEG.data(chans(i),:),...
+    h = subplot(nv, nh, i);
+    bottomleftplot = nh * (nv - 1) + 1;
+    if i == bottomleftplot
+        plot_histogram( EEG.data(chans(i),:,:),...
+                    'plotTitle', false,...
+                    'xlim', Arg.xlim,...
+                    'plotLabels', true,...
+                    'xlabel', 'Amplitude (\muV)');
+
+    elseif i == nchan
+        plot_histogram(  EEG.data(chans(i),:,:),...
+                    'plotTitle', false,...
+                    'plotLabels', false,...
+                    'xlim', Arg.xlim,...
+                    'plotLegend', true);
+                
+    else
+        plot_histogram(  EEG.data(chans(i),:,:),...
                     'plotTitle', false,...
                     'plotLabels', false,...
                     'xlim', Arg.xlim);
-%                     'plotYLabels', leftedge,...
+
+    end
 
    % Add channel name as overlayed text
-   x_lim = get(h, 'XLim');
-   xdiff = x_lim(2)-x_lim(1);
-   y_lim = get(h, 'YLim');
-   ydiff = y_lim(2)-y_lim(1);
-   text(double(x_lim(2)-0.25*xdiff),...
-        double(y_lim(2)-0.1*ydiff),...
+    text(0.95, 0.95,...
         EEG.chanlocs(chans(i)).labels,...
-        'FontName', 'FixedWidth', 'FontWeight', 'bold', 'FontSize', 12);
+        'units', 'normalized',...
+        'FontName', 'FixedWidth', 'FontWeight', 'bold', 'FontSize', 12,...
+        'HorizontalAlignment', 'right', 'VerticalAlignment', 'top');
 end

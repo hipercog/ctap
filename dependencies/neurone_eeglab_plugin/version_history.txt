@@ -1,0 +1,9 @@
+NeurOne EEGLab Plugin
+Andreas Henelius & Mega Electronics
+License: GNU GPL (http://www.gnu.org/licenses/)
+
+Version ????? (2012-05-07)
+Copyright 2012
+Mikko Venäläinen, Mega Electronics Ltd (mega@megaemg.com, http://www.megaemg.com)
+and Andreas Henelius (andreas.henelius@ttl.fi), Finnish Institute of Occupational Health (http://www.ttl.fi/)
+- First version.

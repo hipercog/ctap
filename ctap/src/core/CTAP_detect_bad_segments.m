@@ -12,17 +12,18 @@ function [EEG, Cfg] = CTAP_detect_bad_segments(EEG, Cfg)
 %   EEG         struct, EEGLAB structure
 %   Cfg         struct, CTAP configuration structure
 %   Cfg.ctap.detect_bad_segments:
-%   .method         string, Method to use, available {'quantileTh'},
-%                   default: 'quantileTh'
-%   .channels       cellstring, Channels to include in the analysis, 
-%                   default: {EEG.chanlocs(ismember({EEG.chanlocs.type},'EEG')).labels};
-%   .amplitudeTh    [1,2] numeric, Amplitude threshold values in current 
-%                   EEG data units, If data has been normalized the defaults
-%                   will fail. default: [-75, 75]
+%   .method             string, Method to use, available {'quantileTh'},
+%                       default: 'quantileTh'
+%   .channels           cellstring, Channels to include in the analysis, 
+%                       default: {EEG.chanlocs(ismember({EEG.chanlocs.type},'EEG')).labels};
+%   .normalEEGAmpLimits [1,2] numeric, Normal EEG amplitude limits 
+%                       in muV,
+%                       If data has been normalized the defaults will 
+%                       fail. default: [-75, 75]
 %   .badSegmentIDStr    string, Event id string for labeling the bad segments 
 %                       detected. default: Cfg.event.badSegment
-%   .plot           boolean, Should quality control figures be plotted?
-%                   default: Cfg.grfx.on
+%   .plot               boolean, Should quality control figures be plotted?
+%                       default: Cfg.grfx.on
 %
 % Outputs:
 %   EEG         struct, EEGLAB structure modified by this function
@@ -50,7 +51,7 @@ end
 Arg.method = 'quantileTh';
 eegChanMatch = ismember({EEG.chanlocs.type},'EEG');
 Arg.channels = {EEG.chanlocs(eegChanMatch).labels};
-Arg.amplitudeTh = [-75, 75];
+Arg.normalEEGAmpLimits = [-75, 75];
 Arg.badSegmentIDStr = Cfg.event.badSegment; %string
 Arg.plot = Cfg.grfx.on;
 
@@ -82,7 +83,7 @@ switch Arg.method
     case 'quantileTh'
         [EEG, Rej] = eeglab_detect_extreme_amplitudes(EEG,...
                     'rejectionChannels', Arg.channels,...
-                    'defaultAmpLimits', Arg.amplitudeTh,....
+                    'normalEEGAmpLimits', Arg.normalEEGAmpLimits,....
                     'eventIDStr', Arg.badSegmentIDStr);
         numbad = sum(Rej.allChannelsMatch);
         Rej = rmfield(Rej, {'match','allChannelsMatch'});
@@ -118,8 +119,8 @@ msg = myReport({reportStr}, Cfg.env.logFile);
 Cfg.ctap.detect_bad_segments = Arg;
 EEG.CTAP.history(end+1) = create_CTAP_history_entry(msg, mfilename, Arg);
 
-% 
-% %% DIAGNOSTICS
+
+%% DIAGNOSTICS
 % if Arg.plot && (prcbad > 0)
 %     sbf_plot_bad_segments(EEG, Cfg, Arg)
 % else
@@ -131,7 +132,7 @@ EEG.CTAP.history(end+1) = create_CTAP_history_entry(msg, mfilename, Arg);
 % 
 % % Visualize segment rejections
 % function sbf_plot_bad_segments(EEG, Cfg, Arg)
-%     savedir = get_savepath(Cfg, mfilename);
+%     savedir = get_savepath(Cfg, mfilename, 'qc');
 %     evMatch = ismember({EEG.event.type}, Arg.badSegmentIDStr);
 %     ev = EEG.event(evMatch);
 %     extraWinSec = 2;

@@ -7,7 +7,9 @@ p.addParameter('idArr', {}, @iscellstr);
 p.addParameter('channels', {EEG_list{1}.chanlocs.labels}, @iscellstr);
 p.addParameter('useGridLegend', false, @islogical);
 p.addParameter('visible', 'on', @ischar);
+p.addParameter('ylim', [NaN NaN], @isnumeric);
 p.addParameter('equalYLimits', true, @islogical);
+p.addParameter('reverseYAxis', true, @islogical);
 
 p.parse(EEG_list, varargin{:});
 Arg = p.Results;
@@ -28,11 +30,13 @@ for m=1:M
     
     m_pdata = mean(EEG_list{m}.data(chMatch,:,:),3)';
     lineHArr = plot(EEG_list{m}.times, m_pdata);
+    % plot y=0 (assume zero mean data)
     hold on;
     line([EEG_list{m}.times(1), EEG_list{m}.times(end)],[0, 0],...
         'Color','k',...
         'LineStyle','--');
     hold off;
+    
     legend_strs = {EEG_list{m}.chanlocs(chMatch).labels};
     legend(sp(m), legend_strs, 'Location', 'Best');
     
@@ -43,21 +47,27 @@ for m=1:M
     xlabel(sp(m), 'Time (ms)');
     ylabel(sp(m), 'Voltage (\muV)');
     
-    titlestr = sprintf('[# of trials: %d]',size(EEG_list{m}.data,3));
+    titlestr = sprintf('[trials: %d]',size(EEG_list{m}.data,3));
     if ~isempty(Arg.idArr)
-       titlestr = [Arg.idArr{m},' ', titlestr];
+       titlestr = [Arg.idArr{m}, ' ', titlestr];
     end
     title(titlestr); 
     
     if Arg.equalYLimits && (m==1)
-        axp = get(sp(m));
-        YLIM = axp.YLim;
+        if isnan(Arg.ylim(1)) 
+            axp = get(sp(m));
+            Arg.ylim = axp.YLim;
+        end
+        
     end
     
     if Arg.equalYLimits
-       ylim(YLIM); 
+       ylim(Arg.ylim); 
     end
     
+    if Arg.reverseYAxis
+        set(gca, 'Ydir', 'reverse');
+    end
     
     clear('m_*');
 end

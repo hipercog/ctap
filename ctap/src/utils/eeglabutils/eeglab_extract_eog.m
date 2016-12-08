@@ -26,17 +26,17 @@ Eog = struct();
 veog = sbf_get_signal(EEG, veogChanNames);
 Eog.veog = veog;
 if ~isnan(veog)
-    disp(['Using ''',cellstr2str(veogChanNames),''' as veog signal...']);
+    disp(['Using ''',catcellstr(veogChanNames),''' as veog signal...']);
 else
-    disp(['Channels {',cellstr2str(veogChanNames,'sep',','),'} were not found. Cannot extract veog signal.'])
+    disp(['Channels {',catcellstr(veogChanNames,'sep',','),'} were not found. Cannot extract veog signal.'])
 end
 
 heog = sbf_get_signal(EEG, heogChanNames);
 Eog.heog = heog;
 if ~isnan(heog)
-    disp(['Using ''',cellstr2str(heogChanNames),''' as heog signal...']);
+    disp(['Using ''',catcellstr(heogChanNames),''' as heog signal...']);
 else
-    disp(['Channels {',cellstr2str(heogChanNames,'sep',','),'} were not found. Cannot extract heog signal.'])
+    disp(['Channels {',catcellstr(heogChanNames,'sep',','),'} were not found. Cannot extract heog signal.'])
 end
 
 %% Filter to remove baseline wander

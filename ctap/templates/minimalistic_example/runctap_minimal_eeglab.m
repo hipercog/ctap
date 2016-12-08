@@ -48,7 +48,7 @@ stepSet(i).id = [num2str(i) '_load_WCST'];
 stepSet(i).srcID = '';
 
 i = i+1;  %stepSet 2
-stepSet(i).funH = { @CTAP_filter_data};
+stepSet(i).funH = { @CTAP_fir_filter};
 stepSet(i).id = [num2str(i) '_filter'];
 stepSet(i).srcID = '';
 % filtering takes ages -> hence a cut here
@@ -90,7 +90,7 @@ Cfg.pipe.runSets = {stepSet(1).id}; %by position index
 %Cfg.pipe.runSets = {'all'}; %whole thing
 
 %% Assign arguments to the selected functions
-Cfg = cfg_ctap_functions(Cfg, my_args);
+Cfg = ctap_auto_config(Cfg, my_args);
 
 %% Run the pipe
 %%{

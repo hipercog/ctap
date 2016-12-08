@@ -75,6 +75,7 @@ end
 
 Arg = joinstruct(Arg, params);
 
+
 %% PARSE RESULT
 % Checking and fixing
 if ~isfield(EEG.CTAP, 'badchans') 
@@ -114,9 +115,29 @@ repstr3 = sprintf('\nTOTAL %d/%d = %3.1f prc of channels marked to reject\n'...
 EEG.CTAP.badchans.detect.prc = prcbad;
 
 
+%% Plot threshold
+if isfield(result.method_data, 'th') 
+    savepath = get_savepath(Cfg, mfilename, 'qc',...
+                            'suffix', Arg.method);                  
+    savename = [EEG.CTAP.measurement.casename, '_',...
+                        Arg.method, '_threshold.png'];
+    savefile = fullfile(savepath, savename);
+    
+    if isfield(result.method_data.th, 'figtitle')
+        titlestr = result.method_data.th.figtitle;
+    else
+        titlestr = sprintf('Bad channel detection, method: %s', Arg.method);
+    end
+    title(get(result.method_data.th.figh, 'CurrentAxes'), titlestr);
+    
+    print(result.method_data.th.figh, '-dpng', savefile);
+    close(result.method_data.th.figh);
+    
+end
+
 %% ERROR/REPORT
-Cfg.ctap.detect_bad_channels = Arg;
+Cfg.ctap.detect_bad_channels = params;
 
 msg = myReport({repstr1 repstr2 repstr3}, Cfg.env.logFile);
 
-EEG.CTAP.history(end+1) = create_CTAP_history_entry(msg, mfilename, Arg);
+EEG.CTAP.history(end+1) = create_CTAP_history_entry(msg, mfilename, params);

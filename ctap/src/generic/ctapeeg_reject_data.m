@@ -63,6 +63,9 @@ switch Arg.method
         end
         
     case 'badcomps'
+        %EEG0 = EEG;
+        %icmat = icaact(EEG.data, EEG.icaweights*EEG.icasphere, mean(EEG.data,2));
+        %compare_signals(icmat, [], EEG.srate)
         EEG = pop_subcomp( EEG, Arg.badness );
         EEG.setname = strrep(EEG.setname, ' pruned with ICA', '');
         

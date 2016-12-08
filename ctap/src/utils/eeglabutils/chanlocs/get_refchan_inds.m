@@ -3,14 +3,28 @@ function chaninds = get_refchan_inds(EEG, reference)
 %
 % Input:
 %   EEG         struct, EEG struct
-%   reference   [1,m] cell of strings, Reference specification
+%   reference   [1,m] cell of strings, Reference specification, can be:
+%               'asis', use channels in EEG.ref, if present; else average
+%               'average'/'common'/'EEG', use all EEG channels
+%               'REF', use channels with EEG.chanlocs.type == REF
+%               otherwise, use channel(s) given by label names, or canonical
+%               names from these Biosemi 128, or 10/20 lists:
+%                 occipital = 'A23', or 'Oz'
+%                 parietal = 'A19', or 'Pz'
+%                 vertex = 'A1', or 'Cz'
+%                 frontal = 'C21', or 'Fz', 'Fp1', 'Fp2'
+%                 frontopolar = 'C17', or 'Fpz'
+%                 midleft = 'D19', or 'C3'
+%                 midright = 'B22', or 'C4'
+%                 farleft = 'D23', or 'T7'
+%                 farright = 'B26', or 'T8'
 %
 % Output:
 %   chaninds    [1,p] integer, Indices of channels to refer to. To be
-%               passed on to ctapeeg_reref_data.m.
+%               passed on to CTAP_reref_data.m.
 %
 % See also:
-%   get_channel_names_by_description()
+%   
 %
 % Copyright(c) 2015 FIOH:
 % Benjamin Cowley (Benjamin.Cowley@ttl.fi), Jussi Korpela (jussi.korpela@ttl.fi)
@@ -41,15 +55,12 @@ if length(reference) == 1 %only one string -> maybe something special
                 chaninds = get_refchan_inds(EEG, chaninds);
             end
             
-        case {'average' 'common'}
+        case {'average' 'common' 'EEG'}
             chaninds = find(ismember({EEG.chanlocs.type}, 'EEG'));
             if isempty(chaninds)
                 %if EEG.chanlocs.type missing select all channels
                 chaninds = 1:size(EEG.data,1);
             end
-
-        case 'EEG'
-            chaninds = find(ismember({EEG.chanlocs.type}, 'EEG'));
 
         case 'REF'
             chaninds = find(ismember({EEG.chanlocs.type}, 'REF'));

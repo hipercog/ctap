@@ -2,7 +2,7 @@ function chinds = get_eeg_inds(EEG, chloc_cellstr)
 % GET_EEG_INDS return channel indices equal to a type or label cell string array
 %
 % Description:
-%   * find EEG.chanlocs fields matching to chlocstr, testing first against
+%   * find EEG.chanlocs fields matching to chloc_cellstr, testing first against
 %       EEG.chanlocs.type; if empty tests EEG.chanlocs.labels
 %       If the number of indices returned is equal to the size of the first
 %       dimension of EEG.data, the return value is [1:size(EEG.data,1)]
@@ -10,7 +10,7 @@ function chinds = get_eeg_inds(EEG, chloc_cellstr)
 %       structure doesn't match
 %
 % Syntax:
-%   chinds = get_eeg_inds(EEG, chlocstr)
+%   chinds = get_eeg_inds(EEG, chloc_cellstr)
 %
 % Inputs:
 %   EEG             struct, EEGLAB struct

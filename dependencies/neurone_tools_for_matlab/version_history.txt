@@ -1,0 +1,42 @@
+NeurOne Tools for Matlab
+Andreas Henelius & Mega Electronics
+License: GNU GPL (http://www.gnu.org/licenses/)
+
+Version ????? (2013-03-08)
+Andreas Henelius (andreas.henelius@ttl.fi)
+- module_read_neurone_data.m : support for reading recordings split into multiple files
+- module_read_neurone_events.m : the event type is now a string denoting the NeurOne source port (e.g. A, B) and
+  a numeric code is found in a vector named code in the markers structure of the recording.
+
+Version ????? (2012-05-07)
+Andreas Henelius (andreas.henelius@ttl.fi)
+- module_read_neurone.m modified to allow reading of selected channels, provided as string array
+- module_read_neurone_data.m : data reading code switched to code by Mikko Venäläinen (Mega Electronics Ltd), that allowed reading of individual channels
+
+Version 1.1.3.3 (2012-01-20)
+Mega Electronics Ltd (mega@megaemg.com, http://www.megaemg.com)
+- Minor editing of comments in the m-code.
+
+Version 1.1.3.2 (2012-01-04)
+Mega Electronics Ltd (mega@megaemg.com, http://www.megaemg.com)
+- Bug fix: Removed a debugging code block from module_read_neurone_data.m, which interfered with normal function.
+- Bug fix: Comment text is now read correctly.
+
+Version 1.1.3.1 (2011-12-22)
+Mega Electronics Ltd (mega@megaemg.com, http://www.megaemg.com)
+- Bug fix: Event type did not support types Stimulation, Video, Mute and Out.
+- Bug fix: When reading measurements that are split into multiple binary files, the progressbar shows correct values.
+- New feature: Handling of file revisions.
+
+Version 1.1.2.1 (2011-04-15)
+Mega Electronics Ltd (mega@megaemg.com, http://www.megaemg.com)
+- File structure identifier 'FIOH_BWRC' replaced by 'N/A' and edited the comment.
+- Changed recording.device.version to point to version of NeurOne software, rather than revision of the XML file.
+- Switched from deprecated Gain and Offset variables to use Range and RangeAsCalibrated.
+- Added some strrep() and genvarname() lines to handle variable values with Matlab-illegal characters.
+- Reordered optional input parameters to facilitate measurement phase selection.
+
+Version 1.0.3.1 (2010-12-16)
+Copyright 2009, 2010 Andreas Henelius (andreas.henelius@ttl.fi)
+Finnish Institute of Occupational Health (http://www.ttl.fi/)
+- First version.

@@ -1,4 +1,4 @@
-function [evCA, evLabels]=list_events(EEG, varargin)
+function [evCA, evLabels]=list_events(EEG, from, to, varargin)
 % A helper function to make inspection of EEG.event a bit less pain in the
 % ass.
 %
@@ -17,8 +17,9 @@ p.addOptional('to', NaN, @isnumeric);
 p.addParamValue('type', unique({EEG.event.type}), @iscellstr);
 p.addParamValue('fields', fieldnames(EEG.event), @iscellstr);
 p.addParamValue('silent', false, @islogical);
+p.addParamValue('latencyUnit', 'samples', @ischar);
 
-p.parse(EEG, varargin{:});
+p.parse(EEG, from, to, varargin{:});
 Arg = p.Results;
 
 if isempty(Arg.from) || isnan(Arg.from)
@@ -46,7 +47,28 @@ evLabels = horzcat('#',evLabels);
 evCA = horzcat(num2cell(1:size(evCA,1))', evCA);
 fieldIdx = horzcat(1, fieldIdx+1); 
 
+
+
 dspCA = vertcat(evLabels(fieldIdx), evCA(Arg.from:Arg.to, fieldIdx));
+
+% Change latency units
+if ismember('latency', Arg.fields)
+   latidx = find(ismember(evLabels, 'latency'));
+   dspidx = find(ismember(fieldIdx, latidx));
+   
+   tmp = cell2mat(dspCA(2:end,dspidx)); %cell to matrix, excluding header
+   switch Arg.latencyUnit
+       case 'samples'
+           
+       case 'min'
+            dspCA(2:end,dspidx) = num2cell((tmp/EEG.srate)/60); 
+       otherwise
+           error('list_events:inputError', 'Supported latency units are {''samples'',''min''}.');
+   end
+    
+end
+
+% Show results
 if ~Arg.silent
     dspCA
 end

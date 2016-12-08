@@ -1,0 +1,113 @@
+function [EEG, Cfg] = CTAP_plot_ERP(EEG, Cfg)
+%CTAP_plot_erp - Plot ERP of epoched data and export data to HDF5
+%
+% Description:
+%
+%
+% Syntax:
+%   [EEG, Cfg] = CTAP_plot_ERP(EEG, Cfg)
+%
+% Inputs:
+%   EEG         struct, EEGLAB structure
+%   Cfg         struct, CTAP configuration structure
+%
+% Outputs:
+%   EEG         struct, EEGLAB structure modified by this function
+%   Cfg         struct, Cfg struct should be updated with parameter values
+%                       actually used
+%
+% Notes: 
+%
+% See also: eeglab_writeh5_erp  
+%
+% Copyright(c) 2016 FIOH:
+% Benjamin Cowley (Benjamin.Cowley@ttl.fi), Jussi Korpela (jussi.korpela@ttl.fi)
+%
+% This code is released under the MIT License
+% http://opensource.org/licenses/mit-license.php
+% Please see the file LICENSE for details.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+%% create Arg and assign any defaults to be chosen at the CTAP_ level
+Arg = struct;
+Arg.channels = {EEG.chanlocs(get_eeg_inds(EEG, {'EEG'})).labels};
+% check and assign the defined parameters to structure Arg, for brevity
+if isfield(Cfg.ctap, 'plot_ERP')
+    Arg = joinstruct(Arg, Cfg.ctap.plot_ERP);%override with user params
+end
+
+
+%% ASSIST Perform any initialisation, helping or checking functionality.
+%   Functionality can be set to happen automatically, or only if pipeline
+%   flag is set
+if isfield(Cfg.ctap, 'ASSIST')
+end
+
+
+%% CORE Call the desired core function. The default is hard-coded, but if
+%   the author wants, he can set the wrapper to listen for a core function
+%   defined in the pipeline as a handle alongside the function parameters
+%   which will replace the default. Thus users can choose to use the
+%   wrapper layer but not the core layer (not recommended, unstable).
+if isfield(Arg, 'coreFunc')
+    funHandle = Arg.coreFunc;
+    fun_varargs = rmfield(Arg, 'coreFunc');
+    [EEG, Arg, result] = funHandle(EEG, fun_varargs);
+    
+else
+    
+    outdir = get_savepath(Cfg, mfilename, 'fig');
+    
+    %% Plot ERP
+    figH = plot_epoched_EEG({EEG},...
+                'channels', Arg.channels,...
+                'ylim', Arg.ylim,...
+                'visible', 'off');
+    savename = sprintf('%s_%s_ERP.png', EEG.CTAP.measurement.casename,...
+                       EEG.CTAP.ERP.id);
+    savefile = fullfile(outdir, savename);
+    print(figH, '-dpng', savefile);
+    close(figH);
+    
+ 
+    %% Export ERP data to HDF5 (single trial and raw)
+    savename = sprintf('%s_%s_ERPdata.h5', EEG.CTAP.measurement.casename,...
+                       EEG.CTAP.ERP.id);
+    h5file = fullfile(outdir, savename);
+    eeglab_writeh5_erp(h5file, EEG);
+    
+    
+    %% Export average ERP in HDF5 format - old style, here for old R code to work...
+    %{
+    savename = sprintf('%s_%s_ERPdata.h5', EEG.CTAP.measurement.casename,...
+                       EEG.CTAP.ERP.id);
+    h5file = fullfile(outdir, savename);
+    if exist(h5file, 'file') ~= 0
+        delete(h5file);
+    end
+    
+    h5create(h5file, '/ERP', fliplr([size(EEG.data, 1), size(EEG.data, 2)])); %Note: dimensions need to be flipped
+    h5write(h5file, '/ERP', mean(EEG.data, 3)'); %Note: dimensions need to be transposed
+    h5writeatt(h5file,'/ERP','d1ID', strjoin({EEG.chanlocs.labels}, ';'));
+    h5writeatt(h5file,'/ERP','d2ID', EEG.times);
+    %}
+    
+end
+%handle(Arg);
+%handle(result);
+
+
+%% ERROR/REPORT
+%... the complete parameter set from the function call ...
+Cfg.ctap.plot_ERP = Arg;
+%log outcome to console and to log file
+msg = myReport(sprintf('ERP plotted for measurement %s.',...
+    EEG.CTAP.measurement.casename), Cfg.env.logFile);
+%create an entry to the history struct, with 
+%   1. informative message, 
+%   2. function filename
+%   3. %the complete parameter set from the function call, for reference
+EEG.CTAP.history(end+1) = create_CTAP_history_entry(msg, mfilename, Arg);
+
+%% MISC Miscellaneous additional actions following core function success

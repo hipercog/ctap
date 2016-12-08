@@ -3,9 +3,10 @@ function result = vari_bad_chans(EEG, EEGchan, bound)
 % 
 % Description:
 %   vari_bad_chans takes an input EEG data struct and calculates the 
-%   base e logarithmic variance relative to the median channel average. Channels
-%   are then compared with the bounds given to recognize "dead" (normalized 
-%   variance below the lower limit) and "loose" (above higher limit) channels.
+%   base e logarithmic variance relative to the median channel average.
+%   Channels are then compared with the bounds given to recognize 
+%   "dead" (normalized variance below the lower limit) and "loose" 
+%   (above higher limit) channels.
 %   Found channels are marked as dead or loose the EEG.chanlocs struct
 %
 % Syntax:
@@ -14,9 +15,11 @@ function result = vari_bad_chans(EEG, EEGchan, bound)
 % Inputs:
 %   'EEG'       struct, Input EEG data
 %   'EEGchan'   vector, indices of channels to check for badness
-%   'bound'     vector, Lower and higher variance bounds for dead & loose channels
-%                   (eg. [-2 1] - NaN or 0 can be used to skip channel checks)
-%                   (base e logarithm relative to median)
+%   'bound'     [1,2] or [1,1] numeric, Thresholds for the log relative
+%               channel variance.
+%               [1,2] -> lower and higher log-rel-variance bounds
+%               [1,1] -> number of MADs from median to use in both
+%               directions
 % 
 % Outputs:
 %   'result'    struct, dead = logical []
@@ -37,6 +40,15 @@ p.addRequired('EEGchan', @ismatrix);
 p.addRequired('bound', @ismatrix);
 p.parse(EEG, EEGchan, bound);
 
+if numel(bound)==1
+    % use the MAD approach
+    th = [NaN NaN];
+    nmad = bound;
+else
+    % use fixed thresholds
+    th = bound;
+    nmad = NaN;
+end
 
 %% Calculate normalized channel variance
 eegchs = numel(find(EEGchan)); % find() in case some fool uses logical indexing
@@ -47,14 +59,19 @@ chanVarNorm(EEGchan) = log(chanVar(EEGchan) / median(chanVar(EEGchan)));
 
 
 %% Check for loose and dead channels
-dead = chanVarNorm < bound(1);
-loose = chanVarNorm > bound(2);
+
+Res = threshold(chanVarNorm, th, nmad);
+%dead = chanVarNorm < th(1);
+%loose = chanVarNorm > th(2);
 
 
 %% return logical checks and normalized variance
-result.dead = dead;
-result.loose = loose;
+% backward compatibility
+result.dead = Res.isBelow;
+result.loose = Res.isAbove;
 result.variance = chanVarNorm;
 
+result.th = Res; %the standard output for any thresholding function
+result.th.figtitle = 'log relative channel variance';
 
 end % vari_bad_chans()
