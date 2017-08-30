@@ -24,7 +24,7 @@ Add the whole directory to your Matlab path. You also need to have EEGLAB added 
 ## Getting started ##
 A minimalistic working example can be found in `~/ctap/templates/minimalistic_example/`.
 
-Copy the `cfg_minimal.m` and `pipebatch_minimal.m` files and use them as a starting point for your own pipe.
+Copy the `cfg_minimal.m` and `runctap_minimal.m` files and use them as a starting point for your own pipe.
 
 More examples are available under `~/ctap/templates/`.
 
