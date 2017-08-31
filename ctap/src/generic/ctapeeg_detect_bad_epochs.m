@@ -69,10 +69,11 @@ function [EEG, varargout] = ctapeeg_detect_bad_epochs(EEG, varargin)
 % Please see the file LICENSE for details.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-
+Arg = struct;
 sbf_check_input() % parse the varargin, set defaults
 
 % Remove channel baselines
+tmpdata = EEG.data;
 [EEG.data, ~] = rmbase(EEG.data);
 
 result = struct('method_data', '', 'scores', []);
@@ -118,9 +119,9 @@ switch Arg.method
             scores(Arg.channels, bad_eps_match) = badelec;
         end
         
-        result.scores = array2table(scores...
-            , 'RowNames', {EEG.chanlocs(Arg.channels).labels}...
-            , 'VariableNames', strcat({'ep'}, strtrim(cellstr(num2str((1:EEG.trials)'))) ) );
+        result.scores = array2table(scores,...
+            'RowNames', {EEG.chanlocs(Arg.channels).labels},...
+            'VariableNames', strcat({'ep'}, strtrim(cellstr(num2str((1:EEG.trials)'))) ) );
 
 
     case 'rejspec'
@@ -132,7 +133,6 @@ switch Arg.method
             , 'VariableNames', {'spectralThresh'});
         
     case 'hasEvent'
-        
         % Identify epochs with blinks
         if iscell(EEG.epoch(1).eventtype)
             epoch_eventtypes = {EEG.epoch(:).eventtype};
@@ -141,7 +141,7 @@ switch Arg.method
            % this is a very rare occasion ...
            % make epoch_eventtypes a cell array of cell arrays of strings.
            for i=1:numel(EEG.epoch)
-               epoch_eventtypes{i} = {EEG.epoch(i).eventtype};
+               epoch_eventtypes{i} = {EEG.epoch(i).eventtype}; %#ok<AGROW>
            end
         end
 
@@ -150,9 +150,9 @@ switch Arg.method
                                 'UniformOutput',false);
         bad_eps_match = cellfun(@(x) x==true, bl_ind_cell);
 
-        result.scores = array2table(bad_eps_match...
-            , 'RowNames', {EEG.chanlocs(Arg.channels).labels}...
-            , 'VariableNames', strcat({'ep'}, strtrim(cellstr(num2str((1:EEG.trials)')))) );
+        result.scores = array2table(bad_eps_match,...
+            'RowNames', {EEG.chanlocs(Arg.channels).labels},...
+            'VariableNames', strcat({'ep'}, strtrim(cellstr(num2str((1:EEG.trials)')))) );
        
 end
 
@@ -180,6 +180,8 @@ if ~istable(result.scores)
         'Bad epoch scores by ''%s'' must be in table format', Arg.method)
 end
 
+EEG.data = tmpdata;
+
 varargout{1} = Arg;
 varargout{2} = result;
 
@@ -203,7 +205,7 @@ varargout{2} = result;
         try Arg.method = vargs.method;
         catch
             if numel(Arg.channels) > 32, Arg.method = 'recufast';
-            else Arg.method = 'rejspec';
+            else, Arg.method = 'rejspec';
             end
         end
 
