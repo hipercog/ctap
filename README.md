@@ -24,7 +24,7 @@ Add the whole directory to your Matlab path. You also need to have EEGLAB added 
 ## Getting started ##
 A minimalistic working example can be found in `~/ctap/templates/minimalistic_example/`.
 
-Copy the `cfg_minimal.m` and `runctap_minimal.m` files and use them as a starting point for your own pipe.
+Copy the `cfg_minimal.m` and `runctap_minimal.m` files and use them as a starting point for your own pipe. Note: `runctap_minimal.m` takes as input a small dataset included under `~/ctap/data/`, which it uses to generate synthetic data and illustrate several preprocessing steps. To have it find the data, set the Matlab current directory to the root of the CTAP repo you have just cloned, i.e. `<destination dir>`. You can also set the output directory in `runctap_minimal.m`
 
 More examples are available under `~/ctap/templates/`.
 
