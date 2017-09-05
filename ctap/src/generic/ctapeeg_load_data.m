@@ -31,6 +31,7 @@ function [EEG, varargout] = ctapeeg_load_data( filename, varargin )
 %               'vhdr':load a BrainProducts file; or
 %               'eeg': load a Neuroscan .eeg file; or
 %               'vpd': load a Varioport 6 channel file; or
+%               'e'  : load a Nervus/Nicolet file using fileio plugin; or
 %               'neurone': load a neurOne recording from .xml & .bin files
 %               WIP - importers for Enobio native txt format, BESA, etc.
 %           Even if filename has no extension, file_loadable() will
@@ -56,7 +57,8 @@ function [EEG, varargout] = ctapeeg_load_data( filename, varargin )
 sbf_check_input() % parse the varargin, set defaults
 
 % Check format and file existence, define list of allowed extensions
-extns = {'.set', '.bdf', '.edf', '.gdf', '.vhdr', '.eeg', '.vpd', '.xml'};
+extns = {'.set', '.bdf', '.edf', '.gdf', '.vhdr', '.eeg', '.vpd', ...
+         '.xml', '.e'};
 file = file_loadable(filename, extns);
 if ~file.load
     error('ctapeeg_load_data:bad_file',...
@@ -102,7 +104,11 @@ switch file.ext
         res.meta.identifier = neur1.identifier;
         res.time = {datetime(datestr(datenum(...
             neur1.properties.start.time,'yyyymmddTHHMMSS')))};
-
+    case 'e'
+        if ~exist('pop_fileio', 'file')==2
+            error('EEGLAB plugin fileio not installed');
+        end
+        EEG = pop_fileio(fullfile(file.path, file.name));
 
 % % TODO (BC): THIS OFFICIAL MEGAELECTRONICS readneurone() function calls
 % % pop_chanedit() and results in a pop-up which prevents batching
