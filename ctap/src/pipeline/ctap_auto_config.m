@@ -71,25 +71,36 @@ if isfield(Cfg.env.paths, 'ctapRoot')
     end
     [~,~,~] = mkdir(Cfg.env.paths.analysisRoot);
     
-    
-    Cfg.env.paths.featuresRoot = fullfile(...
-        Cfg.env.paths.analysisRoot,'features');
+    if ~isfield(Cfg.env.paths,'featuresRoot')
+        Cfg.env.paths.featuresRoot = fullfile(...
+            Cfg.env.paths.analysisRoot,'features');
+    end
 
-    Cfg.env.paths.exportRoot = fullfile(...
-        Cfg.env.paths.analysisRoot,'export');
+    if ~isfield(Cfg.env.paths,'export')
+        Cfg.env.paths.exportRoot = fullfile(...
+            Cfg.env.paths.analysisRoot,'export');
+    end
 
-    Cfg.env.paths.qualityControlRoot = fullfile(...
-        Cfg.env.paths.analysisRoot,'quality_control');
+    if ~isfield(Cfg.env.paths,'quality_control')
+        Cfg.env.paths.qualityControlRoot = fullfile(...
+            Cfg.env.paths.analysisRoot,'quality_control');
+    end
     
-    Cfg.env.paths.logRoot = fullfile(...
-        Cfg.env.paths.analysisRoot,'logs');
+    if ~isfield(Cfg.env.paths,'logRoot')
+        Cfg.env.paths.logRoot = fullfile(...
+            Cfg.env.paths.analysisRoot,'logs');
+    end        
     
-    Cfg.env.paths.crashLogRoot = fullfile(...
-        Cfg.env.paths.ctapRoot,'logs');
+    if ~isfield(Cfg.env.paths,'crashLogRoot')
+        Cfg.env.paths.crashLogRoot = fullfile(...
+            Cfg.env.paths.ctapRoot,'logs');
+    end
     
     % Log Files
-    Cfg.env.logFile = fullfile(Cfg.env.paths.logRoot,...
+    if ~isfield(Cfg.env,'logFile')
+        Cfg.env.logFile = fullfile(Cfg.env.paths.logRoot,...
                                sprintf('runlog_%s.txt',datestr(now, 30)) );
+    end                           
 
 else
    error('ctap_auto_config:cfgFieldMissing',...
