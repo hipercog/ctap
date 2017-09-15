@@ -40,6 +40,15 @@ function CTAP_clear_results(Cfg)
                                 if strcmp(files2(k).name,'.')==0 && strcmp(files2(k).name,'..')==0
                                     if ~files2(k).isdir
                                         delete(fullfile(files2(k).folder, files2(k).name));
+                                    else
+                                        files3 = dir(fullfile(files2(k).folder, files2(k).name));            
+                                        for l = 1:length(files3)
+                                            if strcmp(files3(l).name,'.')==0 && strcmp(files3(l).name,'..')==0
+                                                if ~files3(l).isdir
+                                                    delete(fullfile(files3(l).folder, files3(l).name));                                               
+                                                end
+                                            end
+                                        end
                                     end
                                 end
                             end
