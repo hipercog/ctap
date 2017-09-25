@@ -8,10 +8,12 @@ function CTAP_clear_results(Cfg)
 %   CTAP_clear_results(Cfg);
 %
 % Inputs:
-%   Cfg         struct, CTAP configuration structure
-%   Cfg.ctap.load_chanlocs:
+%   Cfg  : CTAP configuration structure, must contain this field:
+%   Cfg.env.paths.analysisRoot  : the path to clear results from
 %
 % Outputs: None
+%
+% Effect: Deletes all files and folders in analysisRoot and below
 %
 %
 % Copyright(c) 2017 FIOH:
@@ -22,40 +24,19 @@ function CTAP_clear_results(Cfg)
 % Please see the file LICENSE for details.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+    deletefilesandfolders(Cfg.env.paths.analysisRoot);    
+end    
 
-    root = dir(Cfg.env.paths.analysisRoot);
-    for i = 1:length(root)
-        if strcmp(root(i).name,'.')==0 && strcmp(root(i).name,'..')==0
-            if ~root(i).isdir
-                delete(fullfile(root(i).folder, root(i).name));
+function deletefilesandfolders(root)
+    rootDir = dir(root);
+    for i = 1:length(rootDir)
+        if strcmp(rootDir(i).name,'.')==0 && strcmp(rootDir(i).name,'..')==0
+            if rootDir(i).isdir
+                deletefilesandfolders(fullfile(rootDir(i).folder, rootDir(i).name));
+                rmdir(fullfile(rootDir(i).folder, rootDir(i).name));
             else
-                files = dir(fullfile(root(i).folder, root(i).name));            
-                for j = 1:length(files)
-                    if strcmp(files(j).name,'.')==0 && strcmp(files(j).name,'..')==0
-                        if ~files(j).isdir
-                            delete(fullfile(files(j).folder, files(j).name));
-                        else
-                            files2 = dir(fullfile(files(j).folder, files(j).name));            
-                            for k = 1:length(files2)
-                                if strcmp(files2(k).name,'.')==0 && strcmp(files2(k).name,'..')==0
-                                    if ~files2(k).isdir
-                                        delete(fullfile(files2(k).folder, files2(k).name));
-                                    else
-                                        files3 = dir(fullfile(files2(k).folder, files2(k).name));            
-                                        for l = 1:length(files3)
-                                            if strcmp(files3(l).name,'.')==0 && strcmp(files3(l).name,'..')==0
-                                                if ~files3(l).isdir
-                                                    delete(fullfile(files3(l).folder, files3(l).name));                                               
-                                                end
-                                            end
-                                        end
-                                    end
-                                end
-                            end
-                        end
-                    end
-                end        
+                delete(fullfile(rootDir(i).folder, rootDir(i).name));                                               
             end
         end
     end
-end    
+end
