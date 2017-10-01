@@ -36,6 +36,7 @@ function [EEG, Cfg] = CTAP_check_file_loadable(~, Cfg)
 
 %Return a dummy EEG object
 EEG = eeg_emptyset();
+
 %% Set optional arguments
 if isfield(Cfg, 'measurement')
     Arg = Cfg.measurement;
