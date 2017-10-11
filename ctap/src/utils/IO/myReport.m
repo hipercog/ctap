@@ -13,9 +13,6 @@ function repstr = myReport( repstr, logfile, delim )
 %
 % Inputs:
 %   'repstr'    unknown, string or cell string array to output
-%
-%   varargin    Keyword-value pairs
-%   Keyword         Type, description, values
 %   'logfile'   string, complete path to a log file
 %               default = emtpy
 %   'delim'     string, optional delimiter string

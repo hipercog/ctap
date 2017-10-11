@@ -163,7 +163,7 @@ falseRespMatch = ~correctRespMatch & respMatch;
 %% Check correctness of event classification
 if sum(respTargetMatch) ~= sum(correctRespMatch)
     msg = 'Checksum mismatch -> event classification failed.';
-    error('ev_responses:eventClassificationError',msg);
+    error('ev_responses:eventClassificationError',msg); 
     
 elseif (sum(norespTargetMatch)+sum(respTargetMatch)) ~= sum(targetMatch)
     msg = 'Checksum mismatch -> event classification failed.';

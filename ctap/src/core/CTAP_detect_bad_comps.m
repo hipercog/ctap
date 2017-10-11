@@ -41,12 +41,6 @@ end
 
 
 %% ASSIST
-% Check that there are EOG channels
-if isfield(Arg, 'blinks') && sum(strcmp('EOG',{EEG.chanlocs.type})) < 2
-    error('ctap:detectBadComps',...
-    'EOG channel type not defined, or not all present; aborting!');
-end
-
 if isempty(EEG.icachansind)
    error('FAIL::This dataset has not been ICA''d! Aborting...');
 else
@@ -55,11 +49,35 @@ else
     end
 end
 
+% If detecting blinks, create VEOG field and check that there are EOG channels
+if isfield(Arg, 'method') && ~isempty(strfind(Arg.method, 'blink'))
+    Arg.veog = Cfg.eeg.veogChannelNames;
+end
+
 
 %% CORE
-[EEG, params, result] = ctapeeg_detect_bad_comps(EEG, Arg);
+switch Arg.method
+    case 'given'
+        if isfield(Arg, 'badICsFile') && strcmpi(Arg.badICsFile(end-2:end), 'csv')
+            gic = csvread(Arg.badICsFile);
+        else
+            error('CTAP_detect_bad_comps:insufficient_parameters'...
+                , 'You must pass a file of bad ICs to this method');
+        end
+        gic = gic(gic(:,1) == Cfg.measurement.subjectnr, 2:end);
+        result.comps = gic(gic ~= 0);
+        gic = false(size(EEG.icaact,1), 1);
+        gic(result.comps) = true; 
+        result.scores = table(gic...
+            , 'RowNames', cellstr(num2str(transpose(1:size(EEG.icaact,1))))...
+            , 'VariableNames', {'given_bad_IC'});
+        result.method_data = '';
+        params = Arg;
+    otherwise
+        [EEG, params, result] = ctapeeg_detect_bad_comps(EEG, Arg);
 
-Arg = joinstruct(Arg, params);
+        Arg = joinstruct(Arg, params);
+end
 
 
 %% PARSE
@@ -86,7 +104,7 @@ else
 end
 
 % parse and describe results
-repstr1 = sprintf('''%s'' bad components for ''%s'': ', Arg.method, EEG.setname);
+repstr1 = sprintf('Bad components by ''%s'' for ''%s'': ', Arg.method, EEG.setname);
 repstr2 = {result.comps};
 
 prcbad = 100 * numbad / numel(EEG.icachansind);

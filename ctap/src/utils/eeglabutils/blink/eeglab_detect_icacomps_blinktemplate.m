@@ -72,7 +72,7 @@ plot(EEG.icawinv(:,20)/std(EEG.icawinv(:,4)),'-g')
 %% Additional criteria
 % If _none_ of the IC's are below the threshold criterion select the one
 % with the lowest criterion value
-if sum(comps_match)==0
+if sum(comps_match) == 0
     [~, ind] = min(th_arr);
     comps_match(ind) = true;
 end
@@ -82,6 +82,6 @@ end
     function value = sbf_vecangle(vec1, vec2)
         vec1 = vec1(:);
         vec2 = vec2(:);
-        value = acos( abs(vec1'*vec2)/(norm(vec1,2) * norm(vec2,2)) );
+        value = acos(abs(vec1' * vec2) / (norm(vec1, 2) * norm(vec2, 2)));
     end
 end

@@ -15,11 +15,10 @@ function [EEG, Cfg] = CTAP_detect_bad_segments(EEG, Cfg)
 %   .method             string, Method to use, available {'quantileTh'},
 %                       default: 'quantileTh'
 %   .channels           cellstring, Channels to include in the analysis, 
-%                       default: {EEG.chanlocs(ismember({EEG.chanlocs.type},'EEG')).labels};
-%   .normalEEGAmpLimits [1,2] numeric, Normal EEG amplitude limits 
-%                       in muV,
-%                       If data has been normalized the defaults will 
-%                       fail. default: [-75, 75]
+%                       default: EEG.chanlocs.type == 'EEG'
+%   .normalEEGAmpLimits [1,2] numeric, Normal EEG amplitude limits in muV,
+%                       If data has been normalized the defaults will fail. 
+%                       default: [-75, 75]
 %   .badSegmentIDStr    string, Event id string for labeling the bad segments 
 %                       detected. default: Cfg.event.badSegment
 %   .plot               boolean, Should quality control figures be plotted?
@@ -49,9 +48,10 @@ end
 
 %% Set optional arguments
 Arg.method = 'quantileTh';
-eegChanMatch = ismember({EEG.chanlocs.type},'EEG');
-Arg.channels = {EEG.chanlocs(eegChanMatch).labels};
+Arg.channels = {EEG.chanlocs(ismember({EEG.chanlocs.type}, 'EEG')).labels};
 Arg.normalEEGAmpLimits = [-75, 75];
+Arg.tailPercentage = 0.001;
+Arg.coOcurrencePrc = 0.25;
 Arg.badSegmentIDStr = Cfg.event.badSegment; %string
 Arg.plot = Cfg.grfx.on;
 
@@ -79,17 +79,24 @@ end
 
 
 %% CORE
+
+%detect bad segments
 switch Arg.method
     case 'quantileTh'
-        [EEG, Rej] = eeglab_detect_extreme_amplitudes(EEG,...
-                    'rejectionChannels', Arg.channels,...
-                    'normalEEGAmpLimits', Arg.normalEEGAmpLimits,....
-                    'eventIDStr', Arg.badSegmentIDStr);
+        
+        % mappings (from CTAP_*() input to method input, avoid these)
+        Arg.rejectionChannels = Arg.channels; %todo: Change CTAP_*() function interface regarding channels?
+        Arg.eventIDStr = Arg.badSegmentIDStr;
+        
+        varg_in = struct2varargin(Arg);
+        [EEG, Rej] = eeglab_detect_extreme_amplitudes(EEG, varg_in{:});
+
+        %parse the detection output
         numbad = sum(Rej.allChannelsMatch);
         Rej = rmfield(Rej, {'match','allChannelsMatch'});
         EEG.CTAP.badsegev.quantileTh.method_data = Rej; %not used by CTAP
-        %Note: contains data only for channels listed in Arg.channels i.e.
-        %typically e.g. EOG and REF channels are missing.
+            %Note: contains data only for channels listed in Arg.channels i.e.
+            %      typically e.g. EOG and REF channels are missing.
         rtb = table(Rej.qntTh(:,1), Rej.qntTh(:,2),...
                     'VariableNames', {'ampth_low','ampth_up'},...
                     'RowNames', Arg.channels);
@@ -98,6 +105,7 @@ switch Arg.method
     otherwise
         error('CTAP_detect_bad_segments:badArgument', 'Unrecognized argument.')
 end
+
 
 %% Set .detect field
 % save the index of the badness for the CTAP_reject_data() function
@@ -119,44 +127,5 @@ msg = myReport({reportStr}, Cfg.env.logFile);
 Cfg.ctap.detect_bad_segments = Arg;
 EEG.CTAP.history(end+1) = create_CTAP_history_entry(msg, mfilename, Arg);
 
-
-%% DIAGNOSTICS
-% if Arg.plot && (prcbad > 0)
-%     sbf_plot_bad_segments(EEG, Cfg, Arg)
-% else
-%     myReport(sprintf('\n'), Cfg.env.logFile);
-% end
-% 
-% 
-% %% Subfunctions
-% 
-% % Visualize segment rejections
-% function sbf_plot_bad_segments(EEG, Cfg, Arg)
-%     savedir = get_savepath(Cfg, mfilename, 'qc');
-%     evMatch = ismember({EEG.event.type}, Arg.badSegmentIDStr);
-%     ev = EEG.event(evMatch);
-%     extraWinSec = 2;
-%     id = sprintf('%s_%s', EEG.CTAP.measurement.casename, Arg.method);
-%     if numel(ev) > 1
-%         savedir = fullfile(savedir, id);
-%         if ~isdir(savedir), mkdir(savedir); end
-%         id = '';
-%     end
-%     myReport(sprintf('Plotting diagnostics to ''%s''...\n', savedir)...
-%         , Cfg.env.logFile);
-%     %save a bunch of pngs to a unique subdirectory.
-%     for i = 1:numel(ev)
-%         figH = plot_raw(EEG, ...
-%             'channels', {EEG.chanlocs(get_eeg_inds(EEG, {'EEG' 'EOG'})).labels},...
-%             'startSample', max(1, ev(i).latency - extraWinSec * EEG.srate),...
-%             'secs', ev(i).duration / EEG.srate + 2 * extraWinSec,...
-%             'shadingLimits', [ev(i).latency, ev(i).latency + ev(i).duration],...
-%             'figVisible', 'off');
-%         set(figH, 'Position', [2000, 250, 600, 800])
-%         % Saves images as separate pngs to save time
-%         saveas(figH, fullfile(savedir, [id sprintf('Badseg_%d.png', i)]), 'png')
-%         close(figH);
-%     end
-% end
 
 end %of CTAP_detect_bad_segments()

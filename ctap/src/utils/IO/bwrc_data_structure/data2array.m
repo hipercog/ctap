@@ -266,9 +266,18 @@ end
 % FACTORS
 n_times = n_output_rows / size(factors_array, 1);
 if (n_times - round(n_times) ~=0)
-    error('Something is terribly wrong. Cannot create array.');
+    % We end up here if there are differing number of calculation segments
+    % for feature data (data_array) and cseg metadata (factors_array).
+    % Currently feature values are matched to cseg metadata by cseg event
+    % order alone. There needs to be the same number of cseg events in 
+    % EEG.event as there are feature values in each of feature sets in
+    % S0 and S1.
+    error('Feature data ("data_array") and cseg metadata ("factors_array") are out of sync. Possible reason is that features could not be computed for some calculation segments. Cannot create result array.');
 end
 factors_array = repmat(factors_array, n_times, 1);
+% todo: check by ordering and/or time stamp comparison that cseg metadata
+% and feature data are in sync. Currently the data does not contain enough
+% information to do so...
 
 
 %% Add INFO and FACTORS to variable array

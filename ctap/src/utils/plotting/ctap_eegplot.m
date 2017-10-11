@@ -4,7 +4,7 @@ function ctap_eegplot(EEG, varargin)
 Arg.channels = {EEG.chanlocs.labels};
 Arg.colorChannels = {};
 Arg.colorspec = repmat({'k'},1, size(EEG.data,1));
-Arg.windowLength = 30; %in sec
+Arg.windowLength = 60; %in sec
 Arg.title = 'ctap_eegplot';
 
 %% Interpret 'varargin'

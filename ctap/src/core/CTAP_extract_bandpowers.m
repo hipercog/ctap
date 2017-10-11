@@ -11,8 +11,10 @@ function [EEG, Cfg] = CTAP_extract_bandpowers(EEG, Cfg)
 %   EEG         struct, EEGLAB structure
 %   Cfg         struct, CTAP configuration structure
 %   Cfg.ctap.extract_bandpowers:'
-%   .fmin   [1,m] numeric, Frequency band starting frequencies in Hz
-%   .fmax   [1,m] numeric, Frequency band ending frequencies in Hz
+%   .fmin       [1,m] numeric, Frequency band starting frequencies in Hz
+%   .fmax       [1,m] numeric, Frequency band ending frequencies in Hz
+%   .extra_path string, another directory level to allow multiple calls in
+%   one pipe
 %
 % Outputs:
 %   EEG         struct, EEGLAB structure modified by this function
@@ -30,23 +32,35 @@ function [EEG, Cfg] = CTAP_extract_bandpowers(EEG, Cfg)
 % Please see the file LICENSE for details.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+
 %% Set optional arguments
-Arg.names ={'delta'...
-            'theta'...
-            'alpha1'...
+Arg.names ={'delta'...%1-4
+            'theta'...%4-8
+            'alpha1'...%8-10
             'iapf'...
-            'alpha2'...
+            'alpha2'...%10-13
             'mu'...
-            'beta1'...
-            'smr'...
-            'beta2'...
-            'gamma1'...
-            'gamma2'...
-            'gamma3'};
-% band powers = delta, theta, alpha, low beta, high beta, low-, mid-, high-gamma
-Arg.fmin = [1 4 8  13 20 35 55  100]; %in Hz
-Arg.fmax = [4 8 13 20 30 45 100 round(EEG.srate / 2)];
-%TODO (BEN) - WORK OUT HIGHER BANDS BASED ON EEG.srate, in case srate <= 200Hz
+            'beta1'...%13-18
+            'beta2'...%18-30
+            'gamma1'...%30-40
+            'gamma2'...%40-50
+            'gamma3'}; %50-sr/2
+% canonical band powers = delta, theta, lo/hi-alpha, lo/hi-beta, low-gamma
+fmx = round(EEG.srate / 2);
+Arg.fmin = [1 4 8  10 13 18 30:10:min(49,fmx) 60:fmx:fmx]; %in Hz
+Arg.fmax = [4 8 10 13 18 30 40:10:min(50,fmx) min(125,fmx):fmx:fmx];
+%check and clean bandpowers
+if numel(Arg.fmin) ~= numel(Arg.fmax)
+    Arg.fmin = Arg.fmin(1:6);
+    Arg.fmax = Arg.fmax(1:6);
+end
+for i = 1:numel(Arg.fmin)
+    if Arg.fmin(i) == Arg.fmax(i)
+        Arg.fmin(i) = [];
+        Arg.fmax(i) = [];
+    end
+end
+Arg.extra_path = '';
 
 % Override defaults with user parameters
 if isfield(Cfg.ctap, 'extract_bandpowers')
@@ -77,7 +91,8 @@ SEGMENT = gather_cseg_metadata(EEG, Cfg.event.csegEvent);
 
 
 %% Save
-savepath = fullfile(Cfg.env.paths.featuresRoot,'bandpowers');
+savepath = fullfile(Cfg.env.paths.featuresRoot, 'bandpowers', Arg.extra_path);
+if isfield(Cfg, 'export'), Cfg.export.featureSavePoints{end + 1} = savepath; end
 if ~isdir(savepath), mkdir(savepath); end
 savename = sprintf('%s_bandpowers.mat', Cfg.measurement.casename);
 save(fullfile(savepath,savename), 'INFO', 'SEGMENT', 'ResBPrel', 'ResBPabs');

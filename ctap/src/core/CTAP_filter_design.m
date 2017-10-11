@@ -17,8 +17,8 @@ function [EEG, Cfg] = CTAP_filter_design(EEG, Cfg)
 %                 function (use e.g. 'designfilt' or FDATool).
 %                 OR build a filter with designfilt() from arguments
 %                 Default=build from arguments
-%   .lowCutOff  [1,1] numeric, Low end of the pass band in Hz, default: 1
-%   .highCutOff [1,1] numeric, High end of the pass band in Hz, default: 45
+%   .locutoff  [1,1] numeric, Low end of the pass band in Hz, default: 1
+%   .hicutoff  [1,1] numeric, High end of the pass band in Hz, default: 45
 %
 % Outputs:
 %   EEG         struct, EEGLAB structure modified by this function
@@ -41,8 +41,8 @@ function [EEG, Cfg] = CTAP_filter_design(EEG, Cfg)
 Arg.detrend = '';
 Arg.response = 'bandpassiir';
 Arg.order = 16;
-Arg.lowCutOff = 1;
-Arg.highCutOff = 45;
+Arg.locutoff = 1;
+Arg.hicutoff = 45;
 Arg.design = [];
 
 % Override defaults with user parameters
@@ -55,8 +55,8 @@ end
 if isempty(Arg.design)
     Arg.design = designfilt(Arg.response...
                  , 'FilterOrder', Arg.order...
-                 , 'CutoffFrequency1', Arg.lowCutOff...
-                 , 'CutoffFrequency2', Arg.highCutOff ...
+                 , 'CutoffFrequency1', Arg.locutoff...
+                 , 'CutoffFrequency2', Arg.hicutoff ...
                  , 'SampleRate', EEG.srate);
 end
 

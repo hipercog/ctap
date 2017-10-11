@@ -39,9 +39,9 @@ function [EEG, Cfg] = CTAP_compute_psd(EEG, Cfg)
 
 %% Set optional arguments
 Arg = struct(...
-	'm', NaN,...% in sec
-	'overlap', 0.5,...% in percentage [0,1]
-	'nfft', NaN,... % in samples (int), should be 2^x, nfft > m*srate
+    'm', NaN,...% in sec
+    'overlap', 0.5,...% in percentage [0,1]
+    'nfft', NaN,... % in samples (int), should be 2^x, nfft > m*srate
     'bandlimit', false);
 % Defaults are set in eeglab_psd()
 
@@ -50,11 +50,44 @@ if isfield(Cfg.ctap, 'compute_psd')
     Arg = joinstruct(Arg, Cfg.ctap.compute_psd); %override with user params
 end
 
-%% CORE
+
+%% Sanity checks
+
 if ~isfield(Cfg.event, 'csegEvent')
     error('CTAP_compute_psd:no_cseg_event',...
        'No ''cseg'' events passed, cannot define computation segments. Abort.');
 end
+
+cseg_match = ismember({EEG.event.type}, Cfg.event.csegEvent);
+cseg_start = [EEG.event(cseg_match).latency]';
+cseg_end = cseg_start + [EEG.event(cseg_match).duration]' - 1;
+cseg_arr = horzcat(cseg_start, cseg_end);
+
+% Check if any of the csegs contains a boundary event              
+bound_match = ismember({EEG.event.type}, 'boundary');
+boundary_lat = [EEG.event(bound_match).latency];
+
+split_cseg = range_has_point(cseg_arr, boundary_lat);
+if sum(split_cseg) > 0
+    warning('CTAP_compute_psd:csegError',...
+         ['Some of the cseg events of type: ''%s'' overlap with boundary events.'...
+         ' These cseg events will be removed.'], Cfg.event.csegEvent);
+    idx = find(cseg_match);
+    EEG.event(idx(split_cseg)) = [];
+end
+
+% Check that last cseg remains within data
+excess_cseg = cseg_end > size(EEG.data, 2);
+if any(excess_cseg)
+   warning('CTAP_compute_psd:csegError',...
+         ['Some of the cseg events of type: ''%s'' exceed duration of data.'...
+         ' These cseg events will be removed.'], Cfg.event.csegEvent);
+    idx = find(cseg_match);
+    EEG.event(idx(excess_cseg)) = [];
+end
+
+
+%% CORE
 
 % Compute PSD, for all 'safe' channels
 refchans = get_refchan_inds(EEG, EEG.CTAP.reference);
@@ -67,16 +100,19 @@ EEG.CTAP.PSD = eeglab_psd(EEG, Cfg.event.csegEvent,...
     'overlap', Arg.overlap,...
     'nfft', Arg.nfft,...
     'chansToAnalyze', {EEG.chanlocs(chans).labels});
+
+
 %restrict output to previously filtered frequencies to save space
 if Arg.bandlimit && any(ismember({EEG.CTAP.history.fun}, 'CTAP_filter_data'))
     idx = ismember({EEG.CTAP.history.fun}, 'CTAP_filter_data');
-    lo = EEG.CTAP.history(idx).args.lowCutOff;
-    hi = EEG.CTAP.history(idx).args.highCutOff;
+    lo = EEG.CTAP.history(idx).args.locutoff;
+    hi = EEG.CTAP.history(idx).args.hicutoff;
     idx = EEG.CTAP.PSD.fvec >= floor(lo) ...
         & EEG.CTAP.PSD.fvec <= ceil(hi + EEG.CTAP.PSD.freqRes * 2);
     EEG.CTAP.PSD.data(:, :, ~idx) = [];
     EEG.CTAP.PSD.fvec(~idx) = [];
 end
+
 
 %% ERROR/REPORT
 Cfg.ctap.compute_psd = Arg;

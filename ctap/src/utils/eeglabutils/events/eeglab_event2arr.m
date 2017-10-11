@@ -2,8 +2,10 @@ function segs = eeglab_event2arr(EEG, type)
 %EEGSEG2ARR - Convert EEG event table events into matrix
 %
 % Description:
-%   Convert EEG event table segment information into matrix. Assumes that
-%   EEG.event has the optional field .duration.
+%   Convert EEG event table segment information into matrix.
+%   Assumes that
+%       1) EEG is continuous i.e. EEG.data is a normal matrix
+%       2) EEG.event has the optional field .duration.
 %
 % Syntax:
 %   segs = eeglab_event2arr(EEG, type);
@@ -29,6 +31,11 @@ function segs = eeglab_event2arr(EEG, type)
 % Copyright 2007- Jussi Korpela, TTL 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+if (numel(size(EEG.data)) > 2)
+   error('Only continuous EEG data supported.'); 
+end
+
+
 %% Convert entries of .type into cell array of strings
 typearr = {EEG.event(:).type};
 typearr = cellfun(@num2str, typearr, 'UniformOutput', false);
@@ -45,9 +52,20 @@ if sum(typelog)==0
 end
 
 
-%% Construct segment array & ensure segs do not exceed data size
+%% Construct segment array
 segs(:,1) = [EEG.event(typelog).latency];
 segs(:,2) = segs(:,1) + [EEG.event(typelog).duration]' - 1;
+
+
+%% Check that segments do not extend over data length
+%todo: refuse to compute if it does
 datsz = size(EEG.data);
-datsz = prod(datsz(2:end));
-segs(segs(:,2)>datsz) = [];
+if (datsz(2) < segs(end,2))
+    warning('eeglab_event2arr:eventsExceedData',...
+        'Some events end after data end - removing them. Output has fewer segments than there are events!');
+    segs = segs(segs(:,2) <= datsz(2), :); %exclude rows
+end
+
+%% Check that segments do not contain boundary events
+%todo: refuse to compute if it does
+

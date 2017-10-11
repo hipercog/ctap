@@ -46,8 +46,8 @@ function [BP, BPinfo] = psd_bandpowers(PSD, varargin)
 %% Default parameter values
 % Field names of 'Arg' can be used as keywords.
 Arg.chansToAnalyze = PSD.chanvec;
-Arg.fmin = [2  4  8  13]; %Lower frequency limits, in Hz   
-Arg.fmax = [4  8  13 20]; %Upper frequency limits, in Hz 
+Arg.fmin = [2  4  8  10 13]; %Lower frequency limits, in Hz   
+Arg.fmax = [4  8  10 13 18]; %Upper frequency limits, in Hz 
 Arg.integrationMethod = 'trapez'; %'trapez','sum'
 Arg.valueType = 'relative'; %'relative','absolute'
 

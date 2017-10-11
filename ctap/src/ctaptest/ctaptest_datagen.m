@@ -7,6 +7,7 @@
 % Returns:
 %   eeg         = EEG-struct containing synthetic data
 %
+% todo: almost identical to ctaptest_generate_data.m
 function eeg = ctaptest_datagen(datafile,chfile,mdl_order)
     load(datafile); % this loads the cnt, nfo and mrk
     ch = readlocs(chfile);

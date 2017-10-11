@@ -9,6 +9,10 @@ if ~ismember(rejmethods, focus)
     error('ctap_read_detections:bad_param', 'Not defined for %s', focus)
 end
 
+if ~isfield(EEG.CTAP.(focus), 'detect')
+    error('ctap_read_detections:no_detect_field', 'No detections available')
+end
+
 mtd = EEG.CTAP.(focus).detect.src{1,1};
 idx = EEG.CTAP.(focus).detect.src{1,2};
 unit = rejdattype{ismember(rejmethods, focus)};

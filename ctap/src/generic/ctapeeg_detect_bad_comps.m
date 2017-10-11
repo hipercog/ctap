@@ -53,6 +53,10 @@ function [EEG, varargout] = ctapeeg_detect_bad_comps(EEG, varargin)
 %   'cmpSpcMethod'  ['fft'|'multitaper'] method to compute spectrum.
 %                 Default='multitaper'
 %
+%   FOR 'blink_template' method
+%   'thr'       [1,1] numeric, threshold in radians for blink template matching,
+%               default: 0.5
+%
 % Output:
 %   'EEG'         struct, modified input EEG
 % varargout:
@@ -155,7 +159,15 @@ switch Arg.method
         result.scores = tmp(:, idx);
 
     case 'blink_template'
-        [bad_comp_match, tmp] = sbf_detect_ICs_blinktemplate();
+        [bad_comp_match, tmp] = ctapeeg_detect_ICs_blinktemplate(EEG, Arg);
+        result.method_data = tmp.blinkERP;
+        result.scores = table(tmp.thArr...
+            , 'RowNames', cellstr(num2str(icacomps'))...
+            , 'VariableNames', {'blinkSimilarityRads'});
+        
+    case 'recu_blink_tmpl'
+        [bad_comp_match, tmp] = ctapeeg_recudetect_blink_ICs(EEG...
+            , rmfield(Arg, 'method'));
         result.method_data = tmp.blinkERP;
         result.scores = table(tmp.thArr...
             , 'RowNames', cellstr(num2str(icacomps'))...
@@ -225,7 +237,11 @@ varargout{2} = result;
                 Arg.cmpSpcMethod = 'multitaper';
                 
             case 'blink_template'
-                Arg.thr = 0.7; %threshold value (def=radians)
+                Arg.thr = 0.5; %threshold value (def=radians)
+                
+            case 'recu_blink_tmpl'
+                Arg.veog = {'VEOG'};
+                Arg.test_pc = 25;
                 
             otherwise
                 error('ctapeeg_detect_bad_comps:bad_method',...
@@ -236,29 +252,5 @@ varargout{2} = result;
         % Arg fields are canonical, vargs values are canonical: intersect-join
         Arg = intersect_struct(Arg, vargs);
     end
-
-
-    function [comp_match, method_data] = sbf_detect_ICs_blinktemplate()
-        % Add blinks if missing
-        if ( ~ismember('blink',unique({EEG.event.type})) )
-            error('ctapeeg_detect_bad_comps:noBlinkEvents',...
-                ['No events of type ''blink'' found. Cannot proceed with'...
-                ' blink template matching. Run CTAP_blink2event() to fix.'])
-        end
-        % Detect components
-        [comp_match, th_arr] = eeglab_detect_icacomps_blinktemplate(EEG...
-            , 'leqThreshold', Arg.thr);
-
-        % Compute blink ERP for future reference
-        EEGbl = pop_epoch( EEG, {'blink'}, [-0.3, 0.3]);
-        EEGbl = pop_rmbase( EEGbl, [-300, 0]);
-        blERPdf = create_dataframe(mean(EEGbl.data,3),...
-            {'channel','time'},...
-            {{EEGbl.chanlocs.labels}, EEGbl.times});
-
-        method_data.thArr = th_arr;
-        method_data.blinkERP = blERPdf;
-        
-    end %sbf_detect_ICs_blinktemplate()
 
 end % ctapeeg_detect_bad_comps()

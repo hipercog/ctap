@@ -38,6 +38,7 @@ function [EEG, Cfg] = CTAP_blink2event(EEG, Cfg)
 
 %% Set optional arguments
 Arg.invert = false;
+Arg.vargs2blinkdetfun = {}; %varargin name-value pairs for blink detection function
 
 % Override defaults with user parameters
 if isfield(Cfg.ctap, 'blink2event')
@@ -62,15 +63,17 @@ Eog = eeglab_extract_eog(EEG,...
                         Cfg.eeg.heogChannelNames);
                     
 if Arg.invert
-    EEG = eeglab_blink2event(EEG, -Eog.veog);
-else
-    EEG = eeglab_blink2event(EEG, Eog.veog);
+    EEG = eeglab_blink2event(EEG, -Eog.veog, ...
+                             'vargs2blinkdetfun', Arg.vargs2blinkdetfun);
+else 
+    EEG = eeglab_blink2event(EEG, Eog.veog,...
+                             'vargs2blinkdetfun', Arg.vargs2blinkdetfun);
 end
 
 %% ERROR/REPORT
 Cfg.ctap.blink2event = Arg;
 
-msg = myReport(['Added blinks as events for ' EEG.subject '_' EEG.setname]...
+msg = myReport(['Added blinks as events for ' EEG.subject ' - ' EEG.setname]...
     , Cfg.env.logFile);
 
 EEG.CTAP.history(end+1) = create_CTAP_history_entry(msg, mfilename, Arg);

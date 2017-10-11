@@ -110,6 +110,9 @@ end
 % Read calculation segment positions into array
 try
     segs = fix(eeglab_event2arr(EEG, Arg.csegEvent));
+    % Ordered according to  matches of Arg.csegEvent in EEG.event - 
+    % this should be a an ascending order in latency but is there a 
+    % guarantee for this in EEGLAB?
 catch ME,
     if strcmp(ME.identifier, 'eegseg2arr:eventsMissing')
         msg=['Found no events of type ''',Arg.csegEvent...
@@ -151,14 +154,14 @@ end
 
 
 %% Preallocate memory space
+disp('Estimating PSD...');
+segs = uint32(segs);
 Psd.data = NaN(length(chaninds), size(segs, 1), Arg.nfft/2+1);
 Psd.fvec = NaN(Arg.nfft/2+1, 1);
 Psd.freqRes = NaN;
 
 
 %% Loop over channels and segments
-disp('Estimating PSD...');
-segs = uint32(segs);
 for k = 1:length(chaninds) %over channels 
     for i=1:size(segs,1) %over calculation segments        
         low = segs(i,1); up = segs(i,2);
@@ -185,9 +188,8 @@ for k = 1:length(chaninds) %over channels
                         cs_length_mode, Arg.m, Arg.nfft, Arg.overlap);
                 end
 
-                if sum(sum(sum(isnan(Psd.data(k,i,:)))))>0
-                    msg='PSD contains NaN''s.'; 
-                    warning('eeglab_psd:psdNaN', msg);
+                if sum(sum(sum(isnan(Psd.data(k,i,:))))) > 0
+                    warning('eeglab_psd:psdNaN', 'PSD contains NaNs.');
                 end
             
             case 'periodogram'
@@ -210,9 +212,75 @@ for k = 1:length(chaninds) %over channels
     end
 end
 
+%% Refactored for clarity (...trying to understand the process). Not tested
+% switch Arg.psdEstimationMethod
+%     case 'welch'
+%         % PSD estimation using jkor's own version of Welch's method
+%         psd_func_hdl = @psdest_welch;
+%         psdm = uint32(fix(Arg.m * EEG.srate));%subsegment length, samples
+%         rptm = Arg.m;
+%         ol = Arg.overlap;
+% 
+%     case 'welch-matlab'
+%         % PSD estimation using Matlab's version of Welch's method
+%         psd_func_hdl = @psdest_welch_matlab;
+%         psdm = uint32(fix(Arg.m * EEG.srate));
+%         rptm = Arg.m;
+%         ol = Arg.overlap;
+% 
+%     case 'periodogram'
+%         % PSD estimation using one periodogram from Welch's method.
+%         % Achieved calling psdest_welch() with such parameters that 
+%         % allow only one periodogram to be formed i.e. m >= length(x)
+%         psd_func_hdl = @psdest_welch;
+%         psdm = up - low + 1;
+%         rptm = NaN;
+%         ol = 0;
+% 
+%     otherwise
+%         error('eeg_script:PsdEstimationError',...
+%             'Unknown PSD estimation method.'); 
+% end
+% 
+% for k = 1:length(chaninds) %over channels 
+%     for i=1:size(segs,1) %over calculation segments        
+%         low = segs(i,1); up = segs(i,2);
+%         eegdata = EEG.data(chaninds(k), low:up);
+%         
+%         % PSD estimation using defined method & parameters
+%         [Psd.data(k, i, :), ~] = psd_func_hdl(eegdata, psdm, ol, Arg.nfft);
+%         if i==1 && k==1
+%             report_parameters(cs_length_mode, rptm, Arg.nfft, ol);
+%         end
+% 
+%         clear('low','up');
+%     end
+% end
+% if strcmp(Arg.psdEstimationMethod, 'welch-matlab') &&...
+%         any(any(any(isnan(Psd.data))))
+%     warning('eeglab_psd:psdNaN', 'PSD contains NaNs.');
+% end
+
 Psd.chanvec = {EEG.chanlocs(chaninds).labels};
 Psd.freqRes = EEG.srate/Arg.nfft; % Hz
 Psd.fvec = (0:1:Arg.nfft/2)' * Psd.freqRes; %Hz
+
+
+% Add cseg metadata to Psd
+CsegMeta = gather_cseg_metadata(EEG, Arg.csegEvent);
+% note: 
+% "CsegMeta" latencies include boundary event durations
+% "cseg" contains latencies without boundary event durations
+
+tsind = find(ismember(CsegMeta.labels, 'timestamp'));
+if  issorted(segs(:,1)) && ...
+    issorted( datenum(CsegMeta.data(:,tsind),'yyyymmddTHHMMSS') )
+    Psd.csvec = CsegMeta.data(:,tsind);
+else
+    error('eeglab_psd:eventsNotSorted',...
+        'Events ''%s'' not sorted in EEG.event. Please fix.', Arg.csegEvent);
+end
+
 
 %% Subfunctions
 

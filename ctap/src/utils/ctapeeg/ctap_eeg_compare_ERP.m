@@ -56,8 +56,8 @@ p = inputParser;
 p.addRequired('EEG1', @isstruct);
 p.addRequired('EEG2', @isstruct);
 p.addRequired('eventTypeString', @iscellstr); %event to epoch around
-p.addParameter('epochWindow', [-0.5,0.5], @isnumeric); %in sec
-p.addParameter('rmbaseWindow', [-0.5,0], @isnumeric); %in sec
+p.addParameter('epochWindow', [-0.5, 0.5], @isnumeric); %in sec
+p.addParameter('rmbaseWindow', [-0.5, 0], @isnumeric); %in sec
 p.addParameter('channels', {EEG1.chanlocs.labels}, @iscellstr); %in sec
 p.addParameter('idArr', {'EEG1','EEG2'}, @iscellstr); %in sec
 p.addParameter('visible', 'on', @isstr); %in sec

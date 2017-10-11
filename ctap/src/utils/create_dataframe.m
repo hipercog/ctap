@@ -1,4 +1,4 @@
-function df=create_dataframe(data, dimnames, dimlabels)
+function df = create_dataframe(data, dimnames, dimlabels)
 %CREATE_DATAFRAME - Create a struct that mimics R data.frame
 %
 % Description:
@@ -13,10 +13,10 @@ function df=create_dataframe(data, dimnames, dimlabels)
 %               labels. dimlabels{i} can be either cell or vector.
 %
 % Outputs:
-%   df  struct, A self-documenting "data.frame"
-%   df.data     [i,j,k,...] numeric, Data matrix
-%   df.dim      [1,I] struct, Dimension information, I=numel(size(data))
-%   df.dim(i).name      string, Name of dimension i.
+%   df              struct, A self-documenting "data.frame"
+%   df.data         [i,j,k,...] numeric, Data matrix
+%   df.dim          [1,I] struct, Dimension information, I=numel(size(data))
+%   df.dim(i).name  string, Name of dimension i.
 %   df.dim(i).labels    [1,size(data,i)] vector of cell of strings, Data
 %                       labels along dimension i.
 %

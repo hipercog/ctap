@@ -52,8 +52,8 @@ if ischar(eeg)
     end
 elseif ~isstruct(eeg)
     warning('This is not an EEG struct'); return;
-elseif ~isfield(eeg, 'CTAP')
-    warning('There is no CTAP field in EEG '); return;
+elseif ~is_valid_CTAPEEG(eeg)
+    warning('EEG file was not processed by CTAP pipe'); return;
 end
 
 msg = {eeg.CTAP.history.msg};
