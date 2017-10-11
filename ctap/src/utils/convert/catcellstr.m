@@ -1,7 +1,7 @@
 function strout = catcellstr(strarray, varargin)
 %CATCELLSTR - Catenate cell array of strings into single string
 %
-% CONSIDER USING MATLAB BUILTIN STRJOIN() INSTEAD.
+% CONSIDER USING MATLAB BUILTIN STRJOIN(,'-') INSTEAD.
 %
 % Description:
 %   Catenates individual elements of a cell array of strings into a single

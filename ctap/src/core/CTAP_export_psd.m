@@ -64,6 +64,7 @@ Psd = create_dataframe(EEG.CTAP.PSD.data, dimnames, dimlabels); %#ok<NASGU>
 
 %% Save data
 savepath = fullfile(Cfg.env.paths.featuresRoot, 'PSD');
+if isfield(Cfg, 'export'), Cfg.export.featureSavePoints{end + 1} = savepath; end
 if ~isdir(savepath), mkdir(savepath); end
 savename = fullfile(savepath, sprintf('%s_PSD.mat', Cfg.measurement.casename));
 save(savename, 'Psd');

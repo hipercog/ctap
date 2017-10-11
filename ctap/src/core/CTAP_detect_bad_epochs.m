@@ -49,7 +49,6 @@ end
 if ~isfield(Arg, 'channels')
     Arg.channels = get_eeg_inds(EEG, {Arg.channelType});
 end
-
 % Don't pay attention to any bad channels
 if isfield(EEG.CTAP, 'badchans')
     if isfield(EEG.CTAP.badchans, 'detect')
@@ -58,7 +57,6 @@ if isfield(EEG.CTAP, 'badchans')
             = [];
     end
 end
-
 % Check that given channels are EEG channels
 if isempty(Arg.channels) ||...
         sum(strcmp('EEG', {EEG.chanlocs.type})) < length(Arg.channels)
@@ -70,15 +68,17 @@ end
 
 %% CORE
 % Find bad epochs, from regular epoched data, for defined non-bad channels
-%todo: not all epoch rejection methods require channels, e.g. event based
-%methods.
-EEGep = pop_select(EEG, 'channel', Arg.channels);
-Arg.channels = get_eeg_inds(EEGep, {'EEG'});
 % If not yet epoched, fail
-if ndims(EEG.data) < 3 %#ok<ISMAT>
-    error('CTAP_detect_bad_epochs:no_epoch', 'Data is not epoched: ABORTING');
+if isempty(EEG.epoch)
+    % Note: Cannot detect epoched data from EEG.data since epoched data
+    % with just one epoch looks like continuous data.
+    % EEG.epoch is not much better since EEGLAB seems to drop EEG.epoch if
+    % data has only two dimension. 
+    % In sum: single epoch data cannot be processed!
+    error('CTAP_detect_bad_epochs:noEpochs',...
+          'Data is not epoched or has only one epoch: ABORT.');
 else
-    [~, params, result] = ctapeeg_detect_bad_epochs(EEGep, Arg);
+    [~, params, result] = ctapeeg_detect_bad_epochs(EEG, Arg);
 end
 
 Arg = joinstruct(Arg, params);

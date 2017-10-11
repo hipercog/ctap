@@ -1,4 +1,4 @@
-function result = vari_bad_chans(EEG, EEGchan, bound)
+function result = vari_bad_chans(EEG, EEGchan, bounds, varargin)
 %VARI_BAD_CHANS detects bad channels by variance
 % 
 % Description:
@@ -10,16 +10,23 @@ function result = vari_bad_chans(EEG, EEGchan, bound)
 %   Found channels are marked as dead or loose the EEG.chanlocs struct
 %
 % Syntax:
-%   result = vari_bad_chans(EEG, EEGchan, bound)
+%   result = vari_bad_chans(EEG, EEGchan, bounds)
 %
 % Inputs:
 %   'EEG'       struct, Input EEG data
 %   'EEGchan'   vector, indices of channels to check for badness
-%   'bound'     [1,2] or [1,1] numeric, Thresholds for the log relative
-%               channel variance.
+%   'bounds'    [1,1] or [1;2] or [1,2] numeric, Thresholds for the
+%               log relative channel variance.
 %               [1,2] -> lower and higher log-rel-variance bounds
-%               [1,1] -> number of MADs from median to use in both
-%               directions
+%               [1,1] or [1;2] -> distance in MADs from median, +- or as given
+% Varargin:
+%   take_worst_n    scalar, if >0, return those n channels with highest
+%                   max abs variance, even if no channels exceed threshold.
+%                   To ensure no channels are marked bad, enter bounds = NaN,
+%                   and the whole set of 1-n highest abs variance channels
+%                   will be marked bad. Otherwise, n becomes only a limit on
+%                   number of bad channels
+%                   default=0
 % 
 % Outputs:
 %   'result'    struct, dead = logical []
@@ -37,32 +44,49 @@ function result = vari_bad_chans(EEG, EEGchan, bound)
 p = inputParser;
 p.addRequired('EEG', @isstruct);
 p.addRequired('EEGchan', @ismatrix);
-p.addRequired('bound', @ismatrix);
-p.parse(EEG, EEGchan, bound);
+p.addRequired('bounds', @ismatrix);
+p.addParameter('take_worst_n', 0, @isscalar);
+p.parse(EEG, EEGchan, bounds, varargin{:});
+Arg = p.Results;
 
-if numel(bound)==1
-    % use the MAD approach
-    th = [NaN NaN];
-    nmad = bound;
-else
-    % use fixed thresholds
-    th = bound;
-    nmad = NaN;
-end
 
 %% Calculate normalized channel variance
 eegchs = numel(find(EEGchan)); % find() in case some fool uses logical indexing
 chanVar = repmat(NaN, 1, eegchs); %#ok<*RPMTN>
 chanVarNorm = repmat(NaN, 1, eegchs);
-chanVar(EEGchan) = var(EEG.data(EEGchan, :), 0, 2);
-chanVarNorm(EEGchan) = log(chanVar(EEGchan) / median(chanVar(EEGchan)));
+
+chanVar = var(EEG.data(EEGchan, :), 0, 2);
+chanVarNorm = log(chanVar / median(chanVar));
 
 
 %% Check for loose and dead channels
+if isscalar(bounds) || iscolumn(bounds)
+    % use the MAD approach
+    th = [NaN NaN];
+    nmad = bounds;
+else
+    % use fixed thresholds
+    th = bounds;
+    nmad = NaN;
+end
 
 Res = threshold(chanVarNorm, th, nmad);
-%dead = chanVarNorm < th(1);
-%loose = chanVarNorm > th(2);
+
+%if user wants to kill worst n channels, or set n as limit of bad channels
+if Arg.take_worst_n > 0
+    [~, ix] = sort(abs(chanVarNorm), 'descend');
+    if all(Res.isInRange)
+        Res.isInRange(ix(1:Arg.take_worst_n)) = false;
+        tmp = chanVarNorm > nanmedian(chanVarNorm);
+        Res.isAbove(ix(1:Arg.take_worst_n)) = tmp(ix(1:Arg.take_worst_n));
+        Res.isBelow(ix(1:Arg.take_worst_n)) = ~tmp(ix(1:Arg.take_worst_n));
+    else
+        % use n as limit by 'cleaning' all channels less variant than channel.n
+        Res.isInRange(ix(Arg.take_worst_n + 1:end)) = true;
+        Res.isAbove(ix(Arg.take_worst_n + 1:end)) = false;
+        Res.isBelow(ix(Arg.take_worst_n + 1:end)) = false;
+    end
+end
 
 
 %% return logical checks and normalized variance

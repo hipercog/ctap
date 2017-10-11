@@ -47,12 +47,17 @@ function file = file_loadable(filename, extns)
 % Copyright 2014- Benjamin Cowley, FIOH, benjamin.cowley@ttl.fi
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+
+%% Initialise
 try
     [pathstr, filename, ext, file] = get_file_parts(filename);
 catch ME,
     error(ME.message);
 end
-% Check format and file existence
+extns = strrep(extns, '.', '');
+
+
+%% Check format and file existence
 % If no extension given, check if a file exists with any supported ext
 if isempty(ext)
     if isempty(filename), filename = '*'; end
@@ -63,15 +68,19 @@ if isempty(ext)
             file = tmp(1);
             warning('Extension %s matches multiple files - using first: %s'...
                 , tst_ext, file.name);
-            file.ext = extns{i};
+            file.ext = ['.' extns{i}];
             file.path = pathstr;
             file.load = 1;
             break;
         end
     end
 % else check if the given file exists
-elseif sum(strcmpi(ext, extns)) > 0 && ~isempty(file)
-    file.load = 1;
+elseif ~isempty(file)
+    if sum(strcmpi(strrep(ext, '.', ''), extns)) > 0 
+        file.load = 1;
+    else
+        file.load = 2;
+    end
 end
 
 end % file_loadable

@@ -1,30 +1,23 @@
-function figh = eeglab_plot_channel_properties(EEG, chans, fixplots, varargin)
+function figh = eeglab_plot_channel_properties(EEG, fixplots, varargin)
 % eeglab_plot_channel_properties - Plots EEG dataset channel properties (histogram)
 
 
 %% Parse input arguments and set varargin defaults
 p = inputParser;
 p.addRequired('EEG', @isstruct);
-p.addRequired('chans', @isnumeric);
 p.addRequired('fixplots', @isnumeric);
 
+p.addParameter('chans', get_eeg_inds(EEG, {'EEG'}), @isnumeric);
 p.addParameter('paperwh', [42 42], @isnumeric);
 p.addParameter('figVisible', 'off', @isstr);
-xlimArr = [max(-150, min(min(EEG.data))),...
-           min(150, max(max(EEG.data)))];
-p.addParameter('xlim', xlimArr, @isnumeric);
+p.addParameter('xlim', [-150 150], @isnumeric);%fixed size makes comparison easier
 
-p.parse(EEG, chans, fixplots, varargin{:});
+p.parse(EEG, fixplots, varargin{:});
 Arg = p.Results;
 
-if nargin < 2
-    nchan = size(EEG.data,1);
-    chans = 1:nchan;
-else
-    nchan = numel(chans);
-end
+nchan = numel(Arg.chans);
 
-if nargin < 3 || fixplots < nchan
+if nargin < 2 || fixplots < nchan
     fixplots = nchan;
 end
 
@@ -47,24 +40,24 @@ end
 
 % loop
 for i = 1:nchan
-    h = subplot(nv, nh, i);
+    subplot(nv, nh, i);
     bottomleftplot = nh * (nv - 1) + 1;
     if i == bottomleftplot
-        plot_histogram( EEG.data(chans(i),:,:),...
+        plot_histogram( EEG.data(Arg.chans(i),:,:),...
                     'plotTitle', false,...
                     'xlim', Arg.xlim,...
                     'plotLabels', true,...
                     'xlabel', 'Amplitude (\muV)');
 
     elseif i == nchan
-        plot_histogram(  EEG.data(chans(i),:,:),...
+        plot_histogram(  EEG.data(Arg.chans(i),:,:),...
                     'plotTitle', false,...
                     'plotLabels', false,...
                     'xlim', Arg.xlim,...
                     'plotLegend', true);
                 
     else
-        plot_histogram(  EEG.data(chans(i),:,:),...
+        plot_histogram(  EEG.data(Arg.chans(i),:,:),...
                     'plotTitle', false,...
                     'plotLabels', false,...
                     'xlim', Arg.xlim);
@@ -73,7 +66,7 @@ for i = 1:nchan
 
    % Add channel name as overlayed text
     text(0.95, 0.95,...
-        EEG.chanlocs(chans(i)).labels,...
+        EEG.chanlocs(Arg.chans(i)).labels,...
         'units', 'normalized',...
         'FontName', 'FixedWidth', 'FontWeight', 'bold', 'FontSize', 12,...
         'HorizontalAlignment', 'right', 'VerticalAlignment', 'top');

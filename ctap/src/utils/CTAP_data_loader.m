@@ -1,11 +1,15 @@
 function EEG = CTAP_data_loader(Cfg, branch, pattern)
+% Note: works only for non-branching flat pipes!
 
-tmp = dir(Cfg.env.paths.analysisRoot);
+% branch = '1_load'
+% pattern = '*042*NB00.set'
+
+tmp = dir(Cfg.env.paths.ctapRoot);
 branch_match = ~cellfun(@isempty, regexp({tmp.name},branch));
 
-fpath = fullfile(Cfg.env.paths.analysisRoot, tmp(branch_match).name);
+fpath = fullfile(Cfg.env.paths.ctapRoot, branch);
 
-%f = dir(fullfile(fpath, sprintf('*%03d*.set', sbjnr)));
+
 f = dir(fullfile(fpath, pattern));
 
 if length(f) > 1

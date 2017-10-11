@@ -38,7 +38,7 @@ function Cfg = ctap_auto_config(Cfg, fun_args)
 % Please see the file LICENSE for details.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-warned = false;
+warning('OFF', 'BACKTRACE')
 
 
 %% Add some CTAP-wide conventions
@@ -60,51 +60,49 @@ if isfield(Cfg.env.paths, 'ctapRoot')
     
     % First step set input data is loaded from:
     if ~isfield(Cfg.env.paths, 'branchSource')
-        warning('You should use cfg_create_paths() to create canonical basepaths for your config.');
+        warning('ctap_auto_config:no_basepath', ['Please use cfg_create_paths()',...
+            ' to create canonical basepaths for your config.']);
         Cfg.env.paths.branchSource = ''; %the default
     end
     
     % All results are saved in:
     if ~isfield(Cfg.env.paths, 'analysisRoot')
-        warning('You should use cfg_create_paths() to create canonical basepaths for your config.');
+        warning('ctap_auto_config:no_basepath', ['Please use cfg_create_paths()',...
+            ' to create canonical basepaths for your config.']);
         Cfg.env.paths.analysisRoot = fullfile(Cfg.env.paths.ctapRoot, Cfg.id);
     end
     [~,~,~] = mkdir(Cfg.env.paths.analysisRoot);
     
-    if ~isfield(Cfg.env.paths,'featuresRoot')
-        Cfg.env.paths.featuresRoot = fullfile(...
-            Cfg.env.paths.analysisRoot,'features');
-    end
-
-    if ~isfield(Cfg.env.paths,'export')
-        Cfg.env.paths.exportRoot = fullfile(...
-            Cfg.env.paths.analysisRoot,'export');
-    end
-
-    if ~isfield(Cfg.env.paths,'quality_control')
-        Cfg.env.paths.qualityControlRoot = fullfile(...
-            Cfg.env.paths.analysisRoot,'quality_control');
-    end
     
-    if ~isfield(Cfg.env.paths,'logRoot')
-        Cfg.env.paths.logRoot = fullfile(...
-            Cfg.env.paths.analysisRoot,'logs');
-    end        
+    Cfg.env.paths.featuresRoot = fullfile(...
+        Cfg.env.paths.analysisRoot, 'features');
     
-    if ~isfield(Cfg.env.paths,'crashLogRoot')
-        Cfg.env.paths.crashLogRoot = fullfile(...
-            Cfg.env.paths.ctapRoot,'logs');
-    end
+    Cfg.env.paths.exportRoot = fullfile(...
+        Cfg.env.paths.analysisRoot,'export');
+
+    Cfg.env.paths.qualityControlRoot = fullfile(...
+        Cfg.env.paths.analysisRoot,'quality_control');
+    
+    Cfg.env.paths.logRoot = fullfile(...
+        Cfg.env.paths.analysisRoot,'logs');
+    [~,~,~] = mkdir(Cfg.env.paths.logRoot);
+    
+    Cfg.env.paths.crashLogRoot = fullfile(...
+        Cfg.env.paths.ctapRoot,'logs');
+    [~,~,~] = mkdir(Cfg.env.paths.crashLogRoot);
     
     % Log Files
-    if ~isfield(Cfg.env,'logFile')
-        Cfg.env.logFile = fullfile(Cfg.env.paths.logRoot,...
+    Cfg.env.logFile = fullfile(Cfg.env.paths.logRoot,...
                                sprintf('runlog_%s.txt',datestr(now, 30)) );
-    end                           
-
+    
+    % SQLite database file for storing function data
+    %(such as numbers of trials etc.)
+    Cfg.env.funDataDB = fullfile(Cfg.env.paths.qualityControlRoot,...
+                        'ctap_function_data.sqlite');
+                           
 else
-   error('ctap_auto_config:cfgFieldMissing',...
-         'Cfg.env.paths.ctapRoot is required for CTAP to work. It specifies the location of CTAP output.'); 
+   error('ctap_auto_config:cfgFieldMissing', ['Cfg.env.paths.ctapRoot is ',...
+       'required for CTAP to work. It specifies the location of CTAP output.']); 
 end
 
 
@@ -130,30 +128,57 @@ end
 if ~isfield(Cfg.eeg, 'chanlocs')
     warning('ctap_auto_config:cfgFieldMissing',...
          'Field Cfg.eeg.chanlocs is required for CTAP to work.');
-    warned = true;
 end
 
 if ~isfield(Cfg.eeg, 'veogChannelNames')
     warning('ctap_auto_config:cfgFieldMissing',...
          ['Field Cfg.eeg.veogChannelNames is recommended for blink'... 
          'artefact detection and rejection.']);
-    warned = true;
 end
 
 if ~isfield(Cfg.eeg, 'heogChannelNames')
     warning('ctap_auto_config:cfgFieldMissing',...
          ['Field Cfg.eeg.heogChannelNames is recommended for blink'...
          'artefact detection and rejection.']);
-    warned = true;
+end
+
+if isfield(Cfg, 'export')
+    if ~isfield(Cfg.export, 'featureSavePoints')
+        Cfg.export.featureSavePoints = {};
+    end
+    if ~isfield(Cfg.export, 'ovw')
+        Cfg.export.ovw = false;
+    end
 end
 
 
-%% Run checks on the pipe
+%% Measure pipe
 %Discard the 'test' step set if present and not requested
 if ~any(ismember(Cfg.pipe.runSets, 'test'))
     testtest = ismember({Cfg.pipe.stepSets.id}, 'test');
     if any(testtest), Cfg.pipe.stepSets(testtest) = []; end
 end
+
+%get original (allSets) and requested (runSets) stepSet indices
+allSets = 1:numel(Cfg.pipe.stepSets);
+if strcmp(Cfg.pipe.runSets{1}, 'all')
+    runSets = allSets;
+    Cfg.pipe.runSets = {Cfg.pipe.stepSets(allSets).id};
+    %'all' replaced to simplify usage of this field -- 'all' not allowed
+    % in general, just a convenience feature
+else
+    runSets = find(ismember({Cfg.pipe.stepSets.id}, Cfg.pipe.runSets));
+end
+
+% Add field Cfg.pipe.totalSets if missing
+if ~isfield(Cfg.pipe, 'totalSets')
+    Cfg.pipe.totalSets = numel(runSets);
+else
+    Cfg.pipe.totalSets = Cfg.pipe.totalSets + numel(runSets);
+end
+
+
+%% Run checks on the pipe
 
 %Check needed pipe fields that the user can leave unspecified 
 if ~isfield(Cfg.pipe.stepSets, 'srcID') %check srcID
@@ -164,170 +189,174 @@ if ~isfield(Cfg.pipe.stepSets, 'save') %check save instruction
 else
     [Cfg.pipe.stepSets(cellfun(@isempty, {Cfg.pipe.stepSets.save})).save] =...
         deal(true);
-    if numel(Cfg.pipe.stepSets) > 1 && ~Cfg.pipe.stepSets(1).save
+    if Cfg.pipe.totalSets == numel(runSets) &&...%=> we're in first pipe
+       numel(allSets) > 1 &&...%=> pipe has multiple steps
+       ~Cfg.pipe.stepSets(1).save %=> save for step 1 is turned off
         warning('ctap_auto_config:badSaveSpec',...
             ['NO SAVE ON STEP 1: the pipe must save intermediary data to have'...
                 ' multiple steps - check your save specification']);
-        warned = true;
     end
+end
+
+
+%% GET INDICES OF PIPE
+
+% Get the complete pipe description
+[allPipeFuns, allStepMap] = sbf_get_pipe_desc(Cfg, allSets);
+% exclStp = find(~ismember(allSets, runSets));
+% exclIdx = find(ismember(allStepMap, exclStp));
+
+% Get the contents of the requested pipe description
+[runPipeFuns, runStepMap] = sbf_get_pipe_desc(Cfg, runSets);
+uniqFuns = unique(runPipeFuns);
+leftout = ones(numel(uniqFuns),1);
+
+% Get whole-pipe indices of called functions
+runFunIdx = find(ismember(allStepMap, runSets));
+
+% Get the configuration parameter names
+defPars = fieldnames(fun_args);
+numdfpm = numel(defPars);
+
+% Find where exist multiple entries per function in parameters
+manyArg = zeros(numdfpm,1);
+for i = 1:numdfpm
+    tmp = size(fun_args.(defPars{i}));
+    if sum(tmp > 1), manyArg(i) = tmp(tmp > 1); end
 end
 
 
 %% ADD ANALYSIS STEP PARAMETERS TO Cfg
-%get original and requested pipe stepSet indices
-allSets = 1:numel(Cfg.pipe.stepSets);
-fixcfg = false;
-if strcmp(Cfg.pipe.runSets{1}, 'all')
-    runSets = allSets;
-else
-    runSets = find(ismember({Cfg.pipe.stepSets.id}, Cfg.pipe.runSets));
-    if numel(runSets) ~= numel(allSets)
-        fixcfg = true;
-    end
-end
-
-%get the contents of the requested pipe, check srcID
-pipesz = numel([Cfg.pipe.stepSets(runSets).funH]); % get size of requested pipe
-pipeFuns = cell(pipesz, 1);
-stepMap = zeros(pipesz, 1);
-
-p = 1; % get the function names of the requested pipe
-for i = runSets %over stepSets
-    for k = 1:numel(Cfg.pipe.stepSets(i).funH) %over analysis steps
-        pipeFuns{p} = func2str(Cfg.pipe.stepSets(i).funH{k});
-        stepMap(p) = i;
-        p = p + 1;
-    end
-end
-uniqFuns = unique(pipeFuns);
-leftout = ones(numel(uniqFuns),1);
-
-defParams = fieldnames(fun_args); % get the configuration parameter names
-numdfpm = numel(defParams);
-%find where exist multiple entries per function in parameters
-manyArg = zeros(numdfpm,1);
-for i = 1:numdfpm
-    tmp = size(fun_args.(defParams{i}));
-    if sum(tmp > 1), manyArg(i) = tmp(tmp > 1); end
-end
 % copy parameters to the Cfg struct for the pipeline_looper
 % if there are multiple calls to function i and only one instance of the
 % parameters, turn parameters into a struct array of dimension [1,n] 
 % where n = number of calls to function i
 for i = 1:numdfpm
-    tmp = cellfun(@isempty, strfind(uniqFuns, defParams{i}));
-    if sum(~tmp) > 1
-        tmpstr = sprintf('''%s''\t', uniqFuns{~tmp});
-        error('write_cfg_ctap:param_funcname_mismatch',...
+    uniqPars = ~cellfun(@isempty, strfind(uniqFuns, defPars{i}));
+    
+    if sum(uniqPars) > 1
+        tmpstr = sprintf('''%s''\t', uniqFuns{uniqPars});
+        error('ctap_auto_config:param_funcname_mismatch',...
             'parameter ''%s'' matches to %d function names: %s',...
-            defParams{i}, sum(~tmp), tmpstr);
-    elseif sum(~tmp)
-        num_pipe_calls = sum(ismember(pipeFuns, uniqFuns{~tmp}));
-        if num_pipe_calls > 1
-            Cfg.ctap.(defParams{i})(1:num_pipe_calls) = fun_args.(defParams{i});
+            defPars{i}, sum(uniqPars), tmpstr);
+        
+    elseif sum(uniqPars)
+        %get indexing info for the function: order and number of calls
+        fOrd = sbf_get_fun_order(defPars{i}, allPipeFuns, runFunIdx, runPipeFuns);
+        fNumCalls = sum(ismember(runPipeFuns, uniqFuns{uniqPars}));
+        
+        %remove any prior initialisation for this function
+        if isfield(Cfg, 'ctap') && isfield(Cfg.ctap, defPars{i})
+            Cfg.ctap = rmfield(Cfg.ctap, defPars{i});
+        end
+        
+        if isscalar(fun_args.(defPars{i}))
+            %scalar argument structs get dealt to each function call
+            Cfg.ctap.(defPars{i})(1:fNumCalls) = deal(fun_args.(defPars{i}));
+            
+        elseif numel(fOrd) == fNumCalls &&...
+                all(ismember(fOrd, 1:numel(fun_args.(defPars{i}))))
+            %struct array arguments get assigned by order of function calls
+            Cfg.ctap.(defPars{i})(1:fNumCalls) = fun_args.(defPars{i})(fOrd);
+            
         else
-            Cfg.ctap.(defParams{i}) = fun_args.(defParams{i});
+            %sthg is terribly wrong!
+            error('ctap_auto_config:multi_param_mismatch'...
+                , ['Parameter struct ''fun_args.%s'' has %d rows; BUT ''%s'''...
+                ' is called in complete pipe %d time, & in run pipe %d '...
+                'time :: can''t infer parameter assignment! Aborting']...
+                , defPars{i}...
+                , numel(fun_args.(defPars{i}))...
+                , uniqFuns{uniqPars}...
+                , sum(ismember(allPipeFuns, uniqFuns{uniqPars}))...
+                , fNumCalls);
         end
     end
-    leftout = leftout & tmp;
+    leftout = leftout & ~uniqPars;
 end
-% make parameter fields as empty structs where none were specified
+
+% Make parameter fields as empty structs where none were specified
 uniqFuns = uniqFuns(leftout);
 fu_names = strrep(uniqFuns, 'CTAP_', '');
 fu_names = strrep(fu_names, 'ctapeeg_', '');
 for i = 1:numel(uniqFuns)
-    num_fun_occ = sum(ismember(pipeFuns, uniqFuns{i}));
+    num_fun_occ = sum(ismember(runPipeFuns, uniqFuns{i}));
     nopars = struct([fu_names{i} '_params'], 0);
     Cfg.ctap.(fu_names{i}) = repmat(nopars, 1, num_fun_occ);
 end
 
 
-%% Get the complete pipe description
-
-if fixcfg
-    % get the size of the whole pipe
-    pipesz = numel([Cfg.pipe.stepSets.funH]);
-    allPipeFuns = cell(pipesz,1);
-    allStepMap = zeros(pipesz,1);
-
-    p = 1; % get the function names of the whole pipe
-    for i = allSets %over ALL stepSets
-        for k = 1:numel(Cfg.pipe.stepSets(i).funH) %over analysis steps
-            allPipeFuns{p} = func2str(Cfg.pipe.stepSets(i).funH{k});
-            allStepMap(p) = i;
-            p = p + 1;
-        end
-    end
-    exclStp = find(~ismember(allSets, runSets));
-    exclIdx = find(ismember(allStepMap, exclStp));
-end
-
-
 %% RUN CHECKS
-%for parameters defined with many rows, check assignments will work - i.e.
-%the user-defined parameter configuration struct is well-formed
-if sum(manyArg)
-    % check that the number of parameters equals number of function calls
-    for i = find(manyArg)'
-        tmp = ~cellfun(@isempty, strfind(pipeFuns, defParams{i}));
-        if sum(tmp) && sum(tmp) ~= manyArg(i)
-            funStr = pipeFuns{tmp};
-            if fixcfg
-                % compare the reduced and complete pipes, find where the
-                % excluded stepSet lies and remove associated parameter rows
-                funcIdx = find(strcmp(allPipeFuns, funStr));
-                goneIdx = ismember(funcIdx, exclIdx);
-                if numel(Cfg.ctap.(defParams{i})) == numel(goneIdx)
-                    Cfg.ctap.(defParams{i})(goneIdx) = [];
-                else
-                    error('write_cfg_ctap:multi_param_mismatch',...
-                        ['''Cfg.ctap.%s'' has %d parameter sets; BUT ''%s'' is'...
-                        ' called in complete pipe %d time, in current pipe %d '...
-                        'time :: can''t infer parameter assignment! Aborting'],...
-                    defParams{i}, manyArg(i), funStr, numel(funcIdx), sum(tmp));
-                end
-            else
-                error('write_cfg_ctap:multi_param_mismatch',...
-                '''%s'' has %d parameter rows; BUT pipe calls ''%s'' %d times.'...
-                    , defParams{i}, manyArg(i), funStr, sum(tmp));
-            end
-        end
+% Check if there are multiple calls to extract features and add extra level 
+% to save path for export functions called more than once per pipe. 
+% Prepend .extra_path with index of function occurence in complete pipe to
+% help keep paths stable when pipes are called with subset of stepSets.
+xfn = {'extract_bandpowers', 'extract_PSDindices', 'export_psd'};
+for ftx = 1:numel(xfn)
+    idx_xtr = sbf_get_fun_order(xfn{ftx}, allPipeFuns, runFunIdx, runPipeFuns);
+    if isempty(idx_xtr)
+        return
+    end
+    if isscalar(Cfg.ctap.(xfn{ftx}))
+        Cfg.ctap.(xfn{ftx})(2:numel(idx_xtr)) = Cfg.ctap.(xfn{ftx})(1);
+    end
+    for ix = 1:numel(idx_xtr)
+        Cfg.ctap.(xfn{ftx})(ix).extra_path = sprintf('%d%s', idx_xtr(ix),...
+            Cfg.pipe.stepSets(idx_xtr(ix)).id(2:end));
     end
 end
 
 % Check pipe has minimum requirements and suggest mandatory reref.
 %   Only if current stepSets is not a subset excluding step 1
-%todo: This logic is not clear. Latter boolean was previously longer than
-%one. Does not always ask for reref.
-if ~fixcfg && ~ismember({Cfg.pipe.stepSets(1).id}, Cfg.pipe.runSets)
+if numel(runSets) == numel(allSets) && numel(runSets) == Cfg.pipe.totalSets
     %check for chanlocs
-    tmp = cellfun(@isempty, strfind(pipeFuns, 'load_chanlocs'));
+    tmp = cellfun(@isempty, strfind(runPipeFuns, 'load_chanlocs'));
     if all(tmp)
-        warning('check_cfg_ctap:no_load_chanlocs',...
+        warning('ctap_auto_config:no_load_chanlocs',...
             '**** MAKE SURE you have chanlocs or pipe may FAIL ****');
-        warned = true;
     end
     %check for reref
-    tmp = cellfun(@isempty, strfind(pipeFuns, 'reref_data'));
+    tmp = cellfun(@isempty, strfind(runPipeFuns, 'reref_data'));
     if all(tmp)
-        warning('check_cfg_ctap:no_reref_data',...
+        warning('ctap_auto_config:no_reref_data',...
          'NO reref! Consider ADDING data re-reference (once chanlocs exist)??');
-        warned = true;
+    end
+end
+
+warning('ON', 'BACKTRACE')
+
+
+end %ctap_auto_config()
+
+
+function idxFun = sbf_get_fun_order(fn, apf, rfi, rpf)
+% fn - function name, with or without 'CTAP_' or 'ctapeeg_' prefix
+% apf - all pipe function names
+% rfi - run pipe function indices
+% rpf - run pipe function names
+
+    fn = strrep(fn, 'CTAP_', '');
+    fn = strrep(fn, 'ctapeeg_', '');
+    all_idx = find(ismember(apf, ['CTAP_' fn]) | ismember(apf, ['ctapeeg_' fn]));
+    if isempty(all_idx)
+        idxFun = [];
+    else
+        idxFun = find(ismember(all_idx, rfi(ismember(rpf, ['CTAP_' fn]))));
     end
 end
 
 
-%% REVIEW WARNINGS
-if warned
-    testi = dbstack;
-    if isempty(strfind([testi.file], 'HYDRAKING.m'))
-        %Give a chance to halt pipe
-        reply = input(['CTAP is configured with warnings.'...
-            'To launch, press Enter. To abort, press any key + Enter'], 's');
-        if ~isempty(reply)
-            error; %#ok<LTARG>
+function [pipe_fun_names, step_map] = sbf_get_pipe_desc(Cfg, idx)
+    pipe_size = numel([Cfg.pipe.stepSets(idx).funH]);%get size of requested pipe
+    pipe_fun_names = cell(pipe_size, 1);
+    step_map = zeros(pipe_size, 1);
+
+    p = 1; % get the function names of the requested pipe
+    for i = idx %over stepSets
+        for k = 1:numel(Cfg.pipe.stepSets(i).funH) %over analysis steps
+            pipe_fun_names{p} = func2str(Cfg.pipe.stepSets(i).funH{k});
+            step_map(p) = i;
+            p = p + 1;
         end
     end
 end
-
-end %ctap_auto_config()

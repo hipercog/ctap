@@ -133,7 +133,7 @@ if Arg.plot && detected.prc > 0
         case 'badcomps'
             sbf_plotNsave_bad_ICs(EEG0, savepath);
             
-            if ismember('blink_template', unique(detected.src(:,1))) &&...
+            if ~isempty(strfind(strjoin(detected.src(:,1),'-'), 'blink')) &&...
                 ismember('blink', unique({EEG0.event.type}))
                 sbf_plotNsave_blinkERP(EEG0, EEG, savepath);
             end
@@ -196,7 +196,7 @@ function sbf_plotNsave_blinkERP(EEG0, EEG, savepath)
         else
             warning('CTAP_reject_data:channelsNotFound',...
                 'Channels {%s} not found in EEG. Cannot plot blink ERP.',...
-                catcellstr(chanArr,'sep',', '));
+                strjoin(chanArr,', '));
 
         end %of chanMatch
     end %of test Cfg.eeg.veogChannelNames
@@ -275,7 +275,7 @@ function sbf_report_bad_data
     badname = Arg.method;
     func = sprintf('s%df%d', Cfg.pipe.current.set, Cfg.pipe.current.funAtSet);
     if isempty(badness)
-        bdstr = 'NA'; %a placeholder to keep the variable type consistent
+        bdstr = 'none'; %a placeholder to keep the variable type consistent
     elseif ~iscellstr(badness)
             bdstr = num2str(badness, 3);
     else
@@ -288,24 +288,17 @@ function sbf_report_bad_data
         tmp = load(rejfile, 'rejtab');
         rejtab = tmp.rejtab;
 
-        if ismember(EEG.CTAP.measurement.casename, rejtab.Properties.RowNames)
-            % if no exsiting vars for this step, append new columns
-            if ~ismember([func '_' badname], rejtab.Properties.VariableNames)
-                rejtab.([func '_' badname]) = cell(height(rejtab), 1);
-            end
-            if ~ismember([func '_pc'], rejtab.Properties.VariableNames)
-                rejtab.([func '_pc']) = cell(height(rejtab), 1);
-            end
-        else
-            % append empty row
-            tmp = cell2table(cell(1, width(rejtab))...
-                , 'RowNames', {EEG.CTAP.measurement.casename}...
-                , 'VariableNames', rejtab.Properties.VariableNames);
-            rejtab = [rejtab; tmp]; %union(rejtab, tmptab);
-        end
         %assign into appropriate columns/rows
-        rejtab.([func '_' badname])(EEG.CTAP.measurement.casename) = {bdstr};
-        rejtab.([func '_pc'])(EEG.CTAP.measurement.casename) = {detected.prc};
+        rejtab = upsert2table(  rejtab,...
+                                sprintf('%s_%s', func, badname),...
+                                EEG.CTAP.measurement.casename,...
+                                bdstr);
+        
+        rejtab = upsert2table(  rejtab,...
+                                sprintf('%s_pc', func),...
+                                EEG.CTAP.measurement.casename,...
+                                detected.prc);
+
     else
         %create table from scratch
         rejtab = table({bdstr}, {detected.prc},...

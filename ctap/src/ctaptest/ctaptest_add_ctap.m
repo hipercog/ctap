@@ -3,27 +3,27 @@
 %
 function eeg = ctaptest_add_ctap(eeg)
     eeg.CTAP.subject = char(randi([65 90], 1, 10));
-    eeg.CTAP.measurement.casename = 'kakka';
-    eeg.CTAP.files.eegFile = 'kakka';
-    eeg.CTAP.files.channelLocationsFile = 'kakka';
+    eeg.CTAP.measurement.casename = eeg.CTAP.subject;
+    eeg.CTAP.files.eegFile = 'synthetic';
+    eeg.CTAP.files.channelLocationsFile = 'synthetic';
     eeg.CTAP.time.fileStart = 1924;
     eeg.CTAP.time.dataStart = 2540;
-    eeg.CTAP.meta = 'kakka';
+    eeg.CTAP.meta = 'synthetic';
     eeg.CTAP.date = date;
-    eeg.CTAP.protocol = 'kakka';
-    eeg.CTAP.history(1).msg = ['kakka_' datestr(now, 'yymmddHHMM')];
-	eeg.CTAP.history(1).fun = 'kakka';
-	eeg.CTAP.history(1).args = 'kakka';
+    eeg.CTAP.protocol = 'synthetic';
+%     eeg.CTAP.history(1).msg = ['na_' datestr(now, 'yymmddHHMM')];
+% 	eeg.CTAP.history(1).fun = 'na';
+% 	eeg.CTAP.history(1).args = 'na';
     eeg.CTAP.artifact = [];
     eeg.CTAP.reference = eeg.ref;
 
-    eeg = remove_peripherals(eeg);
-    eeg = update_channel_types(eeg);
+    eeg = sbf_remove_peripherals(eeg);
+    eeg = sbf_update_channel_types(eeg);
 end
 
 
 % Remove non-EEG data
-function eeg = remove_peripherals(eeg)
+function eeg = sbf_remove_peripherals(eeg)
     bad_idx = find(cellfun(@isempty, {eeg.chanlocs.X}));
     eeg.data(bad_idx, :) = [];
     eeg.chanlocs(bad_idx) = [];
@@ -36,10 +36,10 @@ end
 
 
 % Make sure channel types are correct
-function eeg = update_channel_types(eeg)
+function eeg = sbf_update_channel_types(eeg)
     [eeg.chanlocs.type]=deal('EEG');
-    veog_idx = strmatch('VEOG', {eeg.chanlocs.labels});
-    heog_idx = strmatch('HEOG', {eeg.chanlocs.labels});
+    veog_idx = ismember({eeg.chanlocs.labels}, 'VEOG');
+    heog_idx = ismember({eeg.chanlocs.labels}, 'HEOG');
     [eeg.chanlocs(veog_idx).type] = deal('EOG');
     [eeg.chanlocs(heog_idx).type] = deal('EOG');
 end

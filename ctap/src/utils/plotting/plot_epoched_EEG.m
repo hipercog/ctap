@@ -22,7 +22,7 @@ ncol = M;
 
 
 %% Plot
-figH = figure('Visible',Arg.visible);
+figH = figure('Visible', Arg.visible);
 
 for m=1:M
     sp(m) = subplot(nrow, ncol, m); %#ok<*AGROW>

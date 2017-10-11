@@ -127,33 +127,111 @@ disp(msg);
 %keyboard;
 EEG = eeg_checkevent(EEG);
 EventMod = structconv(EEG.event); %to plane organization
+% two copies of event sequence
+evsq = EventMod.type;
+evsq2 = EventMod.type;
+ 
+
+%% Analyze responses (pre 3/2017)
+%{
+try
+    % Classify stimuli
+    [csm2, fsm2, nasm2, crm2, frm2] =...
+        analyze_events(evsq2, stim, cresp, fresp, noresp);
 
 
-%% Analyze responses
-[csm, fsm, nasm, crm, frm] =...
-    analyze_events(EventMod.type, stim, cresp, fresp, noresp);
+    % Mark target stimuli according to correct/incorrect/not-answered -results
+    for i = 1:length(stim)
+        evsq2(csm2(:,i)) = cstim(i);
+        evsq2(fsm2(:,i)) = icstim(i);
+        evsq2(nasm2(:,i)) = nrstim(i);
+    end
+
+    % Mark unclassified stimuli
+    csm2_tot = sum(csm2,2)>=1;
+    fsm2_tot = sum(fsm2,2)>=1;
+    nasm2_tot = sum(nasm2,2)>=1;
+    stim_match = ismember(evsq2, stim);
+    unclassified_stim_match = stim_match' & ~(csm2_tot | fsm2_tot | nasm2_tot);
+
+    if ischar(evsq2{1})
+       evsq2(unclassified_stim_match) =....
+           strcat(evsq2(unclassified_stim_match),Arg.errorIDStr); 
+    else
+       evsq2(unclassified_stim_match) =  {Arg.errorIDNum};
+    end
+    
+    old_analysis_succeeded = true;
+    
+catch
+    old_analysis_succeeded = false;
+end
+%}
 
 
-%% Mark target stimuli according to correct/incorrect/not-answered -results
-for i = 1:length(stim)
-    EventMod.type(csm(:,i)) = cstim(i);
-    EventMod.type(fsm(:,i)) = icstim(i);
-    EventMod.type(nasm(:,i)) = nrstim(i);
+%% Analyze responses (current)
+csm = false(numel(evsq), numel(stim));
+fsm = false(numel(evsq), numel(stim));
+nrsm = false(numel(evsq), numel(stim));
+crm = false(numel(evsq), numel(stim));
+frm = false(numel(evsq), numel(stim));
+
+for m = 1:numel(stim)
+    [evsq, m_csm, m_fsm, m_nrsm, m_crm, m_frm] = ...
+                                interpret_event_sequence(evsq, stim{m},...
+                                cresp{m}, fresp{m}, noresp{m},...
+                                cstim{m}, icstim{m}, nrstim{m});
+    csm(:,m) = m_csm;
+    fsm(:,m) = m_fsm;
+    nrsm(:,m) = m_nrsm;
+    crm(:,m) = m_crm;
+    frm(:,m) = m_frm;
 end
 
-% mark unclassified stimuli
-csm_tot = sum(csm,2)>=1;
-fsm_tot = sum(fsm,2)>=1;
-nasm_tot = sum(nasm,2)>=1;
-stim_match = ismember(EventMod.type, stim);
-unclassified_stim_match = stim_match' & ~(csm_tot | fsm_tot | nasm_tot);
 
-if isstr(EventMod.type{1})
-   EventMod.type(unclassified_stim_match) =....
-       strcat(EventMod.type(unclassified_stim_match),Arg.errorIDStr); 
+%% Quality control
+%orig stim locations:
+st_match = ismember(EventMod.type, stim)'; 
+% interpreted stim locations:
+ist_match = (sum(csm, 2) > 0) | (sum(fsm, 2) > 0) | (sum(nrsm, 2) > 0);
+
+if sum(st_match ~= ist_match) > 0
+    error(  'mark_resp2stim:mismatch',...
+            'Original stim locations do not match to interpreted locations.');
+end
+
+
+EventMod.type = evsq;
+
+
+%% Compare (debug)
+%{
+savedir = '/ukko/projects/SeamlessCare_2015-16/analysis/ctap_nback/evlog';
+mkdir(savedir);
+
+if old_analysis_succeeded
+    tm = horzcat([csm~=csm2]', [fsm~=fsm2]', [crm~=crm2]', [frm~=frm2]');
+    bad_match = sum(tm, 2) > 0;
+
+    if  sum(bad_match) > 0
+        S.evdata = EventMod;
+        S.evsq_old = evsq2;
+        S.evsq_current = evsq;
+        S.comparison = tm;
+        S.bad_match = bad_match;
+
+       savename = sprintf('%s.mat', EEG.setname);
+        save(fullfile(savedir, savename), 'S');
+    end
+    
 else
-   EventMod.type(unclassified_stim_match) =  {Arg.errorIDNum};
+    logfile = fullfile(savedir, 'old_evmod_failed.txt');
+    fileID = fopen(logfile,'a');
+    fprintf(fileID, sprintf('%s\n', EEG.setname));
+    fclose(fileID);    
 end
+%}
+
 
 %% Set reaction times
 EventMod.rt = NaN(1, length(EventMod.type));
@@ -169,7 +247,7 @@ end
 
 %% Mark responses according to correct/incorrect/not-answered -results
 if Arg.modifyResponses
-
+    
     for i = 1:length(Arg.cresp)
         EventMod.type(crm(:,i)) = Arg.cresp(i);
         EventMod.type(frm(:,i)) = Arg.icresp(i);
@@ -187,11 +265,10 @@ if Arg.modifyResponses
     else
        EventMod.type(unclassified_resp_match) =  {Arg.errorIDNum};
     end
-    
+
 end
 
 %% Set output
 % EEG struct
 
 EEG.event = structconv(EventMod);
-

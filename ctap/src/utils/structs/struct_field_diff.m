@@ -43,7 +43,7 @@ if nargin < 4
     s2str = inputname(2);
 end
 
-sOut=struct();
+sOut = struct();
 diff_size = 0;
 s1mem = whos('s1');
 s2mem = whos('s2');
@@ -66,14 +66,34 @@ if isstruct(s1) && isstruct(s2)
         sOut = rmfield(sOut, fk);
         [tmpOut, dfsz] = struct_field_diff(...
             s1.(fk), s2.(fk), verbose, [s1str '.' fk], [s2str '.' fk]);
-        if ~isempty(fieldnames(tmpOut))
+        if isstruct(tmpOut) && ~isempty(fieldnames(tmpOut))
             sOut.(fk) = tmpOut;
         end
         diff_size = diff_size + dfsz;
     end
     warning('on', 'all')
+elseif isstruct(s1)
+    fprintf('struct_field_diff::struct %s was replaced by non-struct %s'...
+        , s1str, s2str)
+elseif isstruct(s2)
+    sOut = s2;
+    diff_size = sbf_count_struct_fields(s2);
 else
-    disp('struct_field_diff::Main arguments are not both structs! Aborting!');
+    sOut = struct('s2_changed_data', s2);
 end
 
-end
+    function c = sbf_count_struct_fields(s)
+        f = fieldnames(s);
+        c = numel(f);
+        if isscalar(s)
+            r = find(structfun(@isstruct, s));
+        else
+            disp('Found 2 grandmothers. True diff size > reported diff size.')
+            return
+        end
+        for i = 1:numel(r)
+            c = c + sbf_count_struct_fields(s.(f(i)));
+        end
+    end
+
+end%struct_field_diff()

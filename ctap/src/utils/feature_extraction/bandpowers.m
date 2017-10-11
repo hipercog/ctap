@@ -23,7 +23,7 @@ function [bp, labels, units] = bandpowers(psdArray, freq_res, bands, varargin)
 %   'valueType'         string, Type of power values, relative or absolute 
 %                       powers, default: 'relative'
 %                       'relative' = relative band power i.e.
-%                       power_at_band_i/total_spectral_power
+%                       power_at_band_i / total_spectral_power
 %                       'absolute' = absolute band power i.e. power at band
 %                       i as is
 %
@@ -54,61 +54,41 @@ bp = NaN(size(psdArray, 1), size(bands, 1));
 
 % Total spectral power
 if strcmp(Arg.integrationMethod,'trapez')
-    bp_tot = freq_res * trapz(psdArray,2);
+    integf = @trapz;
 elseif strcmp(Arg.integrationMethod,'sum')
-    bp_tot = freq_res * sum(psdArray, 2);
+    integf = @sum;
 else
-    msg = ['Unknown integration method. Found ''',...
-        Arg.integrationMethod,...
-        ''' but only ''trapez'' and ''sum'' allowed'];
-    error('bandpowers:unknownVararginValue',msg);
-end  
+   error('bandpowers:unknownVararginValue'...
+       , 'Unknown integration method. Found ''%s'' but only ''trapez'', ''sum'' allowed'...
+       , Arg.integrationMethod);
+end
+bp_tot = freq_res * integf(psdArray, 2);
 
 % Subband powers
+labels = cell(size(bands, 1), 1);
+units = cell(size(bands, 1), 1);
 for k = 1:size(bands, 1)
-        i_min = round(bands(k,1)/freq_res);
-        i_max = round(bands(k,2)/freq_res);
-        
-        if strcmp(Arg.integrationMethod,'trapez')
-            if strcmp(Arg.valueType,'relative')       
-                bp(:,k) = ((freq_res * trapz(psdArray(:, i_min:i_max),2))./bp_tot)';
-            elseif strcmp(Arg.valueType,'absolute')
-                bp(:,k) = (freq_res * trapz(psdArray(:, i_min:i_max),2))';           
-            else
-                msg = ['Unknown value ', Arg.valueType...
-                    , ' for varargin ''valueType''. Allowed values: ''relative'' or ''absolute''.'];
-                error('bandpowers:unknownValueType', msg);
-            end
+    i_min = round(bands(k,1) / freq_res);
+    i_max = round(bands(k,2) / freq_res);
 
-        elseif strcmp(Arg.integrationMethod,'sum')
-            if strcmp(Arg.valueType,'relative')
-                bp(:,k) = (freq_res * sum(psdArray(:, i_min:i_max), 2))./bp_tot;
-            elseif strcmp(Arg.valueType,'absolute')
-                bp(:,k) = freq_res * sum(psdArray(:, i_min:i_max), 2);
-            else
-                msg = ['Unknown value ', Arg.valueType...
-                    , ' for varargin ''valueType''. Allowed values: ''relative'' or ''absolute''.'];
-                error('bandpowers:unknownValueType', msg);
-            end
-        else
-           msg = ['Unknown integration method. Found ''',...
-                    Arg.integrationMethod,...
-                    ''' but only ''trapez'' and ''sum'' allowed'];
-           error('bandpowers:unknownVararginValue',msg);
-        end
-        
-        
-        % labels and units
-        if strcmp(Arg.valueType,'relative')       
-            labels(k) = {['P',num2varstr(bands(k,1)),'_',num2varstr(bands(k,2)),'_rel']};
-            units(k) = {'nu'};
-        elseif strcmp(Arg.valueType,'absolute')
-            labels(k) = {['P',num2varstr(bands(k,1)),'_',num2varstr(bands(k,2)),'_abs']};
-            units(k) = {'power'};
-        else
-            msg = ['Unknown value ', Arg.valueType,' for varargin ''valueType''. Allowed values: ''relative'' or ''absolute''.'];
-            error('bandpowers:unknownValueType', msg);
-        end
-        
-        clear('i_min', 'i_max');
+    tmp = freq_res * integf(psdArray(:, i_min:i_max), 2);
+    bp(:, k) = tmp(:);%index with (:) to force column-order
+
+    if strcmp(Arg.valueType,'relative')
+        bp(:, k) = bp(:, k) ./ bp_tot;
+        s = '_rel';
+        u = 'nu';
+    elseif strcmp(Arg.valueType,'absolute')
+        s = '_abs';
+        u = 'power';
+    else
+        error('bandpowers:unknownValueType'...
+        , 'Bad ''valueType'': ''%s''. Allowed values: ''relative'' or ''absolute''.'...
+        , Arg.valueType);
+    end
+    % labels and units
+    labels(k) = {['P', num2varstr(bands(k,1)), '_', num2varstr(bands(k,2)), s]};
+    units(k) = {u};
+
+    clear('i_min', 'i_max');
 end

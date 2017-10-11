@@ -15,7 +15,7 @@
 % On first run, create synthetic data:
 overwrite_syndata = true;
 % On subsequent runs, skip creation:
-%overwrite_syndata = false;
+overwrite_syndata = false;
 
 % Runtime options for CTAP:
 STOP_ON_ERROR = true;
@@ -58,7 +58,7 @@ Cfg.pipe.runMeasurements = get_measurement_id(Cfg.MC, Filt);
 % Any stepSet subset can be indexed numerically or logically.
 %Cfg.pipe.runSets = {'all'}; %this is the default
 %Cfg.pipe.runSets = {Cfg.pipe.stepSets([2,5]).id}; %by position index
-%Cfg.pipe.runSets = {Cfg.pipe.stepSets(7:8).id};
+Cfg.pipe.runSets = {Cfg.pipe.stepSets(8).id};
 
 
 %% Assign arguments to the selected functions, perform various checks
