@@ -109,6 +109,7 @@ out.run_ica.channels = {'EEG' 'EOG'};
 
 
 %% IC correction
+% TODO: crashes on jkor's machine... do I have ADJUST installed?
 i = i+1;  %stepSet 4
 stepSet(i).funH = { @CTAP_detect_bad_comps,... %ADJUST
                     @CTAP_reject_data};%,...
