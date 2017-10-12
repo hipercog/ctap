@@ -1,4 +1,4 @@
-#Computational Testing for Automated Preprocessing (CTAP)#
+# Computational Testing for Automated Preprocessing (CTAP) #
 
 ## What is CTAP? ##
 The main aim of the *Computational Testing for Automated Preprocessing (CTAP)* toolbox is to provide:
@@ -14,12 +14,14 @@ The CTAP toolbox provides two main functionalities to achieve these aims:
 _If you use CTAP for your research, __please use the following citation___:
  * Cowley, B., Korpela, J., & Torniainen, J. E. (2017). Computational Testing for Automated Preprocessing: a Matlab toolbox to enable large scale electroencephalography data processing. PeerJ Computer Science, 3:e108. http://doi.org/10.7717/peerj-cs.108
 
+
 ## Installation ##
 Clone the GitHub repository to your machine using
 
     git clone https://github.com/bwrc/ctap.git <destination dir>
 
-Add the whole directory to your Matlab path. You also need to have EEGLAB added to your Matlab path.
+Add the whole directory to the **end** your Matlab path. You will also need to have EEGLAB added to the **end** of your Matlab path. You may accomplish both by editing `ctap_set_path.m` to suit your needs.
+
 
 ## Getting started ##
 A minimalistic working example can be found in `~/ctap/templates/minimalistic_example/`.
@@ -28,18 +30,6 @@ Copy the `cfg_minimal.m` and `runctap_minimal.m` files and use them as a startin
 
 More examples are available under `~/ctap/templates/`.
 
-### How to run the analysis on FIOH BWRC (Linux) machines###
-
-1. Clone the github repo:
-	git clone https://github.com/bwrc/ctap.git <destination dir>
-
-2. Start matlab with the root of the ctap repo as working dir.
-
-3. Run
-	update_matlab_path_anyone()
-4. Try running one of the "proof-of-concept" scripts:
-	pipebatch_minimal()	
-	pipebatch_WCST_baseprepro()
 
 ## License information
 
