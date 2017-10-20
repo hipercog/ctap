@@ -4,14 +4,15 @@
 %% Often changed 
 
 % Location of project root, very user specific
-%projectRoot = '/home/jkor/work_local/projects/hydra';
-projectRoot = '/ukko/projects/ReKnow/HYDRA/CTAP';
+projectRoot = '/home/ben/Benslab/CTAP/hydra';
+% projectRoot = '/ukko/projects/ReKnow/HYDRA/CTAP';
 
 % This one assumes that working directory is ctap_dev repo root:
 %seed_srcdir = '/home/jkor/work_local/projects/ctap/ctap_pipeline/ctap/data/';
 seed_srcdir = fullfile(cd(),'/ctap/data');
 
 % Which parts of code to run etc.
+SYNDATA = true;
 RECOMPUTE_SYNDATA = false;
 RERUN_PREPRO = false;
 STOP_ON_ERROR = true;
@@ -26,15 +27,20 @@ if big_data
     EEG_LEN_MIN = 20;
     SRATE = 512;
 else  
-    EEG_LEN_MIN = 5;
+    EEG_LEN_MIN = 5; %#ok<UNRCH>
     SRATE = 256;
 end
 CH_FILE = 'chanlocs128_biosemi.elp';
 EEG_LENGTH = 60 * EEG_LEN_MIN; %in seconds ? 
 MODEL_ORDER = 20;
-%todo: these are some kind of maxima, how?
 BLINK_N = 10 * EEG_LEN_MIN;
+% Provide BLINK_N as a 1x2 vector and the blinks are generated in two
+% distinct classes: Slower-BiggerAmp and Faster-SmallerAmp
+% BLINK_N = repmat(5 * EEG_LEN_MIN, [1 2]); %here using 1:1 ratio
 EMG_N = 5 * EEG_LEN_MIN;
+% Provide EMG_N as a 1x2 vector and the EMG bursts are generated in two distinct
+% classes: shortTime-slowFreq-largeAmp (like jaw clenching) and long-fast-small
+% EMG_N = [3 * EEG_LEN_MIN, 2 * EEG_LEN_MIN];
 WRECK_N = 10;
 WRECK_MULTIPLIER_ARR = [2 1/2 3 1/3 4 1/4 5 1/5 6 1/6];
 %chmatch = ismember({chanlocs.labels}, 'A4');

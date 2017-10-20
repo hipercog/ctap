@@ -59,25 +59,14 @@ end
 
 
 %% CORE
-
 % Set any old reference channels back to type='EEG'
-ref_ind = find(ismember({EEG.chanlocs.type}, 'REF'));
-for i = 1:numel(ref_ind)
-    EEG.chanlocs(ref_ind(i)).type = 'EEG';
-end
-% for loop since could not find a way to vectorize...
+% EEG = pop_chanedit(EEG, 'changefield', {get_eeg_inds(EEG, {'REF'}) 'type' 'EEG'});
 
 % Re-reference
-EEG = pop_reref(EEG, chaninds, 'keepref','on');
+EEG = pop_reref(EEG, chaninds, 'keepref', 'on');
 
 % Set kept reference channels to correct type
-for i = 1:numel(chaninds)
-    EEG.chanlocs(chaninds(i)).type = 'REF'; %pop_reref() does not set this
-end
-
-% todo: What is EEG.ref -field? Do we need to update it?
-% EEG.ref = {EEG.chanlocs(chaninds).labels}; %this fails for, e.g cellstr arrays
-% record the reference
+% EEG = pop_chanedit(EEG, 'changefield', {chaninds 'type' 'REF'});
 
 if strcmp(Arg.reference, 'average')
     EEG.CTAP.reference = 'average';

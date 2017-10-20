@@ -41,8 +41,10 @@ function [EEG, varargout] = ctapeeg_load_chanlocs(EEG, varargin)
 % Please see the file LICENSE for details.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+
 %% Check input
 sbf_check_input() % parse the varargin, set defaults
+
 
 %% The main work: Import channel locations
 if strcmp(Arg.filetype,'custom') == 1
@@ -50,18 +52,23 @@ if strcmp(Arg.filetype,'custom') == 1
         error('ctapeeg_load_chanlocs:bad_param',...
             'Missing format or header for custom chanlocs!');
     end
-    filelocs = readlocs(Arg.locs, 'filetype', Arg.filetype,...
+    filelocs = readlocs(Arg.file, 'filetype', Arg.filetype,...
                   'format', Arg.format, 'skiplines', Arg.skiplines);
 elseif ~isempty(Arg.filetype)
-    filelocs = readlocs(Arg.locs, 'filetype', Arg.filetype);
+    filelocs = readlocs(Arg.file, 'filetype', Arg.filetype);
 else
-    try filelocs = readlocs(Arg.locs); 
+    try filelocs = readlocs(Arg.file); 
     catch ME,
         error('ctapeeg_load_chanlocs:readlocs_fail', ME.message);
     end
 end
 
-if isempty(EEG.chanlocs)
+% delete any channels according to user 'delchan' argument
+if ~isempty(Arg.delchan) && isnumeric(Arg.delchan)
+    filelocs(Arg.delchan) = [];
+end
+
+if isempty(EEG.chanlocs) || Arg.overwrite
     %no channel information present -> use channel locations as given
     EEG.chanlocs = filelocs;
 else
@@ -85,18 +92,20 @@ varargout{2} = filelocs;
         end
 
         % If desired, the default values can be changed here:
-        Arg.locs = '';
+        Arg.file = '';
         Arg.filetype = '';
         Arg.format = '';
         Arg.skiplines = 0;
+        Arg.overwrite = false;
+        Arg.delchan = [];
         Arg.writemissing = true;
 
         % Arg fields are canonical, vargs data is canonical: intersect-join
         Arg = intersect_struct(Arg, vargs);
         
-        if exist(Arg.locs, 'file') == 0
+        if exist(Arg.file, 'file') == 0
             error('ctapeeg_load_chanlocs:fileNotFound',...
-                'Cannot find channel locations file: %s', Arg.locs);
+                'Cannot find channel locations file: %s', Arg.file);
         end
 
     end

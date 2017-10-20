@@ -44,8 +44,7 @@ SWPipeParams.detect_bad_channels.method = 'variance';
 
 SweepParams.funName = 'CTAP_detect_bad_channels';
 SweepParams.paramName = 'bounds';
-SweepParams.values = num2cell(1.5:0.1:7);
-
+SweepParams.values = num2cell(1.5:0.3:7);
 
 
 %% Generate synthetic data
@@ -105,23 +104,12 @@ for i = 1:n_sweeps
     dmat(i,:) = [SweepParams.values{i},...
                 numel(SWEEG{i}.CTAP.badchans.variance.chans) ];
     fprintf('mad: %1.2f, n_chans: %d\n', dmat(i,1), dmat(i,2));
-    
-    %EEG_tmp_ep = pop_epoch( SWEEG{i}, {'blink'}, ep_win);
-    %cost_arr(i) = sum(sum(sum(abs(  EEG_tmp_ep.data(ch_inds,:,:) - ...
-    %                                EEG_clean_ep.data(ch_inds,:,:)  ))));
-    %cost_arr(i) = sum(sum(abs( SWEEG{i}.data - EEGclean.data  )));
-    
-    %{
-    subplot(n_sweeps, 1, i);
-    fh_tmp = ctap_eeg_compare_ERP(EEGprepro,SWEEG{i}, {'blink'},...
-                'idArr', {'before rejection','after rejection'},...
-                'channels', {'C17'},...
-                'visible', 'off');
-    savename = sprintf('blink_ERP_sweep%d.png', i);
-    savefile = fullfile(sweepresdir, savename);
-    print(fh_tmp, '-dpng', savefile);
-    close(fh_tmp);
-    %}
+   
+    % PLOT BAD CHANS
+    figh = ctaptest_plot_bad_chan(EEGprepro...
+        , 'badness', get_eeg_inds(EEGprepro, SWEEG{i}.CTAP.badchans.variance.chans)...
+        , 'sweep_i', i...
+        , 'savepath', sweepresdir);
 end
 %plot(cost_arr, '-o')
 

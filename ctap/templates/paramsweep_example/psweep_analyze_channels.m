@@ -1,5 +1,5 @@
-function results = psweep_analyze_channels(EEGclean, EEGart, EEG, EEGprepro,...
-    SWEEG, SweepParams, savedir)
+function results = psweep_analyze_channels(...
+    EEGclean, EEGart, EEG, EEGprepro, SWEEG, SweepParams, savedir)
 
 % Working with the output:
 %results.rejections{2,'channel_names'}{1}{:}

@@ -1,12 +1,15 @@
 % Generate synthetic data 
 
-seedEEG = pop_loadset(seed_fname, seed_srcdir);
+% seedEEG = pop_loadset(seed_fname, seed_srcdir);
+seedEEG = ctapeeg_load_data(fullfile(seed_srcdir, seed_fname));
 
 stream = RandStream.getGlobalStream;
 reset(stream, 42);
 
+
 [EEGclean, EEGart, EEG] = ...
     generate_synthetic_data_paramsweep(seedEEG, chanlocs,...
+                                SYNDATA,...
                                 EEG_LENGTH, SRATE, MODEL_ORDER,...
                                 BLINK_N, EMG_N, WRECK_N,...
                                 WRECK_MULTIPLIER_ARR);

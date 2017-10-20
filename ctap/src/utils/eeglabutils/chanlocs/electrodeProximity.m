@@ -36,7 +36,7 @@ function [epmap, rownm, colnm] = electrodeProximity( EEG )
 
 
 
-eegChan = strcmp('EEG', {EEG.chanlocs.type}) | strcmp('', {EEG.chanlocs.type});
+eegChan = get_eeg_inds(EEG, {'EEG' ''});
 eegchs = sum(eegChan);
 epmap = zeros(eegchs);
 rownm = cell(eegchs,1);
@@ -53,6 +53,9 @@ for i = 1:eegchs
         if i == 1,	colnm{k} = EEG.chanlocs(k).labels;	end
     end
 end
+
+end
+
 
 function d = eucl_dist(a,b)
 %EUCL_DIST computes Euclidean distance between two vectors by:

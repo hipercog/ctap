@@ -57,7 +57,8 @@ function [EEG, varargout] = ctapeeg_load_data( filename, varargin )
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-Arg = sbf_check_input(); % parse the varargin, set defaults
+Arg = struct();
+sbf_check_input() % parse the varargin, set defaults
 
 % Check format and file existence, define list of allowed extensions
 extns = {'set' 'bdf' 'edf' 'gdf' 'vhdr' 'eeg' 'vpd' 'xml' 'mat' 'txt'};

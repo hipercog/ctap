@@ -1,6 +1,5 @@
 %% Minimal CTAP batchfile
-DEBUG = false;
-OVERWRITE_SYNDATA = true; %can be used to re-create synthetic data
+overwrite_syndata = true; %can be used to re-create synthetic data
 
 %% Setup
 project_dir = fullfile(cd(), 'example-project');
@@ -13,7 +12,7 @@ if ~isdir(project_dir), mkdir(project_dir); end;
 % Note: Cfg needed to set data_dir_out
 data_dir_seed = fullfile(cd(),'ctap','data');
 data_dir_out = fullfile(Cfg.env.paths.projectRoot,'data','demo');
-if ( isempty(dir(fullfile(data_dir_out,'*.set'))) || OVERWRITE_SYNDATA)
+if ( isempty(dir(fullfile(data_dir_out,'*.set'))) || overwrite_syndata)
     % Normally this is run only once
     generate_synthetic_data_demo(data_dir_seed, data_dir_out);
 end
@@ -90,13 +89,14 @@ Cfg = ctap_auto_config(Cfg, ctap_args);
 %% Run the pipe
 %%{
 tic;
-CTAP_pipeline_looper(Cfg, 'debug', DEBUG, 'overwrite', true)
+CTAP_pipeline_looper(Cfg, 'debug', true, 'overwrite', true)
+% CTAP_pipeline_looper(Cfg)
 toc;
 %}
 
 
 %% Export features
-%%{
+%{
 tic;
 export_features_CTAP([Cfg.id '_db'], {'bandpowers','PSDindices'},...
     Filt, Cfg.MC, Cfg);

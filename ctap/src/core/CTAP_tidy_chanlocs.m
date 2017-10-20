@@ -67,7 +67,7 @@ end
 % tidy up - get rid of undefined, undesired channels
 if isfield(Arg, 'tidy') && Arg.tidy
     EEG = pop_select(EEG, 'nochannel',...
-        find(cellfun(@isempty,{EEG.chanlocs.type})));
+        find(cellfun(@isempty, {EEG.chanlocs.type})));
 end
 % checkset
 EEG = eeg_checkchanlocs(EEG);

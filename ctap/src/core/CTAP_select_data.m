@@ -35,18 +35,23 @@ function [EEG, Cfg] = CTAP_select_data(EEG, Cfg)
 % http://opensource.org/licenses/mit-license.php
 % Please see the file LICENSE for details.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-methods = { 'time','notime','point','nopoint', 'trial','notrial',...
-            'channel','nochannel'};
+methods = { 'time', 'notime',...
+            'point', 'nopoint',...
+            'trial', 'notrial',...
+            'channel', 'nochannel' };
         
 Arg = Cfg.ctap.select_data;
+
 
 %% ASSIST
 methodsCalledMatch = ismember(methods, fieldnames(Arg));
 methodsCalled = methods(methodsCalledMatch);
-        
+
+
 %% CORE
 argsCellArray = struct2varargin(Arg);
 EEG = pop_select(EEG, argsCellArray{:});
+
 
 %% ERROR/REPORT
 msg = myReport({'Selected data using pop_select with methods ',...

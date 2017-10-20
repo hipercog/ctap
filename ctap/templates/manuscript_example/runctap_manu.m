@@ -23,7 +23,7 @@ OVERWRITE_OLD_RESULTS = true;
 
 
 %% Setup
-project_dir = fullfile(cd(), 'example-project');
+project_dir = fullfile(cd(), 'sccn-clean-20min');
 if ~isdir(project_dir), mkdir(project_dir); end;
 
 % Define step sets and their parameters
