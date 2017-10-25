@@ -49,6 +49,7 @@ clean = eeg.data;
 blinks = zeros(size(clean));
 myo = zeros(size(clean));
 wrecks = zeros(size(clean));
+classes = 2;
 
 
 %% I. WRECK CHANNELS
@@ -87,16 +88,16 @@ end
 if any(n_blinks ~= 0)
     %A vector of 2 n_blinks represents two classes of blink: 
     %1: longer large-amp, 2: faster small-amp
-    bl_amp = [300 400; 200 240];
-    bl_dur_start = [0.240 0.120];
-    bl_dur_len = [0.20 0.06];
+    bl_amp = [300 400; 200 240]; % uV
+    bl_dur_offset = [0.240 0.120]; % milliseconds
+    bl_dur_len = [0.20 0.06]; % milliseconds
     
-    for c = 1:numel(n_blinks)
-        for a = 1:n_blinks(c)
+    for c = 1:classes
+        for a = 1:n_blinks / classes
             eeg = ctaptest_add_blink(eeg,...
-                     randi(bl_amp(c, :)),...                  %amplitude:uV
-                     randi([5 round(eeg.xmax - 5)]),...       %start time:sec
-                     bl_dur_start(c) + rand()*bl_dur_len(c)); %duration:sec
+                     randi(bl_amp(c, :)),...                   %amplitude:uV
+                     randi([5 round(eeg.xmax - 5)]),...        %start time:sec
+                     bl_dur_offset(c) + rand() * bl_dur_len(c));%duration:sec
         end
     end
     % derive a dataset of blinks
@@ -110,27 +111,27 @@ if n_myo ~= 0
     center = [-0.566406236924833, -6.936475850670939e-17, 0.824126188622016];
     emg_amp_base = [300 80];
     emg_amp_gain = [100 70];
-    emg_dur_start = [2 0.5];
+    emg_dur_offset = [2 0.5];
     emg_dur_len = [3.0 0.5];
     emg_band_s0 = [8 30];
     emg_band_s1 = [12 10];
     emg_band_w0 = [8 5];
     emg_band_w1 = [7 5];
 
-    for c = 1:numel(n_myo)
-        for a = 1:n_myo
-            f0 = emg_band_s0 + rand() * emg_band_s1;        % band start 8-20 Hz
-            f1 = f0 + (emg_band_w0 + rand() * emg_band_w1); % band width 8-15 Hz
+    for c = 1:classes
+        for a = 1:n_myo / classes
+            f0 = emg_band_s0(c) + rand() * emg_band_s1(c);       % start 8-20 Hz
+            f1 = f0 + (emg_band_w0(c) + rand() * emg_band_w1(c));% width 8-15 Hz
             % center as a random variable (as originally by jari)
             %center = [rand()*2 - 1,  rand()*2 - 1, rand()*.5 + .5]; %[x,y,z]
 
             eeg = ctaptest_add_emg(eeg,...
-                       emg_amp_base + rand() * emg_amp_gain,...%amplitude
-                       5 + rand() * (eeg.xmax - 10),...        %start time:sec
-                       emg_dur_start + rand() * emg_dur_len,...%duration:sec
-                       center,...                              %center[x,y,z]
-                       rand()*2.5,...                          %radius
-                       [f0 f1 1.0]);                           %freq profile
+                       emg_amp_base(c) + rand() * emg_amp_gain(c),... %amplitude
+                       5 + rand() * (eeg.xmax - 10),...          %start time:sec
+                       emg_dur_offset(c) + rand() * emg_dur_len(c),...  %dur:sec
+                       center,...                                 %center[x,y,z]
+                       rand() * 2.5,...                                  %radius
+                       [f0 f1 1.0]);                               %freq profile
         end
     end
     % derive a dataset of EMG

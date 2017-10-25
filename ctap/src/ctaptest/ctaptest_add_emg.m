@@ -58,6 +58,8 @@ fprintf(1,'\nAdding %0.2fs %0.2f-%0.2fHz (A=%0.2f) EMG burst at t=%0.2fs\n',...
 %ssx = eegfilt(ssx,100,0,F(2),0,[],[],'fir1');
 
 warning('OFF', 'BACKTRACE')
+% TODO: REPLACE CALLS TO eegfilt() WITH pop_eegfiltnew(), OR MATLAB'S
+% filter() (BUT CAREFUL, BIOSIG ALSO HAS A FUNCTION CALLED filter())
 ssx = eegfilt(emg, 100, F(1), 0, 0, [], 0, 'fir1');
 ssx = eegfilt(ssx, 100, 0, F(2), 0, [], 0, 'fir1');
 emg = ssx .* (ampl * 2);

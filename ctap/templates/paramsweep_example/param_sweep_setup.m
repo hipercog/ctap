@@ -17,7 +17,7 @@ seed_srcdir = fullfile(cd(),'/ctap/data');
 
 % Which parts of code to run etc.
 SYNDATA = true;
-RECOMPUTE_SYNDATA = false;
+RECOMPUTE_SYNDATA = true;
 RERUN_PREPRO = false;
 STOP_ON_ERROR = true;
 OVERWRITE_OLD_RESULTS = true;
