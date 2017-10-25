@@ -1,4 +1,10 @@
 %% CTAP manuscript analysis batchfile
+% As referenced in the first CTAP article:
+% Cowley BU, Korpela J, Torniainen J. (2017) Computational testing for automated 
+% preprocessing: a Matlab toolbox to enable large scale electroencephalography 
+% data processing. PeerJ Computer Science 3:e108 
+% https://doi.org/10.7717/peerj-cs.108
+% 
 % To run this, you need:
 %   * Matlab R2016b or newer
 %   * EEGLAB, latest version,
