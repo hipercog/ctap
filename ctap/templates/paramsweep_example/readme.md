@@ -2,11 +2,20 @@
 # Parameter sweep examples (codename `HYDRA`)
 
 ## HOWTO
-Start with one of the main batch files listed below. Always check the contents of `param_sweep_setup.m` prior to running a script and make sure the save locations and other settings are satisfactory.
+Make sure you have correctly set up CTAP, see: [main readme](../../../readme.md). Note: HYDRA works currently only branch `dev`.
+
+The batch files should be run in the following order:
+1. `param_sweep_setup.m` (needs editing!)
+2. `param_sweep_sdgen.m`
+3. `param_seep_prepro.m`  
+4. some analysis script?
+
+Always check the contents of `param_sweep_setup.m` prior to running a script and make sure the save locations and other settings are satisfactory.
 
 The current solution is a temporary one where `param_sweep_*.m` scripts make changes directly to workspace causing hard-to-follow stuff to happen. A better option would be to turn them into functions.
 
 ## Main batch files
+TODO: Is this section up to date?
 
 ### Synthetic data
 File | Purpose

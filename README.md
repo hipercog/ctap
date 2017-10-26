@@ -19,7 +19,9 @@ Clone the GitHub repository to your machine using
 
     git clone https://github.com/bwrc/ctap.git <destination dir>
 
-Add the whole directory to your Matlab path. You also need to have EEGLAB added to your Matlab path.
+Add directory trees `<dst_dir>/ctap/` and `<dst_dir>/dependencies/` to your Matlab path. You also need to have EEGLAB added to your Matlab path.
+
+One option to accomplish both of these to make a local copy of `ctap_set_path.m`, edit the file to match the setup on your machine and run to configure Matlab path.
 
 ## Getting started ##
 A minimalistic working example can be found in `~/ctap/templates/minimalistic_example/`.
@@ -38,7 +40,7 @@ More examples are available under `~/ctap/templates/`.
 3. Run
 	update_matlab_path_anyone()
 4. Try running one of the "proof-of-concept" scripts:
-	pipebatch_minimal()	
+	pipebatch_minimal()
 	pipebatch_WCST_baseprepro()
 
 ## License information
