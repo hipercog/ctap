@@ -6,7 +6,7 @@ Make sure you have correctly set up CTAP, see: [main readme](../../../README.md)
 
 ###### Note!
 * HYDRA works currently only branch `dev`.
-* git lfs needs to be _installed_ to get HYDRA source data. Run `git lfs fetch` if you only have file pointers and not data (visible as an empty EEG dataset error).
+* git lfs needs to be _installed_ to get HYDRA source data. Run `git lfs fetch` and `git lfs checkout`, if you only have file pointers and not data (visible as an empty EEG dataset error).
 
 The batch files should be run in the following order:
 1. `param_sweep_setup.m` (needs editing!)
