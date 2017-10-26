@@ -6,13 +6,13 @@
 % Location of project root, very user specific
 projectRoot = '/home/ben/Benslab/CTAP/hydra';
 %projectRoot = '/home/jkor/work_local/projects/ctap/hydra';
+%projectRoot = '/home/jussi/work_local/projects/ctap/ctapres_hydra';
 %projectRoot = '/ukko/projects/ReKnow/HYDRA/CTAP';
 
 
 branch_name = 'defbranch';
 
 % This one assumes that working directory is ctap_dev repo root:
-%seed_srcdir = '/home/jkor/work_local/projects/ctap/ctap_pipeline/ctap/data/';
 seed_srcdir = fullfile(cd(),'/ctap/data');
 
 % Which parts of code to run etc.
