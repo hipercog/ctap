@@ -12,8 +12,6 @@ git s# explicit dirs #
 
 # Minimalistic example related files #
 ###################
-BCICIV_calib_ds1a.fdt
-BCICIV_calib_ds1a.set
 *example-project
 
 # misc #
