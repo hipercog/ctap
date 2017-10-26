@@ -2,7 +2,7 @@
 # Parameter sweep examples (codename `HYDRA`)
 
 ## HOWTO
-Make sure you have correctly set up CTAP, see: [main readme](../../../readme.md). Note: HYDRA works currently only branch `dev`.
+Make sure you have correctly set up CTAP, see: [main readme](../../../README.md). Note: HYDRA works currently only branch `dev`.
 
 The batch files should be run in the following order:
 1. `param_sweep_setup.m` (needs editing!)
