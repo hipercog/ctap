@@ -17,6 +17,8 @@
 %        eeg.CTAP.artifact.EMG   
 function eeg = ctaptest_add_emg(eeg,ampl,t_start,dur,loc,rad,F,timetemp,spacetemp)
 
+FS = 100; %sampling rate, in Hz
+
 if nargin < 8
     timetemp = 'linear';
 end
@@ -57,13 +59,55 @@ fprintf(1,'\nAdding %0.2fs %0.2f-%0.2fHz (A=%0.2f) EMG burst at t=%0.2fs\n',...
 %ssx = eegfilt(emg,100,F(1),0,0,[],[],'fir1');
 %ssx = eegfilt(ssx,100,0,F(2),0,[],[],'fir1');
 
+%{
+% disabled upon "too close to nyqvist" error:
 warning('OFF', 'BACKTRACE')
 % TODO: REPLACE CALLS TO eegfilt() WITH pop_eegfiltnew(), OR MATLAB'S
-% filter() (BUT CAREFUL, BIOSIG ALSO HAS A FUNCTION CALLED filter())
+% filter() (BUT CAREFUL, BIOSIG ALSO HAS A FUNCTION CALLED filter()) -> 
+% done, see code below.
 ssx = eegfilt(emg, 100, F(1), 0, 0, [], 0, 'fir1');
 ssx = eegfilt(ssx, 100, 0, F(2), 0, [], 0, 'fir1');
 emg = ssx .* (ampl * 2);
 warning('ON', 'BACKTRACE')
+%}
+
+% Filtering using EEGLAB firfilt -plugin
+tbw = F(3); %transition band width, in Hz
+
+% Band pass
+cutoff = F(1:2); %cut-off frequencies, in Hz
+m  = pop_firwsord('hamming', FS, tbw);
+b  = firws(m, cutoff / (FS / 2),'band', windows('hamming', m + 1));
+% Frequency response
+% freqz(b, 1, 8192, FS)
+
+emgtmp = create_eeg(emg, 'fs', FS);
+emgtmp = firfilt(emgtmp, b);
+emg = emgtmp.data .* (ampl * 2);
+
+% Usage:
+%   >> b = firws(m, f);
+%   >> b = firws(m, f, w);
+%   >> b = firws(m, f, t);
+%   >> b = firws(m, f, t, w);
+%
+% Inputs:
+%   m - filter order (mandatory even)
+%   f - vector or scalar of cutoff frequency/ies (-6 dB;
+%       pi rad / sample)
+%
+% Optional inputs:
+%   w - vector of length m + 1 defining window {default blackman}
+%   t - 'high' for highpass, 'stop' for bandstop filter {default low-/
+%       bandpass}
+%
+% Output:
+%   b - filter coefficients
+%
+% Example:
+%   fs = 500; cutoff = 0.5; tbw = 1;
+%   m  = pop_firwsord('hamming', fs, tbw);
+%   b  = firws(m, cutoff / (fs / 2), 'high', windows('hamming', m + 1)); 
 
 
 chc = [[eeg.chanlocs.X]' [eeg.chanlocs.Y]' [eeg.chanlocs.Z]'];
