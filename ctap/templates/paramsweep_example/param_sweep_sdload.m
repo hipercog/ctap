@@ -1,4 +1,5 @@
-
+% Note: cannot be called directly. Called as part of
+% test_param_sweep_sdgen_*()
 
 if ~exist('EEGclean')
     EEGclean = pop_loadset('syndata_clean.set', syndata_dir);

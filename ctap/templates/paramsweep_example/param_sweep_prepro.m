@@ -1,4 +1,5 @@
-
+% Note: cannot be called directly. Called as part of
+% test_param_sweep_sdgen_*()
 
 % Create measurement config (MC) based on folder
 % Measurement config based on synthetic source files
@@ -8,8 +9,6 @@ Cfg.MC = MC;
 clear('Filt')
 Filt.subjectnr = 1;
 Cfg.pipe.runMeasurements = get_measurement_id(Cfg.MC, Filt);
-
-%Cfg.pipe.runSets = {Cfg.pipe.stepSets(3).id}; %/3_tmp/
 
 CTAP_pipeline_looper(Cfg,...
                     'debug', STOP_ON_ERROR,...

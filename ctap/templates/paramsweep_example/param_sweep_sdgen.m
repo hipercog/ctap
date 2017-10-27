@@ -1,4 +1,6 @@
-% Generate synthetic data 
+% Generate synthetic data
+% Note: cannot be called directly. Called as part of
+% test_param_sweep_sdgen_*()
 
 % seedEEG = pop_loadset(seed_fname, seed_srcdir);
 seedEEG = ctapeeg_load_data(fullfile(seed_srcdir, seed_fname));

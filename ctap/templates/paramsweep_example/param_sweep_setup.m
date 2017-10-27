@@ -5,20 +5,19 @@
 
 % Location of project root, very user specific
 projectRoot = '/home/ben/Benslab/CTAP/hydra';
-%projectRoot = '/home/jkor/work_local/projects/ctap/hydra';
+%projectRoot = '/home/jkor/work_local/projects/ctap/ctapres_hydra';
 %projectRoot = '/home/jussi/work_local/projects/ctap/ctapres_hydra';
 %projectRoot = '/ukko/projects/ReKnow/HYDRA/CTAP';
 
-
-branch_name = 'defbranch';
+% note: branch is set later at test_param_sweep_*() functions
 
 % This one assumes that working directory is ctap_dev repo root:
-seed_srcdir = fullfile(cd(),'/ctap/data');
+seed_srcdir = fullfile(cd(),'/ctap/data');f
 
 % Which parts of code to run etc.
 SYNDATA = true;
-RECOMPUTE_SYNDATA = true;
-RERUN_PREPRO = false;
+RECOMPUTE_SYNDATA = false;
+RERUN_PREPRO = true;
 STOP_ON_ERROR = true;
 OVERWRITE_OLD_RESULTS = true;
 
