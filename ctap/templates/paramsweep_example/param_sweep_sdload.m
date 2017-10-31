@@ -1,15 +1,19 @@
+function [EEG, EEGart, EEGclean] = param_sweep_sdload(seed_fname, PARAM)
 % Note: cannot be called directly. Called as part of
 % test_param_sweep_sdgen_*()
 
-if ~exist('EEGclean')
-    EEGclean = pop_loadset('syndata_clean.set', syndata_dir);
-end
+sd_file = fullfile(PARAM.path.seedDataSrc, seed_fname);
+[sd_path, sd_name] = fileparts(sd_file);
+sd_factorized_subdir = fullfile(PARAM.path.synDataRoot, sd_name);
 
-if ~exist('EEGart')
-    EEGart = pop_loadset('syndata_artifacts.set', syndata_dir);
-end
 
-if ~exist('EEG')
-    EEG = pop_loadset('syndata.set', syndata_dir);
-end
+EEGclean = pop_loadset(sprintf('%s_syndata_clean.set', sd_name),...
+                        sd_factorized_subdir);
 
+EEGart = pop_loadset(sprintf('%s_syndata_artifacts.set', sd_name),...
+                    sd_factorized_subdir);
+
+EEG = pop_loadset(sprintf('%s_syndata.set', sd_name),...
+                    PARAM.path.synDataRoot);
+
+end

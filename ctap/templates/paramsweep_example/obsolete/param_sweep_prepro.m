@@ -1,3 +1,5 @@
+% obsolete under func-ctap
+
 % Note: cannot be called directly. Called as part of
 % test_param_sweep_sdgen_*()
 
