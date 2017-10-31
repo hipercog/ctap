@@ -84,8 +84,10 @@ infile = 'syndata_session_meas.set';
 EEGprepro = pop_loadset(infile, inpath);
 [SWEEG, PARAMS] = CTAP_pipeline_sweeper(EEGprepro, SWPipe, SWPipeParams, Cfg, ...
                                           SweepParams);
+sweepres_file = fullfile(sweepresdir, 'sweepres.mat');
+save(sweepres_file, 'SWEEG', 'PARAMS','SWPipe','SWPipeParams', 'SweepParams');   
+            
 
-                     
 %% Analyze
 %%{
 %Number of blink related components
@@ -138,6 +140,16 @@ end
 my_xlim = [SweepParams.values{1}, SweepParams.values{end}];
 
 figH = figure();
+semilogx(dt.tail_prc, dt.inj_cover, 'g-o', dt.tail_prc, dt.det_cover, 'b-o');
+xlim(my_xlim);
+xlabel('Tail precentage [0,1]');
+ylabel('Cover [0,1]');
+title('The percentage of A4 EEG data covered');
+legend('EMG','badseg');
+saveas(figH, fullfile(sweepresdir, 'sweep_segment-cover.png'));
+close(figH);
+
+figH = figure();
 semilogx(dt.tail_prc, dt.inj_prc, 'g-o', dt.tail_prc, dt.det_prc, 'b-o');
 xlim(my_xlim);
 xlabel('Tail precentage [0,1]');
@@ -147,16 +159,6 @@ legend('EMG','badseg');
 saveas(figH, fullfile(sweepresdir, 'sweep_segment-overlap.png'));
 close(figH);
 
-
-figH = figure();
-semilogx(dt.tail_prc, dt.inj_cover, 'g-o', dt.tail_prc, dt.det_cover, 'b-o');
-xlim(my_xlim);
-xlabel('Tail precentage [0,1]');
-ylabel('Cover [0,1]');
-title('The percentage of A4 EEG data covered');
-legend('EMG','badseg');
-saveas(figH, fullfile(sweepresdir, 'sweep_segment-cover.png'));
-close(figH);
 
 
 

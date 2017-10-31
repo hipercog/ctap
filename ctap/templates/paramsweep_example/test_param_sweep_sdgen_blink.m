@@ -1,5 +1,5 @@
 % generate synthetic data, detect blink related ICs from it and remove them
-clear;
+%clear;
 
 %% Setup
 branch_name = 'ctap_hydra_blink';
@@ -49,7 +49,7 @@ SWPipe(i).id = [num2str(i) '_blink_correction'];
 
 SweepParams.funName = 'CTAP_detect_bad_comps';
 SweepParams.paramName = 'thr';
-SweepParams.values = num2cell(linspace(0.1, 1.5, 20));
+SweepParams.values = num2cell(linspace(1.3, 1.5, 30));
 
 
 %% Generate synthetic data
@@ -70,13 +70,23 @@ end
 
                 
 %% Sweep
-% Note: This step does sweeping ONLY, preprocess using some other means
-inpath = fullfile(Cfg.env.paths.analysisRoot, '2_ICA');
-infile = 'syndata_session_meas.set';
-EEGprepro = pop_loadset(infile, inpath);
+sweepres_file = fullfile(sweepresdir, 'sweepres.mat');
 
-[SWEEG, PARAMS] = CTAP_pipeline_sweeper(EEGprepro, SWPipe, PipeParams, Cfg, ...
-                                          SweepParams);
+if RERUN_SWEEP
+    % Note: This step does sweeping ONLY, preprocess using some other means
+    inpath = fullfile(Cfg.env.paths.analysisRoot, '2_ICA');
+    infile = 'syndata_session_meas.set';
+    EEGprepro = pop_loadset(infile, inpath);
+
+    [SWEEG, PARAMS] = CTAP_pipeline_sweeper(EEGprepro, SWPipe, PipeParams, Cfg, ...
+                                              SweepParams); 
+    save(sweepres_file, 'SWEEG', 'PARAMS','SWPipe','PipeParams', 'SweepParams',...
+        '-v7.3');   
+ 
+else 
+    S = load(sweepres_file);
+end
+
 
                      
 %% Analyze
@@ -103,6 +113,9 @@ EEG_basis_ep = pop_epoch(EEG_basis_ep, {'blink'}, ep_win);
 % EEG_blink_ep.data = EEGart.blinks;
 % EEG_blink_ep = pop_epoch(EEG_blink_ep, {'blink'}, ep_win);
 
+% output directory for blink-ERPs
+blinkerp_dir = fullfile(sweepresdir, 'blink-ERP');
+mkdir(blinkerp_dir);
 
 for i = 1:n_sweeps
     dmat(i,:) = [SweepParams.values{i},...
@@ -123,15 +136,15 @@ for i = 1:n_sweeps
 %             ))));
 %     U(i) = diffS + diffA;
 
-    %{
+    %%{
     %PLOT BLINK ERP PER SWEEP
     subplot(n_sweeps, 1, i);
     fh_tmp = ctap_eeg_compare_ERP(EEGprepro,SWEEG{i}, {'blink'},...
                 'idArr', {'before rejection','after rejection'},...
                 'channels', {'C17'},...
                 'visible', 'off');
-    savename = sprintf('blink_ERP_sweep%d.png', i);
-    savefile = fullfile(sweepresdir, savename);
+    savename = sprintf('sweep_blink-ERP_%d.png', i);
+    savefile = fullfile(blinkerp_dir, savename);
     print(fh_tmp, '-dpng', savefile);
     close(fh_tmp);
     %}

@@ -4,20 +4,21 @@
 %% Often changed 
 
 % Location of project root, very user specific
-projectRoot = '/home/ben/Benslab/CTAP/hydra';
-%projectRoot = '/home/jkor/work_local/projects/ctap/ctapres_hydra';
+%projectRoot = '/home/ben/Benslab/CTAP/hydra';
+projectRoot = '/home/jkor/work_local/projects/ctap/ctapres_hydra';
 %projectRoot = '/home/jussi/work_local/projects/ctap/ctapres_hydra';
 %projectRoot = '/ukko/projects/ReKnow/HYDRA/CTAP';
 
 % note: branch is set later at test_param_sweep_*() functions
 
 % This one assumes that working directory is ctap_dev repo root:
-seed_srcdir = fullfile(cd(),'/ctap/data');f
+seed_srcdir = fullfile(cd(),'/ctap/data');
 
 % Which parts of code to run etc.
 SYNDATA = true;
-RECOMPUTE_SYNDATA = false;
-RERUN_PREPRO = true;
+RECOMPUTE_SYNDATA = true;
+RERUN_PREPRO = false;
+RERUN_SWEEP = false;
 STOP_ON_ERROR = true;
 OVERWRITE_OLD_RESULTS = true;
 
@@ -65,3 +66,4 @@ Cfg.grfx.on = false;
 seed_fname = 'BCICIV_calib_ds1a.set';
 syndata_dir = fullfile(Cfg.env.paths.ctapRoot, 'syndata');
 mkdir(syndata_dir);
+

@@ -3,7 +3,10 @@
 % test_param_sweep_sdgen_*()
 
 % seedEEG = pop_loadset(seed_fname, seed_srcdir);
-seedEEG = ctapeeg_load_data(fullfile(seed_srcdir, seed_fname));
+sd_file = fullfile(seed_srcdir, seed_fname);
+[sd_path, sd_name] = fileparts(sd_file);
+seedEEG = ctapeeg_load_data(sd_file);
+
 
 stream = RandStream.getGlobalStream;
 reset(stream, 42);
@@ -16,15 +19,19 @@ reset(stream, 42);
                                 BLINK_N, EMG_N, WRECK_N,...
                                 WRECK_MULTIPLIER_ARR);
 
+% save data
+sd_factorized_subdir = fullfile(syndata_dir, sd_name);
+mkdir(sd_factorized_subdir);
+
 pop_saveset(EEGclean,...
-            'filepath', syndata_dir, ...
-            'filename','syndata_clean.set');
+            'filepath', sd_factorized_subdir, ...
+            'filename', sprintf('%s_syndata_clean.set', sd_name));
 pop_saveset(EEGart,...
-            'filepath', syndata_dir, ...
-            'filename','syndata_artifacts.set');
+            'filepath', sd_factorized_subdir, ...
+            'filename', sprintf('%s_syndata_artifacts.set', sd_name));
 pop_saveset(EEG,...
             'filepath', syndata_dir, ...
-            'filename','syndata.set');        
+            'filename', sprintf('%s_syndata.set', sd_name));        
         
 %{
     eeg_eventtypes(EEGart);

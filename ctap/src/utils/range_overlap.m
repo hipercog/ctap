@@ -19,6 +19,11 @@ function [overlap_idx, OVR1, OVR2] = range_overlap(ranges1, ranges2)
 %   overlap_idx     integer vector, a vector of indices that show an
 %                   overlap
 %   OVR#            struct, Overlap results for each range set separately
+%                   Field descriptions:% 
+%       .overlapPrc: # of overlapping indices / # of indices covered 
+%       .nIdxCovered: # of indices covered 
+%       .rangeIdxArr:  row numbers of _sorted_ ranges<x> for which 
+%                      overlaps happen
 %
 % Assumptions:
 %
@@ -95,8 +100,14 @@ overlap_idx = find(ovrl_match);
 
     % Compute range list specific statistics
     function R = sbf_compute_stats(tf, ovrl_match)
+        
+        % # of overlapping indices / # of indices covered
         R.overlapPrc = sum(ovrl_match) / sum(~isnan(tf));
+        
+        % # of indices covered
         R.nIdxCovered = sum(~isnan(tf));
+        
+        % row numbers of sorted ranges<x> for which overlaps happen
         R.rangeIdxArr = unique(tf(ovrl_match)); 
     end
 
