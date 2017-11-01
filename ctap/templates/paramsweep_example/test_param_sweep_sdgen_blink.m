@@ -8,7 +8,7 @@
 %% General setup
 BRANCH_NAME = 'ctap_hydra_blink';
 
-RERUN_PREPRO = false;
+RERUN_PREPRO = true;
 RERUN_SWEEP = true;
 
 STOP_ON_ERROR = true;
