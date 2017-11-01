@@ -2,6 +2,7 @@ function SEGMENT = generate_segment(blockfile)
 % GENERATE_SEGMENT - Create variable SEGMENT based on blockfile
 %
 % Blockfile has to contain data indices as time variables.
+% todo: name not descriptive. Very close to generate_segments.m...
 
 bdef = read_block_defs(blockfile);
 

@@ -39,6 +39,20 @@ function [EEG, varargout] = ctapeeg_detect_bad_epochs(EEG, varargin)
 %   'spec_meth' : ['fft'|'multitaper'] method to compute spectrum
 %                 Default='multitaper'
 %
+%   FOR 'hasEvent' method that rejects epoch that contain a certain type of
+%   event in EEG.epoch.eventtype.
+%   'event'     : string, Event type string of event to use a the rejection
+%                 trigger
+%
+%   Functionality to add:
+%
+%   FOR 'hasEventProperty' method that rejects epochs based on trigger
+%   event properties in EEG.event.
+%   'eventPropertyName'  : string, EEG.event field name
+%   'eventPropertyValue' : cell array of eventProperty field values that trigger
+%                          the exclusion of the epoch i.e. mark it as bad
+%               
+%
 % OUTPUT
 %   'EEG'       : struct, modified input EEG
 % VARARGOUT
@@ -69,15 +83,23 @@ function [EEG, varargout] = ctapeeg_detect_bad_epochs(EEG, varargin)
 % Please see the file LICENSE for details.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-Arg = struct;
+
 sbf_check_input() % parse the varargin, set defaults
 
+% Subset to required channels for:
+% faster, recufast, eegthresh, rejspec
+if ~ismember(Arg.method, {'hasEvent','hasEventProperty'})
+    EEGtmp = pop_select(EEG, 'channel', Arg.channels);
+    Arg.channels = get_eeg_inds(EEGtmp, {'EEG'});
+else
+    EEGtmp = EEG;
+end
 % Remove channel baselines
-tmpdata = EEG.data;
-[EEG.data, ~] = rmbase(EEG.data);
+[EEGtmp.data, ~] = rmbase(EEGtmp.data);
 
 result = struct('method_data', '', 'scores', []);
-epochs = 1:numel(EEG.epoch);
+epochs = 1:numel(EEGtmp.epoch);
+
 
 %% call the method to do BAD EPOCH removal.
 %   bad_eps_match = k epochs classified as bad, integer array, k <= EEG.trials
@@ -86,7 +108,7 @@ epochs = 1:numel(EEG.epoch);
 switch Arg.method
     case 'faster'
         % latent parameters: any|all, metric
-        epbad = epoch_properties(EEG, Arg.channels, epochs);
+        epbad = epoch_properties(EEGtmp, Arg.channels, epochs);
         [~, all_bad, ~] = min_z(epbad, struct('z', Arg.bounds(2)));
         bad_eps_match = epochs(all_bad');
         result.scores =...
@@ -95,9 +117,16 @@ switch Arg.method
             , 'VariableNames', {'ampRange' 'variance' 'chanDev'});
         
     case 'recufast'
-        recu_out = recufast_badness_detector(...
-                  EEG, struct(), Arg.channels, Arg.bounds, Arg.iters, 'chan',...
-                  'outdir', Arg.outdir, 'report', Arg.report);
+        recu_out = recufast_badness_detector(EEGtmp...
+                                            , struct()...
+                                            , Arg.channels...
+                                            , Arg.bounds...
+                                            , Arg.iters...
+                                            , 'chan'...
+                                            , 'outdir'...
+                                            , Arg.outdir...
+                                            , 'report'...
+                                            , Arg.report);
         bad_eps_match = recu_out.bad_bin(2,:) > 0;
         result.scores = table(recu_out.bad_bin(2, :)' ...
             , 'RowNames', cellstr(num2str(epochs'))...
@@ -108,40 +137,46 @@ switch Arg.method
         % exceeding amplitude in one or more electrodes.
         % 'badelec' is a zero-one matrix of size [nchan, numel(bad_eps_match)].
         % Epochs without large amplitudes are not reported.
-        [~, bad_eps_match, ~, badelec] = eegthresh(...
-            EEG.data, EEG.pnts, Arg.channels,...
-            Arg.uV_thresh(1), Arg.uV_thresh(2),...
-            [EEG.xmin EEG.xmax],...
-            Arg.sec_lim(1), Arg.sec_lim(2) );
+        [~, bad_eps_match, ~, badelec] = eegthresh(EEGtmp.data...
+                                         , EEGtmp.pnts...
+                                         , Arg.channels...
+                                         , Arg.uV_thresh(1), Arg.uV_thresh(2)...
+                                         , [EEGtmp.xmin EEGtmp.xmax]...
+                                         , Arg.sec_lim(1), Arg.sec_lim(2) );
         
-        scores = zeros(numel(Arg.channels), EEG.trials);
+        scores = zeros(numel(Arg.channels), EEGtmp.trials);
         if ~isempty(badelec)
             scores(Arg.channels, bad_eps_match) = badelec;
         end
         
-        result.scores = array2table(scores,...
-            'RowNames', {EEG.chanlocs(Arg.channels).labels},...
-            'VariableNames', strcat({'ep'}, strtrim(cellstr(num2str((1:EEG.trials)'))) ) );
+        result.scores = array2table(scores...
+            , 'RowNames', {EEGtmp.chanlocs(Arg.channels).labels}...
+            , 'VariableNames'...
+            , strcat({'ep'}, strtrim(cellstr(num2str((1:EEGtmp.trials)'))) ) );
 
 
     case 'rejspec'
-        [~, bad_eps_match] = pop_rejspec(EEG, 1, 'elecrange', Arg.channels,...
-            'threshold',Arg.dB_thresh, 'freqlimits',Arg.freq_lim,...
-            'method',Arg.spec_meth, 'eegplotreject',0);
+        [~, bad_eps_match] = pop_rejspec(EEGtmp, 1 ...
+                             , 'elecrange', Arg.channels...
+                             , 'threshold', Arg.dB_thresh...
+                             , 'freqlimits', Arg.freq_lim...
+                             , 'method', Arg.spec_meth...
+                             , 'eegplotreject', 0);
         result.scores = table({'no scores available'}...
             , 'RowNames', {'ALL'}...
             , 'VariableNames', {'spectralThresh'});
         
     case 'hasEvent'
         % Identify epochs with blinks
-        if iscell(EEG.epoch(1).eventtype)
-            epoch_eventtypes = {EEG.epoch(:).eventtype};
+        if iscell(EEGtmp.epoch(1).eventtype)
+            epoch_eventtypes = {EEGtmp.epoch(:).eventtype};
         else
            % if EEG.epoch.eventtype is not cell array things get complicated
            % this is a very rare occasion ...
            % make epoch_eventtypes a cell array of cell arrays of strings.
-           for i=1:numel(EEG.epoch)
-               epoch_eventtypes{i} = {EEG.epoch(i).eventtype}; %#ok<AGROW>
+           epoch_eventtypes = cell(1, numel(EEGtmp.epoch));
+           for i=1:numel(EEGtmp.epoch)
+               epoch_eventtypes{i} = {EEGtmp.epoch(i).eventtype};
            end
         end
 
@@ -150,10 +185,29 @@ switch Arg.method
                                 'UniformOutput',false);
         bad_eps_match = cellfun(@(x) x==true, bl_ind_cell);
 
-        result.scores = array2table(bad_eps_match,...
-            'RowNames', {EEG.chanlocs(Arg.channels).labels},...
-            'VariableNames', strcat({'ep'}, strtrim(cellstr(num2str((1:EEG.trials)')))) );
-       
+        result.scores = array2table(bad_eps_match...
+            , 'RowNames', {sprintf('hasEvent_%s', catcellstr(Arg.event))}...
+            , 'VariableNames'...
+            , strcat({'ep'}, strtrim(cellstr(num2str((1:EEGtmp.trials)')))) );
+        
+    case 'hasEventProperty'
+        % Mark as bad epochs whose trigger event has a certain property in
+        % EEG.event
+        
+        % Get a subset of event table with only epoch trigger events,
+        % Note: numel(trigger_event) == numel(EEG.epoch) and the order is
+        % the same.
+        trigger_event = eeg_trigger_events(EEGtmp);
+        
+        % Find epochs that have unwanted event properties
+        bad_eps_match = ismember({trigger_event.(Arg.eventPropertyName)},...
+                                 Arg.eventPropertyValue);
+        
+        result.scores = array2table(bad_eps_match...
+            , 'RowNames', {sprintf('unwantedEventProperty_%s'...
+                                        , catcellstr(Arg.eventPropertyName))}...
+            , 'VariableNames'...
+            , strcat({'ep'}, strtrim(cellstr(num2str((1:EEGtmp.trials)')))) );
 end
 
 
@@ -180,8 +234,6 @@ if ~istable(result.scores)
         'Bad epoch scores by ''%s'' must be in table format', Arg.method)
 end
 
-EEG.data = tmpdata;
-
 varargout{1} = Arg;
 varargout{2} = result;
 
@@ -204,7 +256,7 @@ varargout{2} = result;
         end
         try Arg.method = vargs.method;
         catch
-            if numel(Arg.channels) > 32, Arg.method = 'recufast';
+            if numel(Arg.channels) > 32, Arg.method = 'faster';
             else, Arg.method = 'rejspec';
             end
         end
@@ -220,13 +272,14 @@ varargout{2} = result;
                 Arg.bounds = [-2 2];
 
             case 'eegthresh'
+                Arg.sec_lim = [EEG.xmin EEG.xmax];
+                Arg.uV_thresh = [-120 120];
+%MAYBEDO: Use data-driven approach??
 %                sds = 5; %we use 5 std devs from the mean as uV thresholds
 %                [~,y,z] = size(EEG.data);
 %                vecData = reshape(mean(EEG.data(Arg.channels,:,:)), 1, y*z);
 %                Arg.uV_thresh = [mean(vecData) - std(vecData) * sds ...
 %                                 mean(vecData) + std(vecData) * sds];
-                Arg.sec_lim = [EEG.xmin EEG.xmax];
-                Arg.uV_thresh = [-120 120];
 
             case 'rejspec'
                 Arg.freq_lim = [0 2; 20 40];
@@ -234,7 +287,11 @@ varargout{2} = result;
                 Arg.spec_meth = 'multitaper';
                 
             case 'hasEvent'
-                Arg.event = '';
+                Arg.event = ''; %will be replaced by varargin
+                
+            case 'hasEventProperty'
+                Arg.eventPropertyName = ''; %will be replaced by varargin
+                Arg.eventPropertyValue = ''; %will be replaced by varargin
                 
             otherwise
                 error('ctapeeg_detect_bad_epochs:bad_method',...

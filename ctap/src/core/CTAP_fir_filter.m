@@ -16,8 +16,8 @@ function [EEG, Cfg] = CTAP_fir_filter(EEG, Cfg)
 %   Cfg         struct, CTAP configuration structure
 %
 %   Cfg.ctap.fir_filter:
-%   .lowcutoff  [1,1] numeric, Low end of the pass band in Hz, default: []
-%   .highcutoff [1,1] numeric, High end of the pass band in Hz, default: []
+%   .locutoff  [1,1] numeric, Low end of the pass band in Hz, default: []
+%   .hicutoff  [1,1] numeric, High end of the pass band in Hz, default: []
 %   .filtorder [1,1] integer, Filter order, default: [] i.e. order set by
 %                             the filtering function
 %   .revfilt [1,1] integer, Invert filter from bandpass to notch filter?,

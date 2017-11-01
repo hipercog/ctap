@@ -5,7 +5,7 @@ function figh = ctap_eeg_blink_ERP(EEG1, EEG2, veogChanArr, varargin)
 %   A short wrapper for ctap_eeg_compare_ERP.m with focus on blinks.
 %
 % Syntax:
-%   figh = ctap_eeg_compare_ERP(EEG1, EEG2, veogChanArr, varargin)
+%   figh = ctap_eeg_blink_ERP(EEG1, EEG2, veogChanArr, varargin)
 %
 % Inputs:
 %   'EEG1'              struct, first EEG structure to compare

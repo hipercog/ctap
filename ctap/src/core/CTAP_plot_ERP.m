@@ -78,6 +78,19 @@ else
     eeglab_writeh5_erp(h5file, EEG);
     
     
+    %% Export some statistics to function data database
+    dbid = sbf_fundb_open(Cfg.env.funDataDB);
+    stpf = sprintf('set%d_fun%d',...
+                    Cfg.pipe.current.set,...
+                    Cfg.pipe.current.funAtSet);
+    sqlq = sprintf('INSERT OR REPLACE INTO ctap_plot_erp (casename,erpid,stepsetfun,variable,value) VALUES (''%s'',''%s'',''%s'',''%s'',%f)',...
+                   EEG.CTAP.measurement.casename, EEG.CTAP.ERP.id, stpf,...
+                   'ntrials', size(EEG.data,3));
+    mksqlite(dbid, sqlq);
+    mksqlite(dbid, 'close');
+    % mksqlite('select * from ctap_plot_erp')
+    
+    
     %% Export average ERP in HDF5 format - old style, here for old R code to work...
     %{
     savename = sprintf('%s_%s_ERPdata.h5', EEG.CTAP.measurement.casename,...
@@ -111,3 +124,26 @@ msg = myReport(sprintf('ERP plotted for measurement %s.',...
 EEG.CTAP.history(end+1) = create_CTAP_history_entry(msg, mfilename, Arg);
 
 %% MISC Miscellaneous additional actions following core function success
+
+
+
+%% Helper functions
+function dbid = sbf_fundb_open(dbfile)
+
+    dbid = mksqlite(0, 'open', dbfile); %creates if does not exist
+ 
+    % Create table if necessary
+    S = mksqlite(dbid, 'show tables');
+    if isempty(S)
+        sqlq = 'CREATE TABLE ctap_plot_erp (casename TEXT NOT NULL, erpid TEXT NOT NULL, stepsetfun TEXT NOT NULL, variable TEXT NOT NULL, value REAL, PRIMARY KEY (casename, erpid, stepsetfun, variable))';
+        mksqlite(dbid, sqlq);
+    else
+        if (~ismember('ctap_plot_erp', {S.tablename}))
+            sqlq = 'CREATE TABLE ctap_plot_erp (casename TEXT NOT NULL, erpid TEXT NOT NULL, stepsetfun TEXT NOT NULL, variable TEXT NOT NULL, value REAL, PRIMARY KEY (casename, erpid, stepsetfun, variable))';
+            mksqlite(dbid, sqlq);
+        end
+    end
+end
+
+
+end

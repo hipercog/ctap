@@ -39,9 +39,9 @@ SD = std(data);
 
 
 %% Basic properties without the highest and lowest 'percent'/2 % of data
-zlow = quantile(data, (Arg.tailPrc / 2));   % low  quantile
+zlo = quantile(data, (Arg.tailPrc / 2));   % low  quantile
 zhi  = quantile(data, 1 - Arg.tailPrc / 2); % high quantile
-tndx = find((data >= zlow & data <= zhi & ~isnan(data)));
+tndx = find((data >= zlo & data <= zhi & ~isnan(data)));
 
 tM = mean(data(tndx)); %#ok<NASGU> % mean with excluded Arg.tailPrc/2*100
                                    % of highest and lowest values
@@ -52,7 +52,6 @@ tSD = std(data(tndx)); % trimmed SD
 %[nel,binpos]=hist(data,nbins);
 %bar(binpos, nel, 'FaceColor', [200, 200, 250]/255);
 %dx=binpos(2)-binpos(1); % bin width
-
 h = histogram(data, nbins,...
               'EdgeColor', 'none', ...
               'FaceColor', [180, 180, 220]/255);
@@ -70,11 +69,15 @@ tdatafit = tdatafit * pnts * dx;
 
 
 %% Plot histogram
-
-if isnan(Arg.xlim(1))
+if any(isnan(Arg.xlim))
     Arg.xlim = get(gca, 'XLim');
 end
-if isnan(Arg.ylim(1))
+%sometimes the plots give way too much horizontal space, squashing the hist
+if diff(Arg.xlim) > abs(diff([zlo zhi])) * 2
+    Arg.xlim(1) = zlo - 2 * SD;
+    Arg.xlim(2) = zhi + 2 * SD;
+end
+if any(isnan(Arg.ylim))
     Arg.ylim = get(gca, 'YLim');
     %sometimes the plots give way too much vertical space, squashing the hist
     top = max(max(h.Values), max(tdatafit));
@@ -105,9 +108,9 @@ set(gca, 'XLim', Arg.xlim)
 % Overplotting a normal distribution using trimmed sd (in black)
 h2 = plot(binpos, tdatafit, 'k');
 
-if zlow > Arg.xlim(1)
-    plot([zlow zlow], [0 Arg.ylim(2)/2], 'k', 'LineWidth', 1) % low  percentile
-    text(zlow, Arg.ylim(2)/2, sprintf('%2.1f%%', 100*Arg.tailPrc/2),...
+if zlo > Arg.xlim(1)
+    plot([zlo zlo], [0 Arg.ylim(2)/2], 'k', 'LineWidth', 1) % low  percentile
+    text(zlo, Arg.ylim(2)/2, sprintf('%2.1f%%', 100*Arg.tailPrc/2),...
         'HorizontalAlignment', 'center', 'VerticalAlignment', 'bottom');
 end
 if zhi < Arg.xlim(2)

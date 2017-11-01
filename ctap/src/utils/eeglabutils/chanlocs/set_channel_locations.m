@@ -95,7 +95,9 @@ for i = 1:numel(EEG.chanlocs)
         
     else
         % try to find partial matches for labels
-        index = ~cellfun(@isempty, strfind(lower(chan_locs), lower(chan_name)));
+        index = ~cellfun(@isempty, strfind(lower(chan_locs), lower(chan_name)))...
+            | ~cellfun(@isempty, cellfun(@(x) strfind(lower(chan_name), x)...
+                                , lower(chan_locs), 'UniformOutput', false));
         
         if sum(index) == 1
             EEGtmp = assign_chlocs(i, eloc(index), EEGtmp);

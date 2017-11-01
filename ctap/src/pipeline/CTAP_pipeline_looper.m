@@ -64,6 +64,7 @@ end
 
 %% Create the directories needed
 fnames = fieldnames(Cfg.env.paths);
+fnames(~cellfun(@ischar, struct2cell(Cfg.env.paths))) = [];
 for fn = 1:numel(fnames)
     if ~isdir(Cfg.env.paths.(fnames{fn})) && ...
        ~isempty(Cfg.env.paths.(fnames{fn}))
@@ -91,11 +92,12 @@ end
 badFlag = {'_BAD_FILE'};
 if runSets(1) > 1
     % Find loadable files at source directory
-    Filt = dir(fullfile(sbf_get_src_subdir(Cfg, runSets(1)), '*.set'));
+    srcSubDir = sbf_get_src_subdir(Cfg, runSets(1));
+    Filt = dir(fullfile(srcSubDir, '*.set'));
     if numel(Filt) == 0
-       error('CTAP_pipeline_looper:inputError',...
-        'RunSet source directory ''%s'' is either empty or does not exist. Please check.',...
-        fullfile(sbf_get_src_subdir(Cfg, runSets(1)))); 
+        error('CTAP_pipeline_looper:inputError',...
+        'Source directory ''%s'' is either empty or doesnt exist. Please check.',...
+        srcSubDir);
     end
     Filt = {Filt(cellfun(@isempty, strfind({Filt.name}, badFlag{1}))).name};
     [~, Filt, ~] = cellfun(@fileparts, Filt, 'UniformOutput', false);
@@ -166,27 +168,19 @@ for n = 1:numMC %over measurements
         %% Load source data for current step set
         try
             % Load source dataset
-            if (i ~= idx_start_sets) %(i ~= 1) %
+            if (i ~= idx_start_sets)
                 % middle of pipe, load from previous step set
                 i_EEG = pop_loadset(...
                     'filepath', sbf_get_src_subdir(Cfg, i),...
                     'filename', [Cfg.measurement.casename, '.set']);
             else
-                % start of pipe: data comes from preceding branch OR raw EEG file
-                if ~isempty(Cfg.env.paths.branchSource)
-                    % load from preceding branch
-                    i_EEG = pop_loadset(...
-                        'filepath', Cfg.env.paths.branchSource,...
-                        'filename', [Cfg.measurement.casename, '.set']);
-                else
-                    % assuming CTAP_load_data() and loading based on
-                    % MC.measurement.physiodata
-                    i_EEG = struct();
-                end
+                % start of pipe: data comes from raw EEG file
+                % assuming step1,func1 is CTAP_load_data() and
+                % loading based on MC.measurement.physiodata
+                i_EEG = struct();
             end
         catch ME,
             funStr = 'intermediate_data_load';
-            fun_args = struct('thisIsDummy', true);
             sbf_report_error(ME);
             break;
         end
@@ -214,10 +208,10 @@ for n = 1:numMC %over measurements
             end
             % Call function via handle
             if Arg.debug
-                sbf_execute_pipefun
+                i_Cfg_tmp = sbf_execute_pipefun;
             else
                 try
-                    sbf_execute_pipefun
+                    i_Cfg_tmp = sbf_execute_pipefun;
                 catch ME,
                     sbf_report_error(ME);
                     if isfield(i_EEG, 'CTAP')
@@ -228,15 +222,17 @@ for n = 1:numMC %over measurements
                     break;
                 end
             end
-            % Create CTAP history entry, if wrapper hasn't already done it
-            [i_diff, ~] = struct_field_diff(Cfg, i_Cfg_tmp);
-            if ~isempty(fieldnames(i_diff))
+            % Diff the Cfg and i_Cfg_tmp structs to find changes
+            [i_diff, diff_sz] = struct_field_diff(Cfg, i_Cfg_tmp);
+            if ~isempty(fieldnames(i_diff)) && diff_sz > 0
                 fun_args = i_diff;
-                Cfg = joinstruct(Cfg, i_Cfg_tmp);
             end
+            % Overwrite Cfg with any changes to i_Cfg_tmp
+            Cfg = joinstruct(Cfg, i_Cfg_tmp);
+            % Create CTAP history entry, if wrapper hasn't already done it
             if numel(i_EEG.CTAP.history) <= i_ctap_hist_sz
                 i_EEG.CTAP.history(end+1) = create_CTAP_history_entry(...
-                    ['Success_' Cfg.pipe.stepSets(i).id], funStr, fun_args);
+                    ['Success--' Cfg.pipe.stepSets(i).id], funStr, fun_args);
             end
             % recover args for later use
             if num_ctapFun > 1
@@ -283,9 +279,10 @@ for n = 1:numMC %over measurements
     suxes = {'successfully! :)' 'unsuccessfully :''('};
     suxes = sprintf('\n================\nMeasurement ''%s'' analyzed %s\n',...
         Cfg.measurement.casename, suxes{MCbad(n) + 1});
+    histfile = sprintf('%s_history.txt', Cfg.measurement.casename);
     myReport(suxes, Cfg.env.logFile);
-    myReport(suxes, fullfile(Cfg.env.paths.logRoot, 'history.txt'));
-    ctap_check_hist(EEG, fullfile(Cfg.env.paths.logRoot, 'history.txt'));
+    myReport(suxes, fullfile(Cfg.env.paths.logRoot, histfile));
+    ctap_check_hist(EEG, fullfile(Cfg.env.paths.logRoot, histfile));
 
 end %over measurements
 
@@ -354,10 +351,10 @@ end
 
 
 % embedded function calls the next pipe function
-function sbf_execute_pipefun()
+function i_Cfg_tmp = sbf_execute_pipefun
     switch funStr(1:5)
         case 'CTAP_'
-            Cfg.pipe.current.set = i;
+            Cfg.pipe.current.set = i + Cfg.pipe.totalSets - numel(runSets);
             Cfg.pipe.current.funAtSet = k;
             [i_EEG, i_Cfg_tmp] = Cfg.pipe.stepSets(i).funH{k}(i_EEG, Cfg);
         otherwise
@@ -385,18 +382,8 @@ end
 
 % Get source directory of loadable files
 function src_subdir = sbf_get_src_subdir(Cfg, idx)
-    %todo: logic here will fail if step set is part of a branched pipe;
-    %maybe remove this rivalling branching option completely (i.e. do not
-    %allow .srcID to contain other that in pipe references.
     if ~isempty(Cfg.pipe.stepSets(idx).srcID)
-        parts = strsplit(Cfg.pipe.stepSets(idx).srcID,'#');
-        
-        if numel(parts)==2
-            src_subdir = fullfile(Cfg.env.paths.ctapRoot, parts{1}, parts{2});
-        else 
-            src_subdir = fullfile(Cfg.env.paths.analysisRoot, parts{1});      
-        end
-        
+        src_subdir = Cfg.pipe.stepSets(idx).srcID;
     else
         %get first stepSet index with saved data
         idx = find([Cfg.pipe.stepSets(1:idx - 1).save], 1, 'last' );
@@ -405,8 +392,9 @@ function src_subdir = sbf_get_src_subdir(Cfg, idx)
             'NO SAVE POINT FOUND TO LOAD DATA - check your save specification');
         end
         src_subdir = Cfg.pipe.stepSets(idx).id;
-        src_subdir = fullfile(Cfg.env.paths.analysisRoot, src_subdir);
     end
+    src_subdir = fullfile(Cfg.env.paths.analysisRoot, src_subdir);
+
 end
 
 end% CTAP_pipeline_looper()

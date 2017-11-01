@@ -49,15 +49,17 @@ end
 pathstr = strrep(pathstr, '\', filesep);
 % file's details from matlab 'file' struct
 file = dir(fullfile(pathstr, [fname ext]));
+hdr = '######################';
+
 if numel(file) == 0
-    warning('zero actual files resolved with filename: %s', filename);
+    sprintf('%s\nzero actual files resolved with filename: %s', hdr, filename);
     file = struct('name', '', 'date', datestr(now), 'bytes', 0, 'isdir', 0,...
         'datenum', now, 'path', '', 'ext', '', 'load', 0);
     return;
 elseif numel(file) > 1
     file = file(1);
-    warning('Filename %s resolved to multiple files - using first: %s'...
-        , filename, file.name);
+    sprintf('%s\nFilename ''%s'' resolved to multiple files - using first: %s'...
+        , hdr, filename, file.name);
 end
 
 % if pathstr is empty, but we get this far, the file must really exist
@@ -68,5 +70,6 @@ end
 
 file.path = pathstr;
 file.ext = ext;
+file.load = 0;
 
 end

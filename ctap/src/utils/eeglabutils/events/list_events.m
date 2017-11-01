@@ -28,7 +28,10 @@ end
 
 match = ismember({EEG.event.type}, Arg.type);
 [evCA, evLabels] = struct_to_cell(EEG.event(match));
-
+if size(evCA,1) == 0
+   error('list_events:noEventsFound',...
+         'Found no events of type ''%s''.', catcellstr(Arg.type)); 
+end
 
 fieldIdx = find(ismember(evLabels, Arg.fields));
 

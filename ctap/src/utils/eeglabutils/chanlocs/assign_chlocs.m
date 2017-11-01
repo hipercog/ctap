@@ -43,7 +43,7 @@ function EEGtmp = assign_chlocs(idx, eloc, EEGtmp, writelabel, writeblank)
         fields(strcmpi(fields, 'labels')) = [];
     end
 
-    for j = 1:numel(fields);
+    for j = 1:numel(fields)
         datafield = fields{j};
         if ~writeblank && isempty(eloc.(datafield))
             continue;

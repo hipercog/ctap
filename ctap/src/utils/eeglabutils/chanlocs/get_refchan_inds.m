@@ -56,11 +56,9 @@ if length(reference) == 1 %only one string -> maybe something special
             end
             
         case {'average' 'common' 'EEG'}
+            %if EEG.chanlocs.type is missing, this should anyway give the 
+            %default empty vector that pop_reref() uses to signal average reref
             chaninds = find(ismember({EEG.chanlocs.type}, 'EEG'));
-            if isempty(chaninds)
-                %if EEG.chanlocs.type missing select all channels
-                chaninds = 1:size(EEG.data,1);
-            end
 
         case 'REF'
             chaninds = find(ismember({EEG.chanlocs.type}, 'REF'));

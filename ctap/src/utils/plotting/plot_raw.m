@@ -42,7 +42,7 @@ p = inputParser;
 p.addRequired('EEG', @isstruct);
 
 p.addParameter('dataname', 'Channels', @isstr); %what is data called?
-p.addParameter('startSample', NaN, @isnumeric); %start of plotting in samples
+p.addParameter('startSample', 1, @isnumeric); %start of plotting in samples
 p.addParameter('secs', [0 16], @isnumeric); %how much to plot
 p.addParameter('channels', {EEG.chanlocs.labels}, @iscellstr); %channels to plot
 p.addParameter('markChannels', {}, @iscellstr); %channels to plot in red
@@ -57,8 +57,6 @@ Arg = p.Results;
 
 
 %% Initialize
-if isscalar(Arg.secs), Arg.secs = [0 Arg.secs]; end
-Arg.secs = sort(Arg.secs);
 % get rid of missing channels
 missingChannels = setdiff(Arg.channels, {EEG.chanlocs.labels});
 if ~isempty(missingChannels)
@@ -68,6 +66,7 @@ if ~isempty(missingChannels)
 end
 CHANNELS = intersect(Arg.channels, {EEG.chanlocs.labels}); 
 Arg.markChannels = intersect(CHANNELS, Arg.markChannels);
+
 % Find channel indices (order matters!)
 [~, CHANIDX] = ismember(CHANNELS, {EEG.chanlocs.labels});
 
@@ -75,8 +74,10 @@ Arg.markChannels = intersect(CHANNELS, Arg.markChannels);
 [CHANIDX, si] = sort(CHANIDX);
 CHANNELS = CHANNELS(si);
 
+%Time in seconds
+if isscalar(Arg.secs), Arg.secs = [0 Arg.secs]; end
+Arg.secs = sort(Arg.secs);
 
-%% Setup Plot
 %Epoched or continuous?
 switch ndims(EEG.data)
     case 3
@@ -95,15 +96,17 @@ if dur == 0
     warning('plot_raw:duration_zero', 'Duration was 0 - no plot made')
     return
 end
-if isnan(Arg.startSample)
-    Arg.startSample = ceil(rand(1) * ((size(eegdata, 2) - dur) + 1));
-elseif ~isinteger(Arg.startSample)
-    %set Arg.startSample to integer, as EEG latencies are often double
-    Arg.startSample = int64(Arg.startSample);
-end
 
-t = linspace(0, diff(Arg.secs), dur);
-sig = eegdata(:, Arg.startSample:Arg.startSample + dur - 1);
+%Time in samples (set to integer, as EEG latencies are often double)
+Arg.startSample = int64(Arg.startSample + (Arg.secs(1) * EEG.srate));
+LastSample = Arg.startSample + dur - 1;
+Arg.secs = single(round([Arg.startSample / EEG.srate, LastSample / EEG.srate]));
+
+
+%% Setup Plot
+%Build y-shifted data matrix so channels cannot overlap
+t = linspace(Arg.secs(1), Arg.secs(2), dur);
+sig = eegdata(:, Arg.startSample:LastSample);
 % calculate shift
 mi = min(sig, [], 2);
 match = abs(mi) < 1e-4;
@@ -114,7 +117,7 @@ match = abs(ma) < 1e-4;
 ma(match) = mean(ma); %to get space around low variance channels
 
 shift = cumsum([0; abs(ma(1:end - 1)) + abs(mi(2:end))]);
-shift = repmat(shift, 1, round(dur));
+shift = repmat(shift, 1, dur);
 sig = sig + shift;
 
 
@@ -154,6 +157,9 @@ hold off;
 
 %% edit axes & prettify
 set(gca, 'YTick', mean(sig, 2), 'YTickLabel', CHANNELS)
+set(gca, 'XTick', Arg.secs(1):Arg.secs(2), 'XTickLabel', cellfun(@(x)...
+    sprintf('%d',x), num2cell(Arg.secs(1):Arg.secs(2)), 'UniformOutput', false)...
+    , 'XTickLabelRotation', 45)
 grid on
 if Arg.plotEvents && ~isempty(EEG.event)
     ylim([mi(1) 1.1*max(max(sig))])
@@ -166,23 +172,25 @@ ybds = double(get(gca, 'ylim'));
 top = ybds(2);
  
 %draw a y-axis scalebar at 10% of the total range of the y-axis
-sbar = ybds(1) + (ybds(2) - ybds(1)) / 10;
+sbar = ybds(1) + (diff(ybds) / 10);
 sbr100 = ybds(1) + 100; %plus another one at 100 uV
-line(xbds(2) .* [1.02 1.02], [ybds(1) sbar], 'color', 'b', 'clipping', 'off')
-line(xbds(2) .* [1 1.04], [ybds(1) ybds(1)], 'color', 'b', 'clipping', 'off')
-line(xbds(2) .* [1 1.04], [sbar sbar], 'color', 'b', 'clipping', 'off')
-line(xbds(2) .* [1 1.04], [sbr100 sbr100], 'color', 'r', 'clipping', 'off')
-text(xbds(2) * 1.02, sbar, '\muV', 'VerticalAlignment', 'bottom')
-text(xbds(2) * 1.022, sbar, num2str(round(sbar)), 'VerticalAlignment', 'top')
+xw = xbds(1) + diff(xbds) * 1.02;
+line([xw xw], [ybds(1) sbar], 'color', 'b', 'clipping', 'off')
+text(xw, sbar, '\muV', 'VerticalAlignment', 'bottom', 'HorizontalAlignment', 'center')
+text(xw, sbar, num2str(round(sbar)), 'VerticalAlignment', 'top')
 if sbar < 90 || sbar > 110
-    text(xbds(2) * 1.022, ybds(1) + 100, '100', 'color', 'r'...
+    text(xw, ybds(1) + 100, '100', 'color', 'r'...
         , 'VerticalAlignment', 'bottom')
 end
+xw = xbds(1) + diff(xbds) * 1.04;
+line([xbds(2) xw], [ybds(1) ybds(1)], 'color', 'b', 'clipping', 'off')
+line([xbds(2) xw], [sbar sbar], 'color', 'b', 'clipping', 'off')
+line([xbds(2) xw], [sbr100 sbr100], 'color', 'r', 'clipping', 'off')
 
 % make shaded area
 set(figh, 'Color', 'w')
-if ~isnan(Arg.shadingLimits(1))
-    x = (Arg.shadingLimits(1) - Arg.startSample) / EEG.srate;
+if ~any(isnan(Arg.shadingLimits))
+    x = xbds(1) + (Arg.shadingLimits(1) - Arg.startSample) / EEG.srate;
     y = ybds(1);
     w = (Arg.shadingLimits(2) - Arg.shadingLimits(1)) / EEG.srate;
     h = ybds(2) - ybds(1);
@@ -191,30 +199,32 @@ end
 
 
 %% plot events
-if Arg.plotEvents && ~isempty(EEG.event)
+if Arg.plotEvents && ~isempty(EEG.event) 
     evlat = int64(cell2mat({EEG.event.latency}));
     evlatidx = (evlat >= Arg.startSample) & ...
-               (evlat < Arg.startSample + dur - 1);
+               (evlat < LastSample);
 
     if any(evlatidx) %note: to plot, we need events in range to plot
         evplot = EEG.event(evlatidx);
-        peek = evplot(find(ismember({evplot.type}, 'peeks'),1));
-        evplot = evplot(~ismember({evplot.type}, 'peeks'));
-        evplottyp = {evplot.type peek.label};
-        evplotlat = (double([[evplot.latency] peek.latency]) -...
-            double(Arg.startSample)) ./ EEG.srate;
-        for i = 1:numel(evplotlat)
-            line([evplotlat(i) evplotlat(i)], ybds...
-                    , 'color', 'k', 'LineWidth', 1, 'LineStyle', '--')
-            t = text(evplotlat(i), double(max(ybds)), evplottyp{i}...
-                    , 'BackgroundColor', 'none' ... %[0.9 0.9 0.9]...
-                    , 'Rotation', -90 ...
-                    , 'Interpreter', 'none'...
-                    , 'VerticalAlignment', 'bottom'...
-                    , 'HorizontalAlignment', 'left');
+        peek = evplot(find(ismember({evplot.type}, 'ctapeeks'), 1));
+        
+        if numel(peek) > 0 %we need 'ctapeek' events to plot
+            evplot = evplot(~ismember({evplot.type}, 'ctapeeks'));
+            evplottyp = {evplot.type peek.label};
+            evplotlat = double([[evplot.latency] peek.latency]) ./ EEG.srate;
+            for i = 1:numel(evplotlat)
+                line([evplotlat(i) evplotlat(i)], ybds...
+                        , 'color', 'k', 'LineWidth', 1, 'LineStyle', '--')
+                t = text(evplotlat(i), double(max(ybds)), evplottyp{i}...
+                        , 'BackgroundColor', 'none' ... %[0.9 0.9 0.9]...
+                        , 'Rotation', -90 ...
+                        , 'Interpreter', 'none'...
+                        , 'VerticalAlignment', 'bottom'...
+                        , 'HorizontalAlignment', 'left');
+            end
+            top = t.Extent;
+            top = top(2) + top(4);
         end
-        top = t.Extent;
-        top = top(2) + top(4);
     end
 end
 startSamp = Arg.startSample;
@@ -222,22 +232,21 @@ startSamp = Arg.startSample;
 
 %% TITLE
 title( sprintf('%s -\n raw %s', Arg.eegname, Arg.dataname),...
-    'Position', [xbds(2)/2 top],...
+    'Position', [xbds(1) + diff(xbds) / 2 top],...
     'VerticalAlignment', 'bottom', ...
     'Interpreter', 'none');
 
 
 %% FONT ELEMENTS
-%Determine y-axis-relative proportion & fix size of everything
-fsz = 0.5 * (1 / Arg.paperwh(2));
-set(findall(figh, '-property', 'FontUnits'), 'FontUnits', 'normalized')
-set(findall(figh, '-property', 'FontSize'), 'FontSize', fsz)
-
-% do the axis tick-labels so there is no overlap
+%only need to fix font sizes if there is more than one channel to plot
 if length(CHANIDX) > 1
-    %todo (ben): The follwing can be done only if there are more than one 
-    % channel to plot. Is this hacky fix ok?
-    fsz = 1 / ((ybds(2) - ybds(1)) / min(diff(mean(sig, 2))));
+    %Determine y-axis-relative proportion & fix size of everything
+    fsz = 0.5 * (1 / Arg.paperwh(2));
+    set(findall(figh, '-property', 'FontUnits'), 'FontUnits', 'normalized')
+    set(findall(figh, '-property', 'FontSize'), 'FontSize', fsz)
+
+    % do the axis tick-labels so there is no overlap
+    fsz = 1 / (diff(ybds) / min(diff(mean(sig, 2))));
     set(gca, 'FontSize', fsz)
 end
 %ONLY IN r2016:: do the Y-AXIS tick-labels so there is no overlap
@@ -247,8 +256,8 @@ end
 
 %AXIS LABELS
 xlabel( sprintf('Time\n[samples=%d:%d - seconds=%1.0f:%1.0f]'...
-    , Arg.startSample, Arg.startSample+dur...
-    , Arg.startSample / (EEG.srate), (Arg.startSample+dur) / (EEG.srate)) )
+    , Arg.startSample, LastSample...
+    , Arg.startSample / EEG.srate, LastSample / EEG.srate) )
 ylabel(Arg.dataname)
 
 

@@ -10,6 +10,7 @@
 % Returns:
 %   eeg: EEG-struct containing the generated data
 %
+% todo: almost identical to ctaptest_datagen.m
 function eeg = ctaptest_generate_data(datafile, ch_file, eeg_length, srate, model_order)
 
     ch = readlocs(ch_file);

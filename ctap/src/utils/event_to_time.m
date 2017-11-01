@@ -43,8 +43,14 @@ elseif strcmpi(starttype, 'marker')
         error('No markers present in recording');
     end
     
-    [time, sample] = marker_to_time(startmark, recording.markers);
-    
+    try
+        [time, sample] = marker_to_time(startmark, recording.markers);
+    catch
+        sample = 1;
+        time = sample / recording.properties.samplingRate;
+        warning('event_to_time:markerNotFound',...
+            'Start marker ''%s'' was not found. Using first sample.', startmark);
+    end
 end
 
 if isempty(sample)

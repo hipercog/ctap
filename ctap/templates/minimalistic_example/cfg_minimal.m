@@ -12,8 +12,8 @@ Cfg.env.paths.projectRoot = project_root_folder;
 
 
 %% Define important directories and files
-Cfg.env.paths.ctapRoot = fullfile(cd(), 'example-project');
-Cfg.env.paths.analysisRoot = fullfile(Cfg.env.paths.ctapRoot, Cfg.id);
+Cfg.env.paths.analysisRoot = fullfile(...
+    Cfg.env.paths.projectRoot, 'ctap_results', Cfg.id);
 
 % Note: other canonical locations are added in ctap_auto_config.m
 % You should use it in your analysis batch file.
@@ -90,7 +90,7 @@ out.normalize_data = struct(...
 
 % Filtering data
 out.fir_filter = struct(...
-    'lowcutoff', 2,...
+    'locutoff', 2,...
     'hicutoff', 30);
 
 % ICA
@@ -142,8 +142,8 @@ out.extract_PSDindices.eindcc.bandLabels = {'delta' 'theta' 'alpha' 'beta'};
 out.select_data.time = [1,5];
 
 %out.filter_bandpass = struct(...
-%    'lowCutOff', 0.5,...
-%    'highCutOff', 45);
+%    'locutoff', 0.5,...
+%    'hicutoff', 45);
 
 
 

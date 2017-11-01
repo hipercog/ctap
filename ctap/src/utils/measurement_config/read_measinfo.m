@@ -1,4 +1,4 @@
-function MC = mc_loader(srcfile)
+function MC = read_measinfo(srcfile)
 %MC_LOADER A wrapper to read measurement config data from multiple sources
 
 [pathstr, name, ext] = fileparts(srcfile); 

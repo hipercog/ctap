@@ -6,7 +6,7 @@ function CsegMeta = gather_cseg_metadata(EEG, csegEvent)
 %   * output all in a standardised struct format
 %
 % Syntax:
-%   CsegMeta = gather_cseg_metadata(EEG, csegEvent, timeZeroEvent);
+%   CsegMeta = gather_cseg_metadata(EEG, csegEvent);
 %   
 % Inputs:
 %   EEG             struct, EEGLAB struct
@@ -71,8 +71,8 @@ units = {};
 
 
 % Store segment start times as 'timestamp'
-start_time_dn = datenum(EEG.CTAP.time.dataStart,'yyyymmddTHHMMSS');
-data(:,1) = cellstr(datestr(start_time_dn+[csdata{:,1}]/(24*60*60), 30));
+start_time_dn = datenum(EEG.CTAP.time.dataStart, 'yyyymmddTHHMMSS');
+data(:,1) = cellstr(datestr(start_time_dn + [csdata{:,1}] / (24*60*60), 30));
 labels{1} = 'timestamp';
 units{1} = 'yyyymmddTHHMMSS';
 

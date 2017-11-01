@@ -5,7 +5,7 @@ function EEG = ctapeeg_add_regular_events(EEG, evLength, evOverlap, evType, vara
 %   Add regularly spaced events to EEG.event to enable computations.
 %
 % Syntax:
-%   EEG = ctapeeg_add_cseg(EEG, evLength, evOverlap, evType);
+%   EEG = ctapeeg_add_regular_events(EEG, evLength, evOverlap, evType, varargin)
 %
 % Inputs:
 %   EEG         struct, EEGLAB struct, non-epoched data
@@ -47,6 +47,7 @@ function EEG = ctapeeg_add_regular_events(EEG, evLength, evOverlap, evType, vara
 % Please see the file LICENSE for details.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+
 %% Parse input arguments and set varargin defaults
 p = inputParser;
 
@@ -63,55 +64,77 @@ Arg = p.Results;
 
 
 %% Find a range to add events to
-fprintf('ctapeeg_add_regular_events: adding events of type ''%s''.', evType);
-
-startEventInd = find(ismember({EEG.event.type}, Arg.startAt));
-if isempty(startEventInd)
-    disp('Starting from first sample.');
-    startsample = 1;    
-else
-    if length(startEventInd) > 1
-        warning('ctapeeg_add_regular_events:eventInconsistency'...
-            , 'Several range start events found. Taking the first one.'); 
-        startEventInd = startEventInd(1);
+if ~isempty(EEG.event)
+    
+    startEventInd = find(ismember({EEG.event.type}, Arg.startAt));
+    if isempty(startEventInd)
+        disp('Starting from first sample.');
+        startsample = 1;    
+    else
+        if length(startEventInd) > 1
+            warning('ctapeeg_add_regular_events:eventInconsistency'...
+                , 'Several range start events found. Taking the first one.'); 
+            startEventInd = startEventInd(1);
+        end
+        startsample = EEG.event(startEventInd).latency;
     end
-    startsample = EEG.event(startEventInd).latency;
-end
 
-stopEventInd = find(ismember({EEG.event.type}, Arg.stopAt));
-if isempty(stopEventInd)
-    disp('Stopping at last sample.');
+    stopEventInd = find(ismember({EEG.event.type}, Arg.stopAt));
+    if isempty(stopEventInd)
+        disp('Stopping at last sample.');
+        stopsample = EEG.pnts;
+
+    else
+        if length(stopEventInd) > 1
+            warning('ctapeeg_add_regular_events:eventInconsistency'...
+                , 'Several range stop events found. Taking last one.');
+            stopEventInd = stopEventInd(end); 
+        end
+        stopsample = EEG.event(stopEventInd).latency;
+    end
+
+else
+    startsample = 1;
     stopsample = EEG.pnts;
-
-else
-    if length(stopEventInd) > 1
-        warning('ctapeeg_add_regular_events:eventInconsistency'...
-            , 'Several range stop events found. Taking last one.');
-        stopEventInd = stopEventInd(end); 
-    end
-    stopsample = EEG.event(stopEventInd).latency;
 end
 
 
 %% Generate segments
-csegArr = generate_segments(...
-            stopsample-startsample,...
-            floor(evLength*EEG.srate),...
-            evOverlap);
-durArr = csegArr(:,2)-csegArr(:,1)+1;
+csegArr = startsample - 1 + ...
+          generate_segments(stopsample-startsample,...
+                            floor(evLength*EEG.srate),...
+                            evOverlap);
 
+
+%% Prune out csegs which would contain a boundary event
+if ~isempty(EEG.event)
+    bound_match = ismember({EEG.event.type}, 'boundary');
+    boundary_lat = [EEG.event(bound_match).latency];
+
+    cs_keep_match = ~range_has_point(csegArr, boundary_lat);
+    csegArr = csegArr(cs_keep_match,:);
+end
         
 %% Add segments as 'cseg' events
-event = eeglab_create_event(startsample+csegArr(:,1)-1,...
+fprintf('ctapeeg_add_regular_events: adding events of type ''%s''.', evType);
+
+event = eeglab_create_event(csegArr(:,1),...
                             evType,...
-                            'duration', num2cell(durArr));
+                            'duration', num2cell(csegArr(:,2) - csegArr(:,1)) );
 %EEG.event latency and duration are passed and stored in samples.
 
 
-% Merge new events with existing data
-EEG.event = eeglab_merge_event_tables(event, EEG.event,...
-                                      'ignoreDiscontinuousTime');
-
+if isempty(EEG.event)
+    % no existing events -> add directly
+    EEG.event = event;
+   
+else
+    % Merge new events with existing data
+    EEG.event = eeglab_merge_event_tables(event, EEG.event,...
+                                          'ignoreDiscontinuousTime');
+    % Note: ignoring boundary events since they have been taken care of.
+end
+                              
 EEG = eeg_checkset(EEG, 'eventconsistency');
 
 end %EOF

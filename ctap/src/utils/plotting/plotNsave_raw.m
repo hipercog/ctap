@@ -47,7 +47,7 @@ p.addRequired('plotname', @ischar);
 
 p.addParameter('dataname', 'channels', @isstr); %what is data called?
 p.addParameter('chunksize', 32, @isnumeric); %a handy # channels per figure
-p.addParameter('startSample', NaN, @isnumeric); %start of plotting in samples
+p.addParameter('startSample', 1, @isnumeric); %start of plotting in samples
 p.addParameter('secs', [0 16], @isnumeric); %how much time to plot
 p.addParameter('channels', {EEG.chanlocs.labels}, @iscellstr); %channels to plot
 p.addParameter('markChannels', {}, @iscellstr); %channels to plot in red
@@ -63,7 +63,7 @@ CHANNELS = Arg.channels;
 %% Set up chunks
 nchan = length(CHANNELS);
 if Arg.chunksize > numel(Arg.channels)
-    nchunks = 1;
+%     nchunks = 1;
     chchunks = [1, nchan + 1];
 else
     nchunks = Arg.chunksize;

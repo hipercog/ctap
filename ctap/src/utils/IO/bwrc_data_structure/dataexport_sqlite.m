@@ -68,13 +68,14 @@ function dataexport_sqlite(sourcefiles, dbfile, varargin)
 p = inputParser;
 p.addRequired('sourcefiles', @iscellstr);
 p.addRequired('dbfile', @isstr);
-p.addParamValue('data_variable_names', {}, @iscellstr);
-p.addParamValue('cseg_meta_variable_names', {}, @iscellstr);
-p.addParamValue('strformat', '''%s''', @isstr);
-p.addParamValue('doubleformat', '%e', @isstr);
-p.addParamValue('intformat', '%e', @isstr);
-p.addParamValue('factorsVariable', 'FACTORS', @isstr);
-p.addParamValue('outputFormat', 'long', @isstr); 
+
+p.addParameter('data_variable_names', {}, @iscellstr);
+p.addParameter('cseg_meta_variable_names', {}, @iscellstr);
+p.addParameter('strformat', '''%s''', @isstr);
+p.addParameter('doubleformat', '%e', @isstr);
+p.addParameter('intformat', '%e', @isstr);
+p.addParameter('factorsVariable', 'FACTORS', @isstr);
+p.addParameter('outputFormat', 'long', @isstr); 
 % outputFormat can only be long when using a database
 
 
@@ -201,13 +202,13 @@ for i=1:numel(sourcefiles)
         query(end-1:end) = '';
         query = [query ')'];
     
-        msg = mksqlite(dbid, query);
+        msg = mksqlite(dbid, query); %#ok<*NASGU>
     end
     
     %% Write data-rows to database
     qs  = ['INSERT INTO results VALUES (', fmt, ')'];
     
-    disp(sprintf('Writing %u rows to the database...', size(i_data_array, 1)));
+    fprintf('Writing %u rows to the database...\n', size(i_data_array, 1));
     msg = mksqlite(dbid, 'BEGIN TRANSACTION');
 
     % Find out if there are any NaN values
@@ -228,7 +229,7 @@ for i=1:numel(sourcefiles)
     
     % write rows that do contain NaN
     if ~isempty(nNaNArr)
-        disp(sprintf('%d rows with NaN found. Writing them separately...', length(nNaNArr)));
+        fprintf('%d rows with NaN found. Writing them separately...\n', length(nNaNArr));
         for n = nNaNArr
             queryStr = sprintf(qs, 'NULL', i_Meta.subjectnr, i_Meta.measurement, i_data_array{n,:});
             queryStr = strrep(queryStr, 'NaN', 'NULL');

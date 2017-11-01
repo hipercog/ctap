@@ -4,6 +4,12 @@ function [EEG, Cfg] = CTAP_load_chanlocs(EEG, Cfg)
 % Description:
 %   Load channel locations based on specification in Cfg.eeg.chanlocs.
 %   Cfg.ctap.load_chanlocs specifies how to read custom Cfg.eeg.chanlocs
+%   Can also define new chanlocs field values, and delete any channels
+%   desired. NOTE: users should be very careful when defining indices for new 
+%   fields, because eeg_checkchanlocs() is called after loading new chanlocs.
+%   This function can delete channels which are, e.g. defined as not data.
+%   TIP: try to load chanlocs once to check the outcome (e.g. by debugging after 
+%   the call to ctapeeg_load_chanlocs) before defining fields to edit/tidy.
 %
 % Syntax:
 %   [EEG, Cfg] = CTAP_load_chanlocs(EEG, Cfg);
@@ -19,11 +25,12 @@ function [EEG, Cfg] = CTAP_load_chanlocs(EEG, Cfg)
 %               default = throws error
 %   .skiplines  integer, number header lines for custom chanlocs
 %               default = 1
-%   .types      cell array of {'index' 'type'} string pairs.
-%               Indices should be within range of available EEG channels.
+%   .field      cell array of {'index' 'field' 'value'} string triples.
+%               Indices should be within range of available channels.
+%               Labels and other fields can be (carefully) defined by user.
 %               Types should be three letter codes, EEG, EOG, ECG, REF, etc
 %               For example: {'1:128' 'EEG'},{'129:130' 'ECG'}
-%               default = {}, no type assignment action taken
+%               default = {}, no field assignment action taken
 %   .tidy       cell array of {'fieldname' 'value'} string pairs.
 %               channels with 'fieldname' matching 'value' will be deleted.
 %               For example: {'type' 'ECG'}, {'labels' ''} removes channels
@@ -54,7 +61,7 @@ function [EEG, Cfg] = CTAP_load_chanlocs(EEG, Cfg)
 
 %% Set optional arguments
 Arg.file = Cfg.eeg.chanlocs; %this is checked in ctap_auto_config()
-Arg.types = {}; %user must set this based on his own knowledge!
+Arg.field = {}; %user must set this based on his own knowledge!
 Arg.tidy = {};
 
 % Override defaults with user parameters
@@ -85,56 +92,51 @@ end
 
 %% CORE
 %load chanlocs
-if isfield(Arg, 'filetype')
-    if strcmp(Arg.filetype, 'custom') == 1
-        try Arg.format;
-        catch ME, 
-            error('FAIL:: %s - no custom chanlocs format given', ME.message);
-        end;
-        try Arg.skiplines; 
-        catch 
-            Arg.skiplines = 1;   
-        end;
-        [EEG, params, ~] = ctapeeg_load_chanlocs(EEG,...
-            'locs', Arg.file,...
-            'filetype', Arg.filetype,...
-            'format', Arg.format,...
-            'skiplines', Arg.skiplines);
-    else
-        [EEG, params, ~] = ctapeeg_load_chanlocs(EEG,...
-            'locs', Arg.file,...
-            'filetype', Arg.filetype);
-    end
-else
-    [EEG, params, ~] = ctapeeg_load_chanlocs(EEG,...
-        'locs', Arg.file);
+if isfield(Arg, 'filetype') && strcmp(Arg.filetype, 'custom') == 1
+    try Arg.format;
+    catch ME, 
+        error('FAIL:: %s - no custom chanlocs format given', ME.message);
+    end;
+    try Arg.skiplines; 
+    catch 
+        Arg.skiplines = 1;   
+    end;
 end
+    
+argsCellArray = struct2varargin(Arg);
+[EEG, params, ~] = ctapeeg_load_chanlocs(EEG, argsCellArray{:});
 
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Set any chanlocs types according to user definition
-if ~isempty(Arg.types)
-    for i = 1:numel(Arg.types)
-        EEG = pop_chanedit(EEG, 'settype', Arg.types{i});
+if ~isempty(Arg.field)
+    for fdx = 1:numel(Arg.field)
+        for chidx = 1:numel(Arg.field{fdx}{1})
+            EEG.chanlocs(Arg.field{fdx}{1}(chidx)).(Arg.field{fdx}{2}) =...
+                Arg.field{fdx}{3};
+%DONT USE pop_chanedit() BECAUSE IT CALLS eeg_checkchanlocs()
+%             EEG = pop_chanedit(EEG, 'changefield'...
+%                 , {Arg.field{fdx}{1}(chidx) Arg.field{fdx}{2:3}});
+        end
     end
     % Feedback about types
-    myReport({EEG.chanlocs.type; EEG.chanlocs.labels},...
+    myReport({EEG.chanlocs.labels; EEG.chanlocs.type},...
         Cfg.env.logFile, sprintf('\t'));
-    warning off backtrace
-    warning('^ ^ ^ ^ CAUTION - CHECK YOUR TYPE ASSIGNMENT! ^ ^ ^ ^')
-    warning on backtrace
+    myReport('WARN^ ^ ^ ^ CAUTION - CHECK YOUR TYPE ASSIGNMENT! ^ ^ ^ ^');
 end 
 
 % tidy up - get rid of user-defined channels
 if ~isempty(Arg.tidy)
+    if ~iscell(Arg.tidy{1})
+        Arg.tidy = {Arg.tidy};
+    end
     for i = 1:numel(Arg.tidy)
         tidyidx = find(ismember({EEG.chanlocs.(Arg.tidy{i}{1})}, Arg.tidy{i}{2}));
         EEG = pop_select(EEG, 'nochannel', tidyidx);
     end
 end
 
-% checkset
-EEG = eeg_checkchanlocs(EEG);
+EEG = eeg_checkchanlocs(EEG); % checkset
 % update urchanlocs, e.g. retain only the desired channels
 EEG.urchanlocs = EEG.chanlocs;%make interpolation possible after channel removal
 
@@ -144,8 +146,8 @@ Arg = joinstruct(Arg, params);
 Cfg.ctap.load_chanlocs = Arg;
 
 msg = '';
-if ~isempty(Arg.types)
-    msg = myReport({'Made channel type assignment -' Arg.types});
+if ~isempty(Arg.field)
+    msg = myReport({'Made channel type assignment -' Arg.field});
 end
 msg = myReport(sprintf('Loaded chanlocs from %s.\n%s', Arg.file, msg)...
     , Cfg.env.logFile);

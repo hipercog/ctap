@@ -59,9 +59,15 @@ end
 
 
 %% CORE
-EEG = pop_reref(EEG, chaninds, 'keepref','on');
-% EEG.ref = {EEG.chanlocs(chaninds).labels}; %this fails for, e.g cellstr arrays
-% record the reference
+% Set any old reference channels back to type='EEG'
+% EEG = pop_chanedit(EEG, 'changefield', {get_eeg_inds(EEG, {'REF'}) 'type' 'EEG'});
+
+% Re-reference
+EEG = pop_reref(EEG, chaninds, 'keepref', 'on');
+
+% Set kept reference channels to correct type
+% EEG = pop_chanedit(EEG, 'changefield', {chaninds 'type' 'REF'});
+
 if strcmp(Arg.reference, 'average')
     EEG.CTAP.reference = 'average';
 else

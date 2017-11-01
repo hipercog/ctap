@@ -188,6 +188,14 @@ for i = 1:length(stim)
     %% Find INCORRECTLY answered occurences of stim(i)
     % Set correct responses other than cresp(i) as incorrect responses
     % There might also exist also a dedicated incorrect response code
+    
+    %todo:
+    % there are two cases:
+    % 1. only stim and reponse codes
+    % 2. stim, hit, miss, noresp codes
+    % the logic for finding fsm and frm should be different for each.
+    % The current logic is for case 1. only.
+    % Problems arise if stimuli are missing e.g. due to boundary events.
     i_incorrect_resp_codes = unique(horzcat(i_fresp, setdiff(cresp, i_cresp)));
  
     % Find stim(i) followed by i_incorrect_resp_codes
@@ -200,6 +208,11 @@ for i = 1:length(stim)
     end
     fsm(:,i) = (sum(i_fsm_tmp,2) >= 1);
     frm(:,i) = (sum(i_frm_tmp,2) >= 1);
+    
+    if sum(fsm(:,i)) ~= sum(frm(:,i))
+       error('classify_events:logicError',...
+             'This should not happen. Maybe a stim code is gone missing due to e.g. a boundary event.'); 
+    end
     
     %if strcmp(i_fresp, 'Resp_incorrect_p3') && strcmp(i_stim, 'Event_Seed_p3')
     %   keyboard; 

@@ -48,12 +48,11 @@ end
 
 
 %% CORE
-if isfield(Arg, 'type')
-    [EEG, params, result] = ctapeeg_load_data(Arg.physiodata,...
-        'type', Arg.type);
-else
-    [EEG, params, result] = ctapeeg_load_data(Arg.physiodata);
-end
+% if isfield(Arg, 'type')
+%     [EEG, params, result] = ctapeeg_load_data(Arg.physiodata,'type', Arg.type);
+% else
+[EEG, params, result] = ctapeeg_load_data(Arg.physiodata, Arg);
+% end
 
 
 %% MISC
@@ -108,10 +107,7 @@ else
                    0};
 end
 
-% Add at least one event to avoid problems with functions that assume
-% events exist
-% MAYBEDO: Add checks of EEG.event existence in a zillion places?
-% MAYBEDO: what does this above MAYBEDO mean?
+% Add dummy event to avoid problems with functions that assume events exist
 if (isempty(EEG.event))
    EEG.event(1).type = 'dummy_event';
    EEG.event(1).latency = 1;

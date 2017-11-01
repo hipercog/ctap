@@ -141,3 +141,46 @@ Cfg.ctap.detect_bad_channels = params;
 msg = myReport({repstr1 repstr2 repstr3}, Cfg.env.logFile);
 
 EEG.CTAP.history(end+1) = create_CTAP_history_entry(msg, mfilename, params);
+
+sbf_report_bad_data(); %store detected channels for later review
+
+
+%% sbf_report_bad_data
+function sbf_report_bad_data
+
+    func = sprintf('s%df%d', Cfg.pipe.current.set, Cfg.pipe.current.funAtSet);
+    bdstr = result.chans;
+    if isempty(bdstr)
+        bdstr = 'none'; %a placeholder to keep the variable type consistent
+    else
+        bdstr = strjoin(bdstr);
+    end
+    rejfile =...
+        fullfile(Cfg.env.paths.qualityControlRoot, [Arg.method '_detections.mat']);
+
+    if exist(rejfile, 'file')
+        tmp = load(rejfile, 'rejtab');
+        rejtab = tmp.rejtab;
+
+        %assign into appropriate columns/rows
+        rejtab = upsert2table(  rejtab,...
+                                sprintf('%s_%s', func, Arg.method),...
+                                EEG.CTAP.measurement.casename,...
+                                bdstr);
+        
+        rejtab = upsert2table(  rejtab,...
+                                sprintf('%s_pc', func),...
+                                EEG.CTAP.measurement.casename,...
+                                prcbad);
+
+    else
+        %create table from scratch
+        rejtab = table({bdstr}, {prcbad},...
+            'RowNames', {EEG.CTAP.measurement.casename},...
+            'VariableNames', {[func '_' Arg.method], [func '_pc']}); %#ok<*NASGU>
+    end
+
+    save(rejfile, 'rejtab');
+end %of sbf_report_bad_data()
+
+end

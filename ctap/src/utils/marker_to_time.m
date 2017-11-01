@@ -29,8 +29,7 @@ function [time, sample] = marker_to_time(mark, markers)
 sep = '_';
 
 if numel(findstr(sep, mark))
-    %todo: assumes mark string to be of type 'xxx_y' and outputs numeric
-    %values when actually neither is currently used
+    %assumes mark string to be of type 'xxx_y' and outputs numeric values
     mrk_tmp = strsplit(mark, sep);
     mrk     = zeros(2,1);
     mrk(1)  = str2num(mrk_tmp{1});

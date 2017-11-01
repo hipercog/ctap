@@ -79,11 +79,10 @@ EEG.CTAP.history(end+1) = create_CTAP_history_entry(msg, mfilename, Arg);
 
     %% Subfunctions
     function sbf_log_regions()
-        %Write regions found 
-        %TODO(feature request)(JKOR) - ALSO WRITE EVENT TYPE FOR HUMAN COMPREHENSION: 'Type    ',
+        %Write regions found
         evdata = NaN(size(event_lat,1), 5);
         header = {'#   ', 'start (s)   ', 'stop (s)    ',...
-            'duration (s)', 'duration (min)   '};
+            'duration (s)', 'duration (min)'};
 
         evdata(:,2:3) = event_lat;
         evdata(:,4) = event_lat(:,2)-event_lat(:,1); %duration in samp
@@ -92,18 +91,12 @@ EEG.CTAP.history(end+1) = create_CTAP_history_entry(msg, mfilename, Arg);
         evdata = sortrows(evdata, 2); %just to make sure
         evdata(:,1) = 1:size(evdata,1);
 
-%         OLD APPROACH SAVES 1 .txt FILE PER DATAFILE, annoying to read/parse
-%         savedir = fullfile(Cfg.env.paths.logRoot, mfilename);
-%         if ~isdir(savedir), mkdir(savedir); end
-%         qcfile = fullfile(savedir, sprintf(...
-%             'regions_%s.txt', EEG.CTAP.measurement.casename));
-%         cell2txtfile(qcfile, header, num2cell(evdata),...
-%             horzcat('%-4.0d',repmat({'%-12.1f'},1,4)), 'delimiter',';');
-
         qcf = fullfile(Cfg.env.paths.logRoot, sprintf('%s_times.txt', mfilename));
-        myReport(sprintf('%s_selected:', EEG.CTAP.measurement.casename), qcf);
-        cell2txtfile(qcf, header, num2cell(evdata), horzcat('%-4.0d'...
-            , repmat({'%-12.1f'},1,4)), 'delimiter',';', 'writemode', 'at');        
+        myReport(sprintf('Selected (subject,event) : %s,%s'...
+            , EEG.CTAP.measurement.casename, Arg.evtype), qcf);
+        cell2txtfile(qcf, header, num2cell(evdata)...
+            , horzcat('%-4.0d', repmat({'%-12.1f'},1,4))...
+            , 'delimiter', ';', 'writemode', 'at');        
     end
 
 

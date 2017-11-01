@@ -1,5 +1,6 @@
 git s# explicit dirs #
 ###################
+*doc/html/
 *pipeline_draft/analysis_root/
 *.swp
 *.swo
@@ -11,13 +12,10 @@ git s# explicit dirs #
 
 # Minimalistic example related files #
 ###################
-BCICIV_calib_ds1a.fdt
-BCICIV_calib_ds1a.set
 *example-project
 
 # misc #
 ###################
-update_matlab*.m
 *jkor_test
 *ctap/doc/html
 *tmp
@@ -31,3 +29,5 @@ update_matlab*.m
 .Trashes
 ehthumbs.db
 Thumbs.db
+dependencies/export_fig/*
+update_matlab_path_ctap_jkor.m

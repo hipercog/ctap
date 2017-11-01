@@ -42,7 +42,7 @@ function [EEG, Rej] = eeglab_detect_extreme_amplitudes(EEG, varargin)
 %                   analyzed channels
 %       .allChannelsMatch  [1, nsamples] logical, Final "all channel" bad segment
 %                   matches
-%       .allChannelsPrc        [1,1] numeric in [0...1], Percentage of samples marked 
+%       .allChannelsPrc    [1,1] numeric in [0...1], Percentage of samples marked 
 %                   as belonging to a bad segment
 %       .allChannelsCount      [1,1] integer, Number of bad segment events
 %
@@ -64,41 +64,59 @@ function [EEG, Rej] = eeglab_detect_extreme_amplitudes(EEG, varargin)
 
 %% Parse input arguments and set varargin defaults
 p = inputParser;
+p.KeepUnmatched = true; %to avoid error due to non-matching varargin
+
 p.addRequired('EEG', @isstruct);
-p.addParamValue('rejectionChannels', {EEG.chanlocs(:).labels}, @iscellstr);
-p.addParamValue('filter', false, @islogical);
-p.addParamValue('rejectionMaskWidth', 2, @isnumeric); %in seconds
-p.addParamValue('tailPercentage', 0.001, @isnumeric); %percentage in [0...1]
-% Small probability on each channel but alltogether might result in a high
+p.addParameter('rejectionChannels', {EEG.chanlocs(:).labels}, @iscellstr);
+p.addParameter('filter', false, @islogical);
+p.addParameter('rejectionMaskWidth', 0.2, @isnumeric); %in seconds
+p.addParameter('tailPercentage', 0.001, @isnumeric); %percentage in [0...1]
+% Small probability on each channel but altogether might result in a high
 % proportion of data marked as bad. See also normalEEGAmpLimits.
-p.addParamValue('normalEEGAmpLimits', [-75, 75], @isnumeric); %in muV
-p.addParamValue('coOcurrencePrc', 0.25, @isnumeric); %percentage in [0...1]
-p.addParamValue('eventIDStr', 'artefactAmpTh', @ischar);
+p.addParameter('normalEEGAmpLimits', [-75, 75], @isnumeric); %in muV
+p.addParameter('coOcurrencePrc', 0.25, @isnumeric); %percentage in [0...1]
+p.addParameter('eventIDStr', 'artefactAmpTh', @ischar);
 
 p.parse(EEG, varargin{:});
 Arg = p.Results;
 
+filter_func = 'widmann';
 
 %% Define rejection dataset
 rejChanMatch = ismember({EEG.chanlocs.labels}, Arg.rejectionChannels);
-eegdata = EEG.data(rejChanMatch,:);
 
 
 %% Filter the data
 if Arg.filter
     locutoff = 1;
     hicutoff = 0;
-    epochframes = 0;
     filtorder = EEG.srate;
-    revfilt = 0;
-    firtype = 'fir1';
-    eegdata = eegfilt(eegdata, EEG.srate, locutoff, hicutoff,...
-                      epochframes, filtorder, revfilt, firtype);
+    
+    switch filter_func
+        case 'eeglab'
+            revfilt = 0;
+            firtype = 'fir1';
+            epochframes = 0;
+            eegdata = EEG.data(rejChanMatch,:);
+            eegdata = eegfilt(eegdata, EEG.srate, locutoff, hicutoff,...
+                              epochframes, filtorder, revfilt, firtype);
+
+        case 'widmann'
+            %
+            TMP = pop_select(EEG, 'channel', rejChanMatch);
+            m = pop_firwsord('hamming', filtorder, [locutoff hicutoff]);
+            b = firws(m, [locutoff hicutoff] / (filtorder / 2), 'high'...
+                , windows('hamming', m + 1));
+            TMP = firfilt(TMP, b);
+            eegdata = TMP.data;
+    end
+else
+    eegdata = EEG.data(rejChanMatch,:); %unfiltered
 end
 
 
 %% Remove data baseline
-eegdata = eegdata-repmat(mean(eegdata,2),1,size(eegdata,2));
+eegdata = eegdata - repmat(mean(eegdata, 2), 1, size(eegdata, 2));
 
 
 %% Plotting related setup
@@ -128,10 +146,8 @@ rej_match = true(size(eegdata));
 qnt_th = NaN(size(rej_match,1),2);
 rej_th = NaN(size(rej_match,1),2);
 
-disp(['Analyzing channels: ', strjoin(Arg.rejectionChannels,', '),'...']);
+fprintf('Analyzing channels: %s...', strjoin(Arg.rejectionChannels, ', '))
 for i = 1:size(rej_match,1) %over channels
-   
-
     % Compute quantiles
     qnt_th(i,:) = [ quantile(eegdata(i,:), (Arg.tailPercentage/2)),...
                     quantile(eegdata(i,:), 1-(Arg.tailPercentage/2))];
@@ -145,7 +161,6 @@ for i = 1:size(rej_match,1) %over channels
                       (eegdata(i,:) >= i_rej_high));
    
     rej_th(i,:) = [i_rej_low i_rej_high];
-    
 
     %{
     % Plotting related
@@ -180,7 +195,7 @@ end
 
 %% Combine rejection match from all rejection channels
 % Needed as channels cannot have separate boundary events in EEGLAB
-chCountTh = max(1, floor(Arg.coOcurrencePrc*size(rej_match,1)));
+chCountTh = max(1, floor(Arg.coOcurrencePrc * size(rej_match, 1)));
 rej_counts = sum(rej_match, 1);
 samprej_match = rej_counts >= chCountTh; %[1,EEG.pnts] logical
 % Expand overlaps

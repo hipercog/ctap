@@ -50,6 +50,14 @@ if size(S,1)==1
     S = S';
 end
 
+if isempty(S)
+   error('struct_filter:emptyInput','The input struct S is empty. Cannot compute.'); 
+end
+
+if isempty(Filt)
+   error('struct_filter:emptyInput','The input struct Filt is empty. Cannot compute.'); 
+end
+
 
 %% Select cases (filtering)
 % Creates the variable 'match' based on filtering selections passed by

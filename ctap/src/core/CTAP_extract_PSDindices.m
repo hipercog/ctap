@@ -48,10 +48,12 @@ function [EEG, Cfg] = CTAP_extract_PSDindices(EEG, Cfg)
 % Please see the file LICENSE for details.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+
 %% Set optional arguments
 Arg = struct;
 Arg.eindcc.fzStr = get_channel_name_by_description(EEG,'frontal');
 Arg.eindcc.pzStr = get_channel_name_by_description(EEG,'vertex');
+Arg.extra_path = '';
 
 % Override defaults with user parameters
 if isfield(Cfg.ctap, 'extract_PSDindices')
@@ -89,7 +91,8 @@ varg =  struct2varargin(Arg.eindcc);
 
 
 %% Save
-savepath = fullfile(Cfg.env.paths.featuresRoot,'PSDindices');
+savepath = fullfile(Cfg.env.paths.featuresRoot, 'PSDindices', Arg.extra_path);
+if isfield(Cfg, 'export'), Cfg.export.featureSavePoints{end + 1} = savepath; end
 if ~isdir(savepath), mkdir(savepath); end
 savename = sprintf('%s_PSDindices.mat', Cfg.measurement.casename);
 save(fullfile(savepath, savename)...

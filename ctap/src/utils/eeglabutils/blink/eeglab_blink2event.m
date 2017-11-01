@@ -7,7 +7,7 @@ p.addRequired('EEG', @isstruct);
 p.addRequired('veog_signal', @isnumeric);
 p.addParameter('blinkDetectFun', @sbf_blinkdetector,...
                  @(x)isa(x,'function_handle'));
-
+p.addParameter('vargs2blinkdetfun', {}, @iscell); %varargin name-value pairs for blink detection function
 p.parse(EEG, veog_signal, varargin{:});
 Arg = p.Results;
 
@@ -16,7 +16,8 @@ Arg = p.Results;
 
 % Detect blinks
 QCData = NaN; %#ok<NASGU>
-[blink_latency_arr, QCData] = Arg.blinkDetectFun(veog_signal);
+[blink_latency_arr, QCData] = Arg.blinkDetectFun(veog_signal, ...
+                                                 Arg.vargs2blinkdetfun{:});
 
 if (~isempty(blink_latency_arr)) %some blinks found
     
@@ -53,12 +54,13 @@ end
 
 
 %% Subfunctions
-    function [blinkLatencyArr, QCData] = sbf_blinkdetector(veog)
-        [blinkLatencyArr, BD] = eeg_detect_blink(veog, EEG.srate);
+    function [blinkLatencyArr, QCData] = sbf_blinkdetector(veog, varargin)
+        [blinkLatencyArr, BD] = eeg_detect_blink(veog, EEG.srate, varargin{:});
         
         QCData.criterionValue = BD.Dv;
         QCData.criterionName = 'eogert Dv';
         QCData.isBlink = BD.clusters == 2;
+        QCData.methodData = BD;
     end
 
 end

@@ -62,7 +62,7 @@ idx = Arg.channels;
 nchan = numel(idx);
 %stats don't care about epoch boundaries, I think? so reshape to handy 2D
 data = reshape(EEG.data(idx,:,:), nchan, EEG.pnts * EEG.trials);
-data = data(:, Arg.latency:Arg.latency + Arg.duration - 1);
+data = data(:, single(Arg.latency):single(Arg.latency + Arg.duration - 1));
 
 
 %% get stats of each channel requested, build a matrix of stats
@@ -76,11 +76,6 @@ for i = 1:nchan
     [t(i,5), t(i,6), t(i,7), t(i,8), t(i,9), t(i,10), ~, t(i,11)] =...
         STAT_stats(data(i, :), 'tailPrc', 0.05, 'alpha', 0.05);
 end
-%todo: for jkor this raises:
-%   Assignment has more non-singleton rhs dimensions than non-singleton subscripts
-% 
-%   Error in CTAP_peek_data (line 121)
-%       [t(i,5), t(i,6), t(i,7), t(i,8), t(i,9), t(i,10), ~, t(i,11)] =...
 
 
 %% create a table from the stats

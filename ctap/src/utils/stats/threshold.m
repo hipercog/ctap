@@ -1,21 +1,28 @@
 function Res = threshold(dvec, th, nmad)
+% thresholds - Thresholds a data vector
+%
+% Description:
+%   Thresholds data vector 'dvec' either using provided threshold values 
+%   in 'th' or by using median +- nmad*MAD as the thresholds
 
+%%%% DEBUG ####
 %dvec = randn(20,1);
 %th = [NaN NaN];
 %nmad = 3;
 
-% Defaults
-NBINS = round(0.75 * numel(dvec));
-TOPSPACE = 2;
-LAB_YOFFSET = 0;
-
 % Define th
-dmad = mad(dvec);
-dmedian = median(dvec);
+dmad = double(mad(dvec));%dmad, dmedian must be type double or text() will crash
+dmedian = double(nanmedian(dvec)); % note: does not ignore NaNs!
 
-
-if isnan(th(1))
-    th = dmedian + [-nmad*dmad, nmad*dmad];
+if all(isnan(th)) && any(~isnan(nmad))
+    %expand nmad if it is a single value
+    if isscalar(nmad)
+        nmad = [-nmad nmad];
+    %sort nmad if no elements were NaN
+    elseif ~any(isnan(nmad))
+        nmad = sort(nmad);
+    end
+    th = dmedian + [nmad(1)*dmad, nmad(2)*dmad];
 end
 
 isAbove = th(2) < dvec;
@@ -24,6 +31,13 @@ isInRange = ~isAbove & ~isBelow;
 
 
 %% Plot
+% todo: why is this plot mandatory?
+
+% Defaults
+NBINS = round(0.75 * numel(dvec));
+TOPSPACE = 2;
+LAB_YOFFSET = 0;
+
 figh = figure('Visible', 'off');
 
 % Add histogram
