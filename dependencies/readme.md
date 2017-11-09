@@ -1,7 +1,8 @@
+# Current dependencies of CTAP
+
 Listing of external dependencies other than EEGLAB
 All dependencies are included in this folder for convenience, licenced within their own folders. The CTAP licence does not apply.
 
-# Current dependencies:
 
 ## ctap/dependencies/nansuite:
 * from FileExchange: http://www.mathworks.com/matlabcentral/fileexchange/6837-nan-suite
@@ -64,7 +65,6 @@ All dependencies are included in this folder for convenience, licenced within th
 * license unknown
 * used by: ../ctap/src/generic/ctapeeg_epoch_data.m
 * status: used but not required
-
 
 ## ctap/dependencies/litekmeans:
 * from

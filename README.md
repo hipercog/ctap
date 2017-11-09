@@ -14,12 +14,15 @@ The CTAP toolbox provides two main functionalities to achieve these aims:
 _If you use CTAP for your research, __please use the following citation___:
  * Cowley, B., Korpela, J., & Torniainen, J. E. (2017). Computational Testing for Automated Preprocessing: a Matlab toolbox to enable large scale electroencephalography data processing. PeerJ Computer Science, 3:e108. http://doi.org/10.7717/peerj-cs.108
 
+
 ## Installation ##
 Clone the GitHub repository to your machine using
 
     git clone https://github.com/bwrc/ctap.git <destination dir>
 
-Add the whole directory to your Matlab path. You also need to have EEGLAB added to your Matlab path.
+Add directory trees `<dst_dir>/ctap/` and `<dst_dir>/dependencies/` to your Matlab path. You also need to have EEGLAB added to your Matlab path.
+
+One option to accomplish both of these to make a local copy of `ctap_set_path.m`, edit the file to match the setup on your machine and run to configure Matlab path.
 
 ## Getting started ##
 A minimalistic working example can be found in `~/ctap/templates/minimalistic_example/`.
@@ -38,7 +41,7 @@ More examples are available under `~/ctap/templates/`.
 3. Run
 	update_matlab_path_anyone()
 4. Try running one of the "proof-of-concept" scripts:
-	pipebatch_minimal()	
+	pipebatch_minimal()
 	pipebatch_WCST_baseprepro()
 
 ## License information

@@ -6,12 +6,13 @@
 
 %% Setup
 %projectRoot = fullfile(tempdir(),'hydra');
-projectRoot = '/home/jkor/work_local/projects/ctap/hydra';
+projectRoot = '/home/jkor/work_local/projects/ctap/ctapres_hydra';
+
 ctapRoot = projectRoot;
 Cfg.env.paths = cfg_create_paths(ctapRoot, 'ctap_prepro', '');
 
 % what to run:
-run_datagen = true;
+run_datagen = true; % todo: not working anymore
 run_prepro = true; %takes a long time due to ICA
 run_sweep = true;
 sweep_resave = false;
@@ -21,10 +22,10 @@ run_analyze = true;
 
 %--------------------------------------------------------------------------
 % Data generation options
-srcdir = fullfile(projectRoot,'data','seed_data');
+%seed_srcdir = fullfile(projectRoot,'data','seed_data'); %from param_sweep_setup.m
 srcname = 'BCICIV_calib_ds1a.set';
-syndata_dir = fullfile(projectRoot,'data','syn_data');
-mkdir(syndata_dir);
+%syndata_dir = fullfile(projectRoot,'data','syn_data'); %from param_sweep_setup.m
+%mkdir(syndata_dir);
 
 EEG_LEN_MIN = 5;
 CH_FILE = 'chanlocs128_biosemi.elp';
@@ -106,13 +107,13 @@ Cfg = ctap_auto_config(Cfg, PipeParams);
 %% Generate synthetic data
 if run_datagen
 
-    seedEEG = pop_loadset(srcname, srcdir);
+    seedEEG = pop_loadset(srcname, seed_srcdir);
     chanlocs = readlocs(CH_FILE);
     
     stream = RandStream.getGlobalStream;
     reset(stream, 42);
     [EEGclean, EEGart, EEG] = ...
-        generate_synthetic_data_paramsweep(seedEEG, chanlocs,...
+        generate_synthetic_data_paramsweep(seedEEG, chanlocs, true,...
                                     EEG_LENGTH, SRATE, MODEL_ORDER,...
                                     BLINK_N, EMG_N, WRECK_N,...
                                     WRECK_MULTIPLIER_ARR);

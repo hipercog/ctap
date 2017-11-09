@@ -18,7 +18,8 @@ function EEG = eeglab_seedgen_synthetic_data(seedEEG, ch, eeg_length, srate, mod
 	seedEEG = pop_reref(seedEEG, []);
 
     % reserve space for data: samples x channels
-    data = zeros(eeg_length * seedEEG.srate, length(ch));
+    n_samples = ceil(eeg_length * seedEEG.srate); %.srate not always integer
+    data = zeros(n_samples, length(ch));
 
     for k=1:length(ch)
         % find closest channel from input data
@@ -29,7 +30,7 @@ function EEG = eeglab_seedgen_synthetic_data(seedEEG, ch, eeg_length, srate, mod
 
 		data(:, k) = sbf_generate_channel(seedEEG.data(idx, :)', ...
 									  model_order, ... 
-									  eeg_length * seedEEG.srate);
+									  n_samples);
         if isnan(data(1,k))
            keyboard; 
         end
