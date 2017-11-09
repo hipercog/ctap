@@ -89,6 +89,7 @@ if ~isempty(strfind(Arg.method, 'fast'))
     % Re-reference for Faster
     if ~isempty(Arg.refChannel)
         EEG = ctapeeg_reref_data(EEG, 'ref', Arg.refChannel);
+%        EEG = pop_reref(EEG, Arg.refChannel);
     else
         varargout{2} = myReport('FAIL :: reference channel not found ...');
     end
