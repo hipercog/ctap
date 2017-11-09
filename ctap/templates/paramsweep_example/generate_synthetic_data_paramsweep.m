@@ -27,6 +27,8 @@ if SYNDATA
     EEGclean = eeglab_seedgen_synthetic_data(seedEEG, chanlocs,...
                                             dlen, srate, model_order);
 else
+    % todo: Does not set EEG.chanlocs correctly! Assumes seedEEG has channel
+    % locations set up.
     EEGclean = seedEEG;
     clear seedEEG;
 end

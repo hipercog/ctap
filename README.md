@@ -14,6 +14,7 @@ The CTAP toolbox provides two main functionalities to achieve these aims:
 _If you use CTAP for your research, __please use the following citation___:
  * Cowley, B., Korpela, J., & Torniainen, J. E. (2017). Computational Testing for Automated Preprocessing: a Matlab toolbox to enable large scale electroencephalography data processing. PeerJ Computer Science, 3:e108. http://doi.org/10.7717/peerj-cs.108
 
+
 ## Installation ##
 Clone the GitHub repository to your machine using
 

@@ -6,13 +6,13 @@
 
 %% Setup
 %projectRoot = fullfile(tempdir(),'hydra');
-%projectRoot = '/home/jkor/work_local/projects/ctap/hydra';
-% projectRoot comes from param_sweep_setup.m
+projectRoot = '/home/jkor/work_local/projects/ctap/ctapres_hydra';
+
 ctapRoot = projectRoot;
 Cfg.env.paths = cfg_create_paths(ctapRoot, 'ctap_prepro', '');
 
 % what to run:
-run_datagen = false;
+run_datagen = true; % todo: not working anymore
 run_prepro = true; %takes a long time due to ICA
 run_sweep = true;
 sweep_resave = false;
@@ -113,7 +113,7 @@ if run_datagen
     stream = RandStream.getGlobalStream;
     reset(stream, 42);
     [EEGclean, EEGart, EEG] = ...
-        generate_synthetic_data_paramsweep(seedEEG, chanlocs,...
+        generate_synthetic_data_paramsweep(seedEEG, chanlocs, true,...
                                     EEG_LENGTH, SRATE, MODEL_ORDER,...
                                     BLINK_N, EMG_N, WRECK_N,...
                                     WRECK_MULTIPLIER_ARR);
