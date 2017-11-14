@@ -1,4 +1,4 @@
-%% Clean SCCN data CTAP script
+ %% Clean SCCN data CTAP script
 % As referenced in the second CTAP article:
 % Cowley BU, Korpela J, (2018) Computational Testing for Automated Preprocessing 
 % 2: practical demonstration of a system for scientific data-processing workflow 
@@ -61,7 +61,7 @@ Cfg = ctap_auto_config(Cfg, ctap_args);
 
 
 %% Run the pipe
-% {
+%{
 tic;
 CTAP_pipeline_looper(Cfg,...
                     'debug', STOP_ON_ERROR,...
@@ -73,9 +73,9 @@ clear STOP_ON_ERROR OVERWRITE_OLD_RESULTS Filt ctap_args data_dir_in
 %}
 
 
-%% Cleanup saved .sets
+%% Plot ERPs of saved .sets
 % {
-setpths = fullfile(Cfg.env.paths.projectRoot, Cfg.pipe.runSets);
+setpths = fullfile(Cfg.env.paths.analysisRoot, Cfg.pipe.runSets);
 fname = [Cfg.pipe.runMeasurements{1} '.set'];
 for i = 1:numel(setpths)
     eeg = ctapeeg_load_data(fullfile(setpths{i}, fname) );
@@ -85,21 +85,20 @@ for i = 1:numel(setpths)
     shrt_dev = pop_epoch(eeg, {'100' '150'}, [-1 1]);
     
     shrt_vtx_erp = [ctap_test_erp(shrt_std); ctap_test_erp(shrt_dev)];
-    plot(shrt_vtx_erp', 'Linewidth', 2)
-    axis([0 shrt_std.pnts Inf Inf])
-    xticks(linspace(0, shrt_std.pnts, 15))
-    xtl = xticklabels;
-%     xticklabels(num2str(round(linspace(shrt_std.xmin * 1000, shrt_std.xmax * 1000, 15))))
-    legend({'short std' 'short dev'})
+    ctaptest_plot_erp(shrt_vtx_erp, shrt_std.pnts, eeg.srate...
+        , {'short standard' 'short deviant'}...
+        , fullfile(Cfg.env.paths.exportRoot...
+            , sprintf('ERP%s-%s.png', Cfg.pipe.runSets{i}, 'short_tones')))
     
     long_std = pop_epoch(eeg, {'201' '251'}, [-1 1]);
     long_dev = pop_epoch(eeg, {'101' '151'}, [-1 1]);
     
     long_vtx_erp = [ctap_test_erp(long_std); ctap_test_erp(long_dev)];
-    plot(shrt_vtx_erp', 'Linewidth', 2)
-    xticklabels()
-%     axis([shrt_std.xmin * 1000 shrt_std.xmax * 1000 inf inf])
-    legend({'long std' 'long dev'})
+    ctaptest_plot_erp(long_vtx_erp, long_std.pnts, eeg.srate...
+        , {'long standard' 'long deviant'}...
+        , fullfile(Cfg.env.paths.exportRoot...
+            , sprintf('ERP%s-%s.png', Cfg.pipe.runSets{i}, 'long_tones')))
+
 %     pop_saveset(eeg, 'filename', savename, 'filepath', setpths{i});
 end
 

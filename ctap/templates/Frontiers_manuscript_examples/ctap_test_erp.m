@@ -1,7 +1,7 @@
 function erp = ctap_test_erp(epocs, loc, bl, smth)
 
 if nargin < 4
-    smth = 10;
+    smth = 20;
 end
 if nargin < 3
     bl = [find(epocs.times > epocs.xmin * 1000, 1)...
