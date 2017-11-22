@@ -39,6 +39,7 @@ analysis_ID = 'sccn-short-pipe';
 [Cfg, ctap_args] = sbf_cfg(data_dir_in, analysis_ID);
 
 % Runtime options for CTAP:
+PREPRO = false;
 STOP_ON_ERROR = true;
 OVERWRITE_OLD_RESULTS = true;
 
@@ -61,47 +62,53 @@ Cfg = ctap_auto_config(Cfg, ctap_args);
 
 
 %% Run the pipe
-%{
-tic;
+if PREPRO
+tic; %#ok<UNRCH>
 CTAP_pipeline_looper(Cfg,...
                     'debug', STOP_ON_ERROR,...
                     'overwrite', OVERWRITE_OLD_RESULTS);
 toc;
-
 %clean workspace
 clear STOP_ON_ERROR OVERWRITE_OLD_RESULTS Filt ctap_args data_dir_in
-%}
+end
 
 
 %% Plot ERPs of saved .sets
 % {
-setpths = fullfile(Cfg.env.paths.analysisRoot, Cfg.pipe.runSets);
-fname = [Cfg.pipe.runMeasurements{1} '.set'];
-for i = 1:numel(setpths)
-    eeg = ctapeeg_load_data(fullfile(setpths{i}, fname) );
+setpth = fullfile(Cfg.env.paths.analysisRoot, Cfg.pipe.runSets{end});
+fnames = strcat(Cfg.pipe.runMeasurements, '.set');
+% define subject-wise ERP data structure: of known size for subjects,conditions
+erps = cell(numel(fnames), 4);
+cond = {'short' 'long'};
+codes = 100:50:250;
+for i = 1:numel(fnames)
+    eeg = ctapeeg_load_data(fullfile(setpth, fnames{i}) );
     eeg.event(isnan(str2double({eeg.event.type}))) = [];
     
-    shrt_std = pop_epoch(eeg, {'200' '250'}, [-1 1]);
-    shrt_dev = pop_epoch(eeg, {'100' '150'}, [-1 1]);
-    
-    shrt_vtx_erp = [ctap_test_erp(shrt_std); ctap_test_erp(shrt_dev)];
-    ctaptest_plot_erp(shrt_vtx_erp, shrt_std.pnts, eeg.srate...
-        , {'short standard' 'short deviant'}...
-        , fullfile(Cfg.env.paths.exportRoot...
-            , sprintf('ERP%s-%s.png', Cfg.pipe.runSets{i}, 'short_tones')))
-    
-    long_std = pop_epoch(eeg, {'201' '251'}, [-1 1]);
-    long_dev = pop_epoch(eeg, {'101' '151'}, [-1 1]);
-    
-    long_vtx_erp = [ctap_test_erp(long_std); ctap_test_erp(long_dev)];
-    ctaptest_plot_erp(long_vtx_erp, long_std.pnts, eeg.srate...
-        , {'long standard' 'long deviant'}...
-        , fullfile(Cfg.env.paths.exportRoot...
-            , sprintf('ERP%s-%s.png', Cfg.pipe.runSets{i}, 'long_tones')))
+    for c = 1:2
+        stan = pop_epoch(eeg, cellstr(num2str(codes(3:4)' + (c-1))), [-1 1]);
+        devi = pop_epoch(eeg, cellstr(num2str(codes(1:2)' + (c-1))), [-1 1]);
 
-%     pop_saveset(eeg, 'filename', savename, 'filepath', setpths{i});
+        erps{i, c * 2 - 1} = ctap_get_erp(stan);
+        erps{i, c * 2} = ctap_get_erp(devi);
+        ctaptest_plot_erp([erps{i, 1}; erps{i, 2}], stan.pnts, eeg.srate...
+            , {[cond{c} ' standard'] [cond{c} ' deviant']}...
+            , fullfile(Cfg.env.paths.exportRoot, sprintf(...
+                'ERP%s-%s_%s.png', fnames{i}, cond{c}, 'tones')))
+
+    end
 end
 
+% Obtain condition-wise grand average ERP and plot
+for c = 1:2:4
+    ERP_std = mean(cell2mat(erps(:,c)), 1);
+    ERP_dev = mean(cell2mat(erps(:,c + 1)), 1);
+    ctaptest_plot_erp([ERP_std; ERP_dev], numel(ERP_std), eeg.srate...
+        , {[cond{ceil(c/2)} ' standard'] [cond{ceil(c/2)} ' deviant']}...
+        , fullfile(Cfg.env.paths.exportRoot...
+            , sprintf('ERP%s-%s_%s.png', 'all', cond{ceil(c/2)}, 'tones')))
+end
+%}
 
 
 %% Subfunctions
@@ -142,10 +149,8 @@ stepSet(i).funH = { @CTAP_load_data,...
                     @CTAP_load_chanlocs,...
                     @CTAP_reref_data,... 
                     @CTAP_blink2event,...
-                    @CTAP_select_data,...
                     @CTAP_peek_data,...
                     @CTAP_fir_filter,...
-                    @CTAP_select_data,...
                     @CTAP_run_ica };
 stepSet(i).id = [num2str(i) '_load'];
 
@@ -155,9 +160,6 @@ out.load_chanlocs = struct(...
 out.load_chanlocs.field = {{251:254 'type' 'EOG'}...
                          , {255:256 'type' 'ECG'}};
 out.load_chanlocs.tidy  = {{'type' 'FID'} {'type' 'ECG'}};
-
-out.select_data = struct(...
-    'time', {[1100 2500] [100 1300]});
 
 out.fir_filter = struct(...
     'locutoff', 1);
