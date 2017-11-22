@@ -139,14 +139,15 @@ end
 
 
 %% Define latencies to peek at
-peekmatch = ismember(cellfun(@num2str, {EEG.event.type}, 'Uni', 0), 'ctapeeks'); 
+peekmatch = ismember(cellfun(@num2str, {EEG.event.type}, 'Uni', 0), 'ctapeeks');
 if any(peekmatch)%peek events are present - use them
     starts = [EEG.event(peekmatch).latency]; 
 else
     %create new peeks
     if isfield(Arg, 'peekevent')
         % based on events
-        peekidx = find(ismember({EEG.event.type}, Arg.peekevent));
+        peekidx = find(ismember(cellfun(@num2str, {EEG.event.type}, 'Uni', 0)...
+            , Arg.peekevent));
         if isfield(Arg, 'peekindex')
             peekidx = peekidx(Arg.peekindex);
         else
@@ -160,7 +161,8 @@ else
         
     elseif isfield(Cfg.ctap, 'select_evdata') &&...
             isfield(Cfg.ctap.select_evdata, 'evtype')
-        peekmatch = ismember({EEG.event.type}, Cfg.ctap.select_evdata.evtype);
+        peekmatch = ismember(cellfun(@num2str, {EEG.event.type}, 'Uni', 0)...
+            , Cfg.ctap.select_evdata.evtype);
         starts = [EEG.event(peekmatch).latency] + 1;
     else
         %num peeks = as many as will fit with room to spare at the end, up to 10
@@ -177,7 +179,8 @@ else
                 eeglab_create_event(starts, 'ctapeeks', 'label', labels),...
                 'ignoreDiscontinuousTime');
             
-    peekmatch = ismember({EEG.event.type}, 'ctapeeks'); %assumed to exist later
+    peekmatch = ismember(cellfun(@num2str, {EEG.event.type}, 'Uni', 0)...
+        , 'ctapeeks'); %assumed to exist later
 end
 % Find labels for peeks
 if isfield(EEG.event, 'label')
