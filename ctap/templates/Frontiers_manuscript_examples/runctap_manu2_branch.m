@@ -1,4 +1,4 @@
- %% Branching CTAP script to clean SCCN data
+%% Branching CTAP script to clean SCCN data
 % As referenced in the second CTAP article:
 % Cowley BU, Korpela J, (2018) Computational Testing for Automated Preprocessing 
 % 2: practical demonstration of a system for scientific data-processing workflow 
@@ -32,45 +32,48 @@
 % On the Matlab console, execute >> runctap_manu2_branch
 
 
-%% Setup
-data_dir_in = '/home/ben/Benslab/CTAP/CTAPIIdata';
-analysis_ID = 'sccn-branch-pipe';
+function runctap_manu2_branch()
+    %% Setup
+    data_dir_in = '/home/ben/Benslab/CTAP/CTAPIIdata';
+    analysis_ID = 'sccn-branch-pipe';
 
-% Define step sets and their parameters
-[Cfg, ~] = sbf_cfg(data_dir_in, analysis_ID);
+    % Define step sets and their parameters
+    [Cfg, ~] = sbf_cfg(data_dir_in, analysis_ID);
 
-% Runtime options for CTAP:
-PREPRO = false;
-STOP_ON_ERROR = true;
-OVERWRITE_OLD_RESULTS = true;
-
-
-%% Create measurement config (MC) based on folder
-Cfg.MC = path2measconf(data_dir_in, '*.bdf');
-% Select measurements to process
-clear('Filt')
-Filt.subject = 'eeg_recording_8';
+    % Runtime options for CTAP:
+    PREPRO = false;
+    STOP_ON_ERROR = true; %#ok<*NASGU>
+    OVERWRITE_OLD_RESULTS = true;
 
 
-%% Select pipe array and first and last pipe to run
-pipeArr = {@sbf_pipe1,...
-           @sbf_pipe2A,...
-           @sbf_pipe2B};
-first = 2;
-last = length(pipeArr);
-%You can also run only a subset of pipes, e.g. 2:length(pipeArr)
+    %% Create measurement config (MC) based on folder
+    Cfg.MC = path2measconf(data_dir_in, '*.bdf');
+    % Select measurements to process
+    clear('Filt')
+    Filt.subject = 'eeg_recording_8';
 
 
-%% Run
-if PREPRO
-    CTAP_pipeline_brancher(Cfg, Filt, pipeArr...
+    %% Select pipe array and first and last pipe to run
+    pipeArr = {@sbf_pipe1,...
+               @sbf_pipe2A,...
+               @sbf_pipe2B};
+    first = 2;
+    last = length(pipeArr);
+    %You can also run only a subset of pipes, e.g. 2:length(pipeArr)
+
+
+    %% Run
+    if PREPRO
+        CTAP_pipeline_brancher(Cfg, Filt, pipeArr...
                             , first, last...
                             , STOP_ON_ERROR, OVERWRITE_OLD_RESULTS) %#ok<UNRCH>
+    end
+
+    % Finally, obtain ERPs of known conditions from the processed data
+    % For this we use a helper function to rebuild the branching tree of paths
+    % to the export directories
+    CTAP_postproc_brancher(Cfg, Filt, pipeArr, first, last)
 end
-
-% Plot ERPs to export directory
-CTAP_postproc_brancher(Cfg, Filt, pipeArr, first, last)
-
 
 
 %% Subfunctions
@@ -80,11 +83,8 @@ function [Cfg, out] = sbf_cfg(project_root_folder, ID)
 
     % Analysis branch ID
     Cfg.id = ID;
-
     Cfg.srcid = {''};
-
     Cfg.env.paths.projectRoot = project_root_folder;
-
 
     % Define important directories and files
     Cfg.env.paths.branchSource = ''; 
@@ -95,7 +95,6 @@ function [Cfg, out] = sbf_cfg(project_root_folder, ID)
     Cfg.eeg.chanlocs = fullfile(Cfg.env.paths.projectRoot...
         , 'channel_locations_8.elp');
     Channels = readlocs(Cfg.eeg.chanlocs);
-
 
     % Define other important stuff
     Cfg.eeg.reference = {'average'};

@@ -1,4 +1,4 @@
- %% Clean SCCN data CTAP script
+%% Clean SCCN data CTAP script
 % As referenced in the second CTAP article:
 % Cowley BU, Korpela J, (2018) Computational Testing for Automated Preprocessing 
 % 2: practical demonstration of a system for scientific data-processing workflow 
@@ -31,84 +31,51 @@
 % On the Matlab console, execute >> runctap_manu2_short
 
 
-%% Setup
-data_dir_in = '/home/ben/Benslab/CTAP/CTAPIIdata';
-analysis_ID = 'sccn-short-pipe';
+function runctap_manu2_short()
+    %% Setup
+    data_dir_in = '/home/ben/Benslab/CTAP/CTAPIIdata';
+    analysis_ID = 'sccn-short-pipe';
 
-% Define step sets and their parameters
-[Cfg, ctap_args] = sbf_cfg(data_dir_in, analysis_ID);
+    % Define step sets and their parameters
+    [Cfg, ctap_args] = sbf_cfg(data_dir_in, analysis_ID);
 
-% Runtime options for CTAP:
-PREPRO = false;
-STOP_ON_ERROR = true;
-OVERWRITE_OLD_RESULTS = true;
-
-
-%% Create measurement config (MC) based on folder
-Cfg.MC = path2measconf(data_dir_in, '*.bdf');
-% Select measurements to process
-clear('Filt')
-Filt.subject = 'eeg_recording_8';
-Cfg.pipe.runMeasurements = get_measurement_id(Cfg.MC, Filt);
+    % Runtime options for CTAP:
+    PREPRO = false;
+    STOP_ON_ERROR = true;
+    OVERWRITE_OLD_RESULTS = true;
 
 
-%% Select step sets to process
-Cfg.pipe.runSets = {'all'}; %this is the default
-% Cfg.pipe.runSets = {Cfg.pipe.stepSets(8).id};
+    %% Create measurement config (MC) based on folder
+    Cfg.MC = path2measconf(data_dir_in, '*.bdf');
+    % Select measurements to process
+    clear('Filt')
+    Filt.subject = 'eeg_recording_8';
+    Cfg.pipe.runMeasurements = get_measurement_id(Cfg.MC, Filt);
 
 
-%% Assign arguments to the selected functions, perform various checks
-Cfg = ctap_auto_config(Cfg, ctap_args);
+    %% Select step sets to process
+    Cfg.pipe.runSets = {'all'}; %this is the default
+    % Cfg.pipe.runSets = {Cfg.pipe.stepSets(8).id};
 
 
-%% Run the pipe
-if PREPRO
-tic; %#ok<UNRCH>
-CTAP_pipeline_looper(Cfg,...
-                    'debug', STOP_ON_ERROR,...
-                    'overwrite', OVERWRITE_OLD_RESULTS);
-toc;
-%clean workspace
-clear STOP_ON_ERROR OVERWRITE_OLD_RESULTS Filt ctap_args data_dir_in
-end
+    %% Assign arguments to the selected functions, perform various checks
+    Cfg = ctap_auto_config(Cfg, ctap_args);
 
 
-%% Plot ERPs of saved .sets
-% {
-setpth = fullfile(Cfg.env.paths.analysisRoot, Cfg.pipe.runSets{end});
-fnames = strcat(Cfg.pipe.runMeasurements, '.set');
-% define subject-wise ERP data structure: of known size for subjects,conditions
-erps = cell(numel(fnames), 4);
-cond = {'short' 'long'};
-codes = 100:50:250;
-for i = 1:numel(fnames)
-    eeg = ctapeeg_load_data(fullfile(setpth, fnames{i}) );
-    eeg.event(isnan(str2double({eeg.event.type}))) = [];
-    
-    for c = 1:2
-        stan = pop_epoch(eeg, cellstr(num2str(codes(3:4)' + (c-1))), [-1 1]);
-        devi = pop_epoch(eeg, cellstr(num2str(codes(1:2)' + (c-1))), [-1 1]);
-
-        erps{i, c * 2 - 1} = ctap_get_erp(stan);
-        erps{i, c * 2} = ctap_get_erp(devi);
-        ctaptest_plot_erp([erps{i, 1}; erps{i, 2}], stan.pnts, eeg.srate...
-            , {[cond{c} ' standard'] [cond{c} ' deviant']}...
-            , fullfile(Cfg.env.paths.exportRoot, sprintf(...
-                'ERP%s-%s_%s.png', fnames{i}, cond{c}, 'tones')))
-
+    %% Run the pipe
+    if PREPRO
+    tic; %#ok<UNRCH>
+    CTAP_pipeline_looper(Cfg,...
+                        'debug', STOP_ON_ERROR,...
+                        'overwrite', OVERWRITE_OLD_RESULTS);
+    toc;
+    %clean workspace
+    clear STOP_ON_ERROR OVERWRITE_OLD_RESULTS Filt ctap_args data_dir_in
     end
-end
 
-% Obtain condition-wise grand average ERP and plot
-for c = 1:2:4
-    ERP_std = mean(cell2mat(erps(:,c)), 1);
-    ERP_dev = mean(cell2mat(erps(:,c + 1)), 1);
-    ctaptest_plot_erp([ERP_std; ERP_dev], numel(ERP_std), eeg.srate...
-        , {[cond{ceil(c/2)} ' standard'] [cond{ceil(c/2)} ' deviant']}...
-        , fullfile(Cfg.env.paths.exportRoot...
-            , sprintf('ERP%s-%s_%s.png', 'all', cond{ceil(c/2)}, 'tones')))
+    % Finally, obtain ERPs of known conditions from the processed data
+    oddball_erps(Cfg)
 end
-%}
 
 
 %% Subfunctions

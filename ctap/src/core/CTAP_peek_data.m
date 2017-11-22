@@ -139,7 +139,7 @@ end
 
 
 %% Define latencies to peek at
-peekmatch = ismember({EEG.event.type}, 'ctapeeks'); 
+peekmatch = ismember(cellfun(@num2str, {EEG.event.type}, 'Uni', 0), 'ctapeeks'); 
 if any(peekmatch)%peek events are present - use them
     starts = [EEG.event(peekmatch).latency]; 
 else
