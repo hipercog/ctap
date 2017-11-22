@@ -31,25 +31,26 @@
 % On the Matlab console, execute >> runctap_manu2_short
 
 
-function runctap_manu2_short()
+function runctap_manu2_short(data_dir_in, sbj_filt, PREPRO)
     %% Setup
-    data_dir_in = '/home/ben/Benslab/CTAP/CTAPIIdata';
-    analysis_ID = 'sccn-short-pipe';
-
-    % Define step sets and their parameters
-    [Cfg, ctap_args] = sbf_cfg(data_dir_in, analysis_ID);
-
+    if nargin < 1, data_dir_in = '/home/ben/Benslab/CTAP/CTAPIIdata'; end
+    if nargin < 2, sbj_filt = setdiff(1:12, [3 7]); end
+    if nargin < 3, PREPRO = false; end
+    
     % Runtime options for CTAP:
-    PREPRO = false;
     STOP_ON_ERROR = true;
     OVERWRITE_OLD_RESULTS = true;
 
+    % Define step sets and their parameters
+    [Cfg, ctap_args] = sbf_cfg(data_dir_in, 'sccn-short-pipe');
+    
 
     %% Create measurement config (MC) based on folder
     Cfg.MC = path2measconf(data_dir_in, '*.bdf');
     % Select measurements to process
-    clear('Filt')
-    Filt.subject = 'eeg_recording_8';
+%     sbjs = strcat(cellfun(@(x) strrep(x, '0.', 's'), cellstr(num2str([sbj_filt / 100]', '%0.2f')), 'Uni', 0), '_eeg_1');
+    sbjs = {Cfg.MC.subject.subject};
+    Filt.subject = sbjs(ismember([Cfg.MC.subject.subjectnr], sbj_filt));
     Cfg.pipe.runMeasurements = get_measurement_id(Cfg.MC, Filt);
 
 
@@ -64,13 +65,11 @@ function runctap_manu2_short()
 
     %% Run the pipe
     if PREPRO
-    tic; %#ok<UNRCH>
-    CTAP_pipeline_looper(Cfg,...
-                        'debug', STOP_ON_ERROR,...
-                        'overwrite', OVERWRITE_OLD_RESULTS);
-    toc;
-    %clean workspace
-    clear STOP_ON_ERROR OVERWRITE_OLD_RESULTS Filt ctap_args data_dir_in
+        tic;
+        CTAP_pipeline_looper(Cfg,...
+                            'debug', STOP_ON_ERROR,...
+                            'overwrite', OVERWRITE_OLD_RESULTS);
+        toc;
     end
 
     % Finally, obtain ERPs of known conditions from the processed data
