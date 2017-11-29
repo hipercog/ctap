@@ -32,15 +32,16 @@
 % On the Matlab console, execute >> runctap_manu2_branch
 
 
-function runctap_manu2_branch(data_dir_in, sbj_filt, PREPRO)
-    %% Setup
-    if nargin < 1, data_dir_in = '/home/ben/Benslab/CTAP/CTAPIIdata'; end
-    if nargin < 2, sbj_filt = setdiff(1:12, [3 7]); end
-    if nargin < 3, PREPRO = false; end
-    
-    % Runtime options for CTAP:
-    STOP_ON_ERROR = true;
-    OVERWRITE_OLD_RESULTS = true;
+function runctap_manu2_branch(data_dir_in, varargin)
+    %% Parse input arguments and set varargin defaults
+    p = inputParser;
+    p.addRequired('data_dir_in', @isstr);
+    p.addParameter('sbj_filt', setdiff(1:12, [3 7]), @isnumeric);
+    p.addParameter('PREPRO', false, @islogical);
+    p.addParameter('STOP_ON_ERROR', true, @islogical);
+    p.addParameter('OVERWRITE_OLD_RESULTS', true, @islogical);
+    p.parse(data_dir_in, varargin{:});
+    Arg = p.Results;
 
     % Define step sets and their parameters
     [Cfg, ~] = sbf_cfg(data_dir_in, 'sccn-short-pipe');
@@ -50,7 +51,7 @@ function runctap_manu2_branch(data_dir_in, sbj_filt, PREPRO)
     Cfg.MC = path2measconf(data_dir_in, '*.bdf');
     % Select measurements to process
     sbjs = {Cfg.MC.subject.subject};
-    Filt.subject = sbjs(ismember([Cfg.MC.subject.subjectnr], sbj_filt));
+    Filt.subject = sbjs(ismember([Cfg.MC.subject.subjectnr], Arg.sbj_filt));
     Cfg.pipe.runMeasurements = get_measurement_id(Cfg.MC, Filt);
 
 
@@ -64,10 +65,10 @@ function runctap_manu2_branch(data_dir_in, sbj_filt, PREPRO)
 
 
     %% Run
-    if PREPRO
+    if Arg.PREPRO
         CTAP_pipeline_brancher(Cfg, Filt, pipeArr...
                             , first, last...
-                            , STOP_ON_ERROR, OVERWRITE_OLD_RESULTS)
+                            , Arg.STOP_ON_ERROR, Arg.OVERWRITE_OLD_RESULTS)
     end
 
     % Finally, obtain ERPs of known conditions from the processed data

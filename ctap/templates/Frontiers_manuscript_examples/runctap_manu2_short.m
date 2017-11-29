@@ -31,15 +31,16 @@
 % On the Matlab console, execute >> runctap_manu2_short
 
 
-function runctap_manu2_short(data_dir_in, sbj_filt, PREPRO)
-    %% Setup
-    if nargin < 1, data_dir_in = '/home/ben/Benslab/CTAP/CTAPIIdata'; end
-    if nargin < 2, sbj_filt = setdiff(1:12, [3 7]); end
-    if nargin < 3, PREPRO = false; end
-    
-    % Runtime options for CTAP:
-    STOP_ON_ERROR = true;
-    OVERWRITE_OLD_RESULTS = true;
+function runctap_manu2_short(data_dir_in, varargin)
+    %% Parse input arguments and set varargin defaults
+    p = inputParser;
+    p.addRequired('data_dir_in', @isstr);
+    p.addParameter('sbj_filt', setdiff(1:12, [3 7]), @isnumeric);
+    p.addParameter('PREPRO', false, @islogical);
+    p.addParameter('STOP_ON_ERROR', true, @islogical);
+    p.addParameter('OVERWRITE_OLD_RESULTS', true, @islogical);
+    p.parse(data_dir_in, varargin{:});
+    Arg = p.Results;
 
     % Define step sets and their parameters
     [Cfg, ctap_args] = sbf_cfg(data_dir_in, 'sccn-short-pipe');
@@ -50,7 +51,7 @@ function runctap_manu2_short(data_dir_in, sbj_filt, PREPRO)
     % Select measurements to process
 %     sbjs = strcat(cellfun(@(x) strrep(x, '0.', 's'), cellstr(num2str([sbj_filt / 100]', '%0.2f')), 'Uni', 0), '_eeg_1');
     sbjs = {Cfg.MC.subject.subject};
-    Filt.subject = sbjs(ismember([Cfg.MC.subject.subjectnr], sbj_filt));
+    Filt.subject = sbjs(ismember([Cfg.MC.subject.subjectnr], Arg.sbj_filt));
     Cfg.pipe.runMeasurements = get_measurement_id(Cfg.MC, Filt);
 
 
@@ -64,11 +65,11 @@ function runctap_manu2_short(data_dir_in, sbj_filt, PREPRO)
 
 
     %% Run the pipe
-    if PREPRO
+    if Arg.PREPRO
         tic;
         CTAP_pipeline_looper(Cfg,...
-                            'debug', STOP_ON_ERROR,...
-                            'overwrite', OVERWRITE_OLD_RESULTS);
+                            'debug', Arg.STOP_ON_ERROR,...
+                            'overwrite', Arg.OVERWRITE_OLD_RESULTS);
         toc;
     end
 
