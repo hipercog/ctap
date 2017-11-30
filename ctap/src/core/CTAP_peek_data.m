@@ -74,13 +74,6 @@ duration = diff(Arg.secs);
 if ~isscalar(duration) || (duration < 1)
     error('CTAP_peek_data:inputError', 'Arg.secs must be [min max], max-min>1.'); 
 end
-%...and we need EEG event type field to be all cell string arrays 
-evtmp = EEG.event; 
-for idx = 1:numel(EEG.event) 
-    if isnumeric(EEG.event(idx).type) 
-        EEG.event(idx).type = {num2str(EEG.event(idx).type)}; 
-    end 
-end
 %...and we treat only EEG channels
 if ismember('EEG', Arg.channels)
     idx = get_eeg_inds(EEG, {'EEG'});
@@ -271,6 +264,5 @@ end
 
 %% ERROR/REPORT
 EEG.CTAP.history(end+1) = create_CTAP_history_entry(msg, mfilename, Arg);
-EEG.event = evtmp; %restore altered events 
 
 end %CTAP_peek_data()
