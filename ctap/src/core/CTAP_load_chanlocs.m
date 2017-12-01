@@ -71,18 +71,25 @@ end
 
 
 %% ASSIST
+exts = {'locs', 'loc', 'sph', 'sfp', 'xyz', 'asc', 'elc', 'elp', 'elp', 'ced'};
+% Find chanlocs from directory with filename closest matching to EEG filename.
+% NOTE: ONLY WORKS IF CHANLOCS ARE NAMED REGULARLY, WITH SUBJECT IDENTIFIER
+% MATCHING EEG FILE, E.G. s01_eeg.bdf <--> s01_chanlocs.elp
+if isdir(Arg.file)
+    loc = match_file(Cfg.measurement.physiodata, Arg.file, exts);
+    Arg.file = fullfile(Arg.file, loc);
+end
+
 if isfield(Cfg.ctap.load_chanlocs, 'assist') && Cfg.ctap.load_chanlocs.assist
     % find the chanlocs filetype from the file name
     if ~isfield( Arg, 'filetype' )
         types = {'loc', 'loc', 'sph', 'sfp', 'xyz', 'asc', 'elc', 'besa'...
               , 'polhemus', 'chanedit'};
-        exts = {'locs', 'loc', 'sph', 'sfp', 'xyz', 'asc', 'elc', 'elp'...
-              , 'elp', 'ced'};
-        [~, ~, e] = fileparts(Cfg.eeg.chanlocs);
+        [~, ~, e] = fileparts(Arg.file);
         fext = strrep(e,'.','');
-        e = find(~cellfun(@isempty, strfind(exts, fext)), 1, 'first');
-        if ~isempty(e)
-            Arg.filetype = types{e};
+        e = ismember(exts, fext);
+        if any(e)
+            Arg.filetype = types{find(e, 1)};
         else
             error('Chanlocs extension ''%s'' not recognised', fext);
         end

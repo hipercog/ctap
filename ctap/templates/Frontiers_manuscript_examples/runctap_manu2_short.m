@@ -31,51 +31,50 @@
 % On the Matlab console, execute >> runctap_manu2_short
 
 
-function runctap_manu2_short(data_dir_in, varargin)
-    %% Parse input arguments and set varargin defaults
-    p = inputParser;
-    p.addRequired('data_dir_in', @isstr);
-    p.addParameter('sbj_filt', setdiff(1:12, [3 7]), @isnumeric);
-    p.addParameter('PREPRO', false, @islogical);
-    p.addParameter('STOP_ON_ERROR', true, @islogical);
-    p.addParameter('OVERWRITE_OLD_RESULTS', true, @islogical);
-    p.parse(data_dir_in, varargin{:});
-    Arg = p.Results;
+% function ERPS = runctap_manu2_short(data_dir_in, sbj_filt, PREPRO)
+%% Setup
+data_dir_in = '/home/ben/Benslab/CTAP/CTAPIIdata';
+sbj_filt = setdiff(1:12, [3 7]);
 
-    % Define step sets and their parameters
-    [Cfg, ctap_args] = sbf_cfg(data_dir_in, 'sccn-short-pipe');
-    
+% Runtime options for CTAP:
+PREPRO = true;
+STOP_ON_ERROR = true;
+OVERWRITE_OLD_RESULTS = true;
 
-    %% Create measurement config (MC) based on folder
-    Cfg.MC = path2measconf(data_dir_in, '*.bdf');
-    % Select measurements to process
-%     sbjs = strcat(cellfun(@(x) strrep(x, '0.', 's'), cellstr(num2str([sbj_filt / 100]', '%0.2f')), 'Uni', 0), '_eeg_1');
-    sbjs = {Cfg.MC.subject.subject};
-    Filt.subject = sbjs(ismember([Cfg.MC.subject.subjectnr], Arg.sbj_filt));
-    Cfg.pipe.runMeasurements = get_measurement_id(Cfg.MC, Filt);
+% Define step sets and their parameters
+[Cfg, ctap_args] = sbf_cfg(data_dir_in, 'sccn-short-pipe');
 
 
-    %% Select step sets to process
-    Cfg.pipe.runSets = {'all'}; %this is the default
-    % Cfg.pipe.runSets = {Cfg.pipe.stepSets(8).id};
+%% Create measurement config (MC) based on folder
+Cfg.MC = path2measconf(data_dir_in, '*.bdf');
+% Select measurements to process
+Filt.subject = {Cfg.MC.subject.subject};
+Filt.subject = Filt.subject(ismember([Cfg.MC.subject.subjectnr], sbj_filt));
+Cfg.pipe.runMeasurements = get_measurement_id(Cfg.MC, Filt);
 
 
-    %% Assign arguments to the selected functions, perform various checks
-    Cfg = ctap_auto_config(Cfg, ctap_args);
+%% Select step sets to process
+Cfg.pipe.runSets = {'all'}; %this is the default
+% Cfg.pipe.runSets = {Cfg.pipe.stepSets(8).id};
 
 
-    %% Run the pipe
-    if Arg.PREPRO
-        tic;
-        CTAP_pipeline_looper(Cfg,...
-                            'debug', Arg.STOP_ON_ERROR,...
-                            'overwrite', Arg.OVERWRITE_OLD_RESULTS);
-        toc;
-    end
+%% Assign arguments to the selected functions, perform various checks
+Cfg = ctap_auto_config(Cfg, ctap_args);
 
-    % Finally, obtain ERPs of known conditions from the processed data
-    oddball_erps(Cfg)
+
+%% Run the pipe
+if PREPRO
+    tic; %#ok<*UNRCH>
+    CTAP_pipeline_looper(Cfg,...
+                        'debug', STOP_ON_ERROR,...
+                        'overwrite', OVERWRITE_OLD_RESULTS);
+    toc;
+    clear PREPRO STOP_ON_ERROR OVERWRITE_OLD_RESULTS Filt ctap_args sbj_filt
 end
+
+% Finally, obtain ERPs of known conditions from the processed data
+ERPS = oddball_erps(Cfg, false);
+
 
 
 %% Subfunctions
@@ -96,7 +95,7 @@ Cfg.env.paths.ctapRoot = fullfile(Cfg.env.paths.projectRoot, Cfg.id);
 Cfg.env.paths.analysisRoot = Cfg.env.paths.ctapRoot;
 
 % Channel location file
-Cfg.eeg.chanlocs = fullfile(Cfg.env.paths.projectRoot, 'channel_locations_8.elp');
+Cfg.eeg.chanlocs = fullfile(Cfg.env.paths.projectRoot, 's08_channel_locations.elp');
 Channels = readlocs(Cfg.eeg.chanlocs);
 
 

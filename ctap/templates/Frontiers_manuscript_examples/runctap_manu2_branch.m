@@ -32,50 +32,53 @@
 % On the Matlab console, execute >> runctap_manu2_branch
 
 
-function runctap_manu2_branch(data_dir_in, varargin)
-    %% Parse input arguments and set varargin defaults
-    p = inputParser;
-    p.addRequired('data_dir_in', @isstr);
-    p.addParameter('sbj_filt', setdiff(1:12, [3 7]), @isnumeric);
-    p.addParameter('PREPRO', false, @islogical);
-    p.addParameter('STOP_ON_ERROR', true, @islogical);
-    p.addParameter('OVERWRITE_OLD_RESULTS', true, @islogical);
-    p.parse(data_dir_in, varargin{:});
-    Arg = p.Results;
+% function runctap_manu2_branch(data_dir_in, sbj_filt, PREPRO)
+%% Setup
+data_dir_in = '/home/ben/Benslab/CTAP/CTAPIIdata';
+sbj_filt = setdiff(1:12, [3 7]);
 
-    % Define step sets and their parameters
-    [Cfg, ~] = sbf_cfg(data_dir_in, 'sccn-short-pipe');
-    
+% Runtime options for CTAP:
+PREPRO = false;
+STOP_ON_ERROR = true;
+OVERWRITE_OLD_RESULTS = true;
 
-    %% Create measurement config (MC) based on folder
-    Cfg.MC = path2measconf(data_dir_in, '*.bdf');
-    % Select measurements to process
-    sbjs = {Cfg.MC.subject.subject};
-    Filt.subject = sbjs(ismember([Cfg.MC.subject.subjectnr], Arg.sbj_filt));
-    Cfg.pipe.runMeasurements = get_measurement_id(Cfg.MC, Filt);
+% Define step sets and their parameters
+[Cfg, ~] = sbf_cfg(data_dir_in, 'sccn-branch-pipe');
 
 
-    %% Select pipe array and first and last pipe to run
-    pipeArr = {@sbf_pipe1,...
-               @sbf_pipe2A,...
-               @sbf_pipe2B};
-    first = 2;
-    last = length(pipeArr);
-    %You can also run only a subset of pipes, e.g. 2:length(pipeArr)
+%% Create measurement config (MC) based on folder
+Cfg.MC = path2measconf(data_dir_in, '*.bdf');
+% Select measurements to process
+Filt.subject = {Cfg.MC.subject.subject};
+Filt.subject = Filt.subject(ismember([Cfg.MC.subject.subjectnr], sbj_filt));
+Cfg.pipe.runMeasurements = get_measurement_id(Cfg.MC, Filt);
 
 
-    %% Run
-    if Arg.PREPRO
-        CTAP_pipeline_brancher(Cfg, Filt, pipeArr...
-                            , first, last...
-                            , Arg.STOP_ON_ERROR, Arg.OVERWRITE_OLD_RESULTS)
-    end
+%% Select pipe array and first and last pipe to run
+pipeArr = {@sbf_pipe1,...
+           @sbf_pipe2A,...
+           @sbf_pipe2B};
+first = 1;
+last = length(pipeArr);
+%You can also run only a subset of pipes, e.g. 2:length(pipeArr)
 
-    % Finally, obtain ERPs of known conditions from the processed data
-    % For this we use a helper function to rebuild the branching tree of paths
-    % to the export directories
-    CTAP_postproc_brancher(Cfg, Filt, pipeArr, first, last)
+
+%% Run
+if PREPRO
+    tic %#ok<*UNRCH>
+    CTAP_pipeline_brancher(Cfg, Filt, pipeArr...
+                        , first, last...
+                        , STOP_ON_ERROR, OVERWRITE_OLD_RESULTS)
+    toc
+    clear PREPRO STOP_ON_ERROR OVERWRITE_OLD_RESULTS bsbj_filt
 end
+
+% Finally, obtain ERPs of known conditions from the processed data
+% For this we use a helper function to rebuild the branching tree of paths
+% to the export directories
+CTAP_postproc_brancher(Cfg, Filt, pipeArr, first, last)
+clear Filt pipeArr first last
+
 
 
 %% Subfunctions
@@ -95,7 +98,7 @@ function [Cfg, out] = sbf_cfg(project_root_folder, ID)
 
     % Channel location file
     Cfg.eeg.chanlocs = fullfile(Cfg.env.paths.projectRoot...
-        , 'channel_locations_8.elp');
+        , 's08_channel_locations.elp');
     Channels = readlocs(Cfg.eeg.chanlocs);
 
     % Define other important stuff
