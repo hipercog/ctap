@@ -60,7 +60,7 @@ function [EEG, Cfg] = CTAP_load_chanlocs(EEG, Cfg)
 
 
 %% Set optional arguments
-Arg.file = Cfg.eeg.chanlocs; %this is checked in ctap_auto_config()
+Arg.file = ctap_eeg_find_chlocs(Cfg);
 Arg.field = {}; %user must set this based on his own knowledge!
 Arg.tidy = {};
 
@@ -71,20 +71,13 @@ end
 
 
 %% ASSIST
-exts = {'locs', 'loc', 'sph', 'sfp', 'xyz', 'asc', 'elc', 'elp', 'elp', 'ced'};
-% Find chanlocs from directory with filename closest matching to EEG filename.
-% NOTE: ONLY WORKS IF CHANLOCS ARE NAMED REGULARLY, WITH SUBJECT IDENTIFIER
-% MATCHING EEG FILE, E.G. s01_eeg.bdf <--> s01_chanlocs.elp
-if isdir(Arg.file)
-    loc = match_file(Cfg.measurement.physiodata, Arg.file, exts);
-    Arg.file = fullfile(Arg.file, loc);
-end
-
 if isfield(Cfg.ctap.load_chanlocs, 'assist') && Cfg.ctap.load_chanlocs.assist
     % find the chanlocs filetype from the file name
     if ~isfield( Arg, 'filetype' )
         types = {'loc', 'loc', 'sph', 'sfp', 'xyz', 'asc', 'elc', 'besa'...
               , 'polhemus', 'chanedit'};
+        exts = {'locs', 'loc', 'sph', 'sfp', 'xyz', 'asc', 'elc', 'elp'...
+            , 'elp', 'ced'};
         [~, ~, e] = fileparts(Arg.file);
         fext = strrep(e,'.','');
         e = ismember(exts, fext);

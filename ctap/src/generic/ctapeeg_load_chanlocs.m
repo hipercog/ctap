@@ -43,7 +43,7 @@ function [EEG, varargout] = ctapeeg_load_chanlocs(EEG, varargin)
 
 
 %% Check input
-sbf_check_input() % parse the varargin, set defaults
+Arg = sbf_check_input(); % parse the varargin, set defaults
 
 
 %% The main work: Import channel locations
@@ -81,7 +81,7 @@ varargout{2} = filelocs;
 
 
 %% Sub-functions
-    function sbf_check_input() % parse the varargin, set defaults
+    function Arg = sbf_check_input() % parse the varargin, set defaults
         % Unpack and store varargin
         if isempty(varargin)
             vargs = struct;

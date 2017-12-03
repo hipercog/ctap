@@ -41,16 +41,15 @@ PREPRO = true;
 STOP_ON_ERROR = true;
 OVERWRITE_OLD_RESULTS = true;
 
-% Define step sets and their parameters
+
+%% CREATE THE CONFIGURATION STRUCT!
+
+% First, define step sets and their parameters
 [Cfg, ctap_args] = sbf_cfg(data_dir_in, 'sccn-short-pipe');
 
-
-%% Create measurement config (MC) based on folder
-Cfg.MC = path2measconf(data_dir_in, '*.bdf');
-% Select measurements to process
-Filt.subject = {Cfg.MC.subject.subject};
-Filt.subject = Filt.subject(ismember([Cfg.MC.subject.subjectnr], sbj_filt));
-Cfg.pipe.runMeasurements = get_measurement_id(Cfg.MC, Filt);
+% Next, create measurement config (MC) based on folder, & select subject subset
+[Cfg.MC, Cfg.pipe.runMeasurements] =...
+    confilt_meas_dir(data_dir_in, '*.bdf', sbj_filt);
 
 
 %% Select step sets to process
