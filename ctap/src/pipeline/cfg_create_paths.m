@@ -11,7 +11,7 @@ function Dirs = cfg_create_paths(ctapRoot, id, srcid, has_multiple_src)
 %   srcid             string, special definition of a relative source
 %   has_multiple_src  boolean, true if pipe has specified multiple sources,
 %                     default = false
-%                     N.B. a pipe was initially called with multiple sources
+%                     N.B. pipe that was initially called with multiple sources
 %                     cannnot be later rerun with a single source, due to
 %                     the way this function creates paths. To rerun a pipe
 %                     for only a single source, give it a second dummy source,

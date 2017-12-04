@@ -8,7 +8,7 @@ function locstr = ctap_eeg_find_chlocs(Cfg)
 %   'cell' - assume it is cell string array of chanlocs filenames; return the
 %           cell contents at the index of the current subject number
 
-if exist(Cfg.eeg.chanlocs, 'file')
+if exist(Cfg.eeg.chanlocs, 'file') == 2
     locstr = Cfg.eeg.chanlocs; 
     return
 end
@@ -18,7 +18,7 @@ if isdir(Cfg.eeg.chanlocs)
     % NOTE: ONLY WORKS IF CHANLOCS ARE NAMED REGULARLY, WITH SUBJECT IDENTIFIER
     % MATCHING EEG FILE, E.G. s01_eeg.bdf <--> s01_chanlocs.elp
     exts = {'locs', 'loc', 'sph', 'sfp', 'xyz', 'asc', 'elc', 'elp', 'ced'};
-    loc = match_file(Cfg.measurement.physiodata, Cfg.eeg.chanlocs, exts);
+    loc = find_closest_file(Cfg.measurement.physiodata, Cfg.eeg.chanlocs, exts);
     locstr = fullfile(Cfg.eeg.chanlocs, loc);
 
 elseif iscell(Cfg.eeg.chanlocs) 

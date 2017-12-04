@@ -31,9 +31,8 @@
 % On the Matlab console, execute >> runctap_manu2_short
 
 
-% function ERPS = runctap_manu2_short(data_dir_in, sbj_filt, PREPRO)
-%% Setup
-data_dir_in = '/home/ben/Benslab/CTAP/CTAPIIdata';
+%% Setup MAIN parameters
+% data_dir_in = '/home/ben/Benslab/CTAP/CTAPIIdata';
 sbj_filt = setdiff(1:12, [3 7]);
 
 % Runtime options for CTAP:
@@ -44,20 +43,18 @@ OVERWRITE_OLD_RESULTS = true;
 
 %% CREATE THE CONFIGURATION STRUCT!
 
-% First, define step sets and their parameters
+% First, define step sets & their parameters: sbf_cfg() is written by the USER,
+% and contains the 
 [Cfg, ctap_args] = sbf_cfg(data_dir_in, 'sccn-short-pipe');
 
 % Next, create measurement config (MC) based on folder, & select subject subset
 [Cfg.MC, Cfg.pipe.runMeasurements] =...
     confilt_meas_dir(data_dir_in, '*.bdf', sbj_filt);
 
-
-%% Select step sets to process
+% Select step sets to process
 Cfg.pipe.runSets = {'all'}; %this is the default
-% Cfg.pipe.runSets = {Cfg.pipe.stepSets(8).id};
 
-
-%% Assign arguments to the selected functions, perform various checks
+% Assign arguments to the selected functions, perform various checks
 Cfg = ctap_auto_config(Cfg, ctap_args);
 
 
@@ -71,7 +68,8 @@ if PREPRO
     clear PREPRO STOP_ON_ERROR OVERWRITE_OLD_RESULTS Filt ctap_args sbj_filt
 end
 
-% Finally, obtain ERPs of known conditions from the processed data
+
+%% Finally, obtain ERPs of known conditions from the processed data
 ERPS = oddball_erps(Cfg, false);
 
 
@@ -80,35 +78,35 @@ ERPS = oddball_erps(Cfg, false);
 % Pipe definition
 function [Cfg, out] = sbf_cfg(project_root_folder, ID)
 
-% Analysis branch ID
-Cfg.id = ID;
-
-Cfg.srcid = {''};
-
-Cfg.env.paths.projectRoot = project_root_folder;
-
 
 %% Define important directories and files
-Cfg.env.paths.branchSource = ''; 
+% Analysis ID
+Cfg.id = ID;
+% Directory where to locate project - in this case, just the same as input dir
+Cfg.env.paths.projectRoot = project_root_folder;
+% CTAP root dir named for the ID
 Cfg.env.paths.ctapRoot = fullfile(Cfg.env.paths.projectRoot, Cfg.id);
+% CTAP output goes into analysisRoot dir, here can be same as CTAP root
 Cfg.env.paths.analysisRoot = Cfg.env.paths.ctapRoot;
-
-% Channel location file
-Cfg.eeg.chanlocs = fullfile(Cfg.env.paths.projectRoot, 's08_channel_locations.elp');
-Channels = readlocs(Cfg.eeg.chanlocs);
+% Channel location directory
+Cfg.eeg.chanlocs = Cfg.env.paths.projectRoot;
 
 
 %% Define other important stuff
 Cfg.eeg.reference = {'average'};
-
 % EOG channel specification for artifact detection purposes
-Cfg.eeg.veogChannelNames = {Channels([254 255]).labels};%'1EX3' '1EX4'};
-Cfg.eeg.heogChannelNames = {Channels([252 253]).labels};%'1EX1','1EX2'};
+Cfg.eeg.heogChannelNames = {'EXG1' 'EXG2'};
+Cfg.eeg.veogChannelNames = {'EXG3' 'EXG4'};
 
 
 %% Configure analysis pipe
 
-%% Load
+%% Load and prepare - 
+% Define the functions and parameters to load data & chanlocs, perform 
+% 'safeguard' re-reference, find a blink subset to provide an IC template, 
+% peek at the initial state, FIR filter, and compute an ICA decomposition.
+% Parameters are grouped with functions for easier reading, but are a
+% separate struct and can be defined elsewhere if preferred.
 i = 1; %stepSet 1
 stepSet(i).funH = { @CTAP_load_data,...
                     @CTAP_load_chanlocs,...
@@ -122,9 +120,9 @@ stepSet(i).id = [num2str(i) '_load'];
 out.load_chanlocs = struct(...
     'overwrite', true,...
     'delchan', 1);
-out.load_chanlocs.field = {{251:254 'type' 'EOG'}...
-                         , {255:256 'type' 'ECG'}};
-out.load_chanlocs.tidy  = {{'type' 'FID'} {'type' 'ECG'}};
+out.load_chanlocs.field = {{{'EXG1' 'EXG2' 'EXG3' 'EXG4'} 'type' 'EOG'}...
+                         , {{'EXG5' 'EXG6' 'EXG7' 'EXG8'} 'type' 'NA'}};
+out.load_chanlocs.tidy  = {{'type' 'FID'} {'type' 'NA'}};
 
 out.fir_filter = struct(...
     'locutoff', 1);
@@ -139,7 +137,11 @@ out.peek_data = struct(...
     'plotEEGHist', false);
 
 
-%% IC correction
+%% Artefact correction -
+% Use ADJUST toolbox to detect ICs related to horizontal saccade, and remove; 
+% the CTAP method to detect blink-related ICs, and filter them; 
+% and the variance method to detect bad channels, and interpolate them.
+% Finally peek the data again, to compare with first peek & assess improvement
 i = i+1;  %stepSet 2
 stepSet(i).funH = { @CTAP_detect_bad_comps,... %ADJUST for horizontal eye moves
                     @CTAP_reject_data,...
@@ -151,7 +153,6 @@ stepSet(i).funH = { @CTAP_detect_bad_comps,... %ADJUST for horizontal eye moves
                     @CTAP_peek_data };
 stepSet(i).id = [num2str(i) '_artifact_correction'];
 
-
 out.detect_bad_comps = struct(...
     'method', {'adjust' 'blink_template'},...
     'adjustarg', {'horiz' ''});
@@ -162,7 +163,6 @@ out.detect_bad_channels = struct(...
 
 
 %% Store to Cfg
-Cfg.pipe.runSets = {'all'}; % step sets to run, the whole thing by default
-Cfg.pipe.stepSets = stepSet; % record of all step sets
+Cfg.pipe.stepSets = stepSet; % return all step sets inside Cfg struct
 
 end

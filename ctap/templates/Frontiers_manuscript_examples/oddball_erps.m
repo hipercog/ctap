@@ -1,5 +1,5 @@
 %% Plot ERPs of saved .sets
-function [erps, ERP] = oddball_erps(Cfg, PLOT)
+function [ERPS, ERP] = oddball_erps(Cfg, PLOT)
 
     if nargin < 2, PLOT = true; end
     
@@ -9,7 +9,7 @@ function [erps, ERP] = oddball_erps(Cfg, PLOT)
     
     %%%%%%%% define subject-wise ERP data structure: 
     %%%%%%%%  of known size for subjects,conditions
-    erps = cell(numel(fnames), 4);
+    ERPS = cell(numel(fnames), 4);
     cond = {'short' 'long'};
     codes = 100:50:250;
     for i = 1:numel(fnames)
@@ -20,10 +20,10 @@ function [erps, ERP] = oddball_erps(Cfg, PLOT)
             stan = pop_epoch(eeg, cellstr(num2str(codes(3:4)' + (c-1))), [-1 1]);
             devi = pop_epoch(eeg, cellstr(num2str(codes(1:2)' + (c-1))), [-1 1]);
 
-            erps{i, c * 2 - 1} = ctap_get_erp(stan);
-            erps{i, c * 2} = ctap_get_erp(devi);
+            ERPS{i, c * 2 - 1} = ctap_get_erp(stan);
+            ERPS{i, c * 2} = ctap_get_erp(devi);
             if PLOT
-                ctaptest_plot_erp([erps{i, c * 2 - 1}; erps{i, c * 2}]...
+                ctaptest_plot_erp([ERPS{i, c * 2 - 1}; ERPS{i, c * 2}]...
                     , NaN...
                     , stan.pnts, eeg.srate...
                     , {[cond{c} ' standard'] [cond{c} ' deviant']}...

@@ -96,20 +96,17 @@ function [Cfg, out] = sbf_cfg(project_root_folder, ID)
     Cfg.env.paths.analysisRoot = Cfg.env.paths.ctapRoot;
 
     % Channel location file
-    Cfg.eeg.chanlocs = fullfile(Cfg.env.paths.projectRoot...
-        , 's08_channel_locations.elp');
-    Channels = readlocs(Cfg.eeg.chanlocs);
+    Cfg.eeg.chanlocs = Cfg.env.paths.projectRoot;
 
     % Define other important stuff
     Cfg.eeg.reference = {'average'};
 
     % EOG channel specification for artifact detection purposes
-    Cfg.eeg.veogChannelNames = {Channels([254 255]).labels};%'1EX3' '1EX4'};
-    Cfg.eeg.heogChannelNames = {Channels([252 253]).labels};%'1EX1','1EX2'};
+    Cfg.eeg.heogChannelNames = {'EXG1' 'EXG2'};
+    Cfg.eeg.veogChannelNames = {'EXG3' 'EXG4'};
 
     % dummy var
     out = struct([]);
-
 end
 
 
