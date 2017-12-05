@@ -58,7 +58,7 @@ elseif ~isempty(Arg.filetype)
     filelocs = readlocs(Arg.file, 'filetype', Arg.filetype);
 else
     try filelocs = readlocs(Arg.file); 
-    catch ME,
+    catch ME
         error('ctapeeg_load_chanlocs:readlocs_fail', ME.message);
     end
 end
@@ -68,7 +68,7 @@ if ~isempty(Arg.delchan) && isnumeric(Arg.delchan)
     filelocs(Arg.delchan) = [];
 end
 
-if isempty(EEG.chanlocs) || Arg.overwrite
+if isempty(EEG.chanlocs) || (Arg.overwrite && EEG.nbchan == numel(filelocs))
     %no channel information present -> use channel locations as given
     EEG.chanlocs = filelocs;
 else

@@ -5,7 +5,13 @@ function [ERPS, ERP] = oddball_erps(Cfg, PLOT)
     
     setpth = fullfile(Cfg.env.paths.analysisRoot, Cfg.pipe.runSets{end});
     
-    fnames = strcat(Cfg.pipe.runMeasurements, '.set');
+    fnames = dir(fullfile(setpth, '*.set'));
+    fnames = {fnames.name};
+    fnames = fnames(ismember(fnames, strcat(Cfg.pipe.runMeasurements, '.set')));
+    if isempty(fnames)
+        error('oddball_erps:no_data'...
+            , 'None of the selected recordings exist at the end of the pipe')
+    end
     
     %%%%%%%% define subject-wise ERP data structure: 
     %%%%%%%%  of known size for subjects,conditions

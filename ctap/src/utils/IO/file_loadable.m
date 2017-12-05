@@ -51,13 +51,19 @@ function file = file_loadable(filename, extns)
 %% Initialise
 try
     [pathstr, filename, ext, file] = get_file_parts(filename);
-catch ME,
+catch ME
     error(ME.message);
 end
-extns = strrep(extns, '.', '');
+if isempty(file)
+    file = struct('name', '', 'date', datestr(now), 'bytes', 0, 'isdir', 0,...
+        'datenum', now, 'path', '', 'ext', '', 'load', 0);
+    return
+end
 
 
 %% Check format and file existence
+extns = strrep(extns, '.', '');
+
 % If no extension given, check if a file exists with any supported ext
 if isempty(ext)
     if isempty(filename), filename = '*'; end
@@ -74,13 +80,12 @@ if isempty(ext)
             break;
         end
     end
-% else check if the given file exists
-elseif ~isempty(file)
-    if sum(strcmpi(strrep(ext, '.', ''), extns)) > 0 
-        file.load = 1;
-    else
-        file.load = 2;
-    end
+    
+% else check if the given extension is recognized
+elseif any(strcmpi(strrep(ext, '.', ''), extns))
+    file.load = 1;
+else
+    file.load = 2;
 end
 
 end % file_loadable

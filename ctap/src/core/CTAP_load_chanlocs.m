@@ -94,13 +94,13 @@ end
 %load chanlocs
 if isfield(Arg, 'filetype') && strcmp(Arg.filetype, 'custom') == 1
     try Arg.format;
-    catch ME, 
+    catch ME
         error('FAIL:: %s - no custom chanlocs format given', ME.message);
-    end;
+    end
     try Arg.skiplines; 
     catch 
         Arg.skiplines = 1;   
-    end;
+    end
 end
     
 argsCellArray = struct2varargin(Arg);
