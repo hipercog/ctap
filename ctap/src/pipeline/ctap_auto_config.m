@@ -73,28 +73,37 @@ if isfield(Cfg.env.paths, 'ctapRoot')
     end
     [~,~,~] = mkdir(Cfg.env.paths.analysisRoot);
     
-    
-    Cfg.env.paths.featuresRoot = fullfile(...
-        Cfg.env.paths.analysisRoot, 'features');
-    
-    Cfg.env.paths.exportRoot = fullfile(...
-        Cfg.env.paths.analysisRoot,'export');
+    if ~isfield(Cfg.env.paths,'featuresRoot')
+        Cfg.env.paths.featuresRoot = fullfile(...
+            Cfg.env.paths.analysisRoot,'features');
+    end
 
-    Cfg.env.paths.qualityControlRoot = fullfile(...
-        Cfg.env.paths.analysisRoot,'quality_control');
+    if ~isfield(Cfg.env.paths,'export')
+        Cfg.env.paths.exportRoot = fullfile(...
+            Cfg.env.paths.analysisRoot,'export');
+    end
+
+    if ~isfield(Cfg.env.paths,'quality_control')
+        Cfg.env.paths.qualityControlRoot = fullfile(...
+            Cfg.env.paths.analysisRoot,'quality_control');
+    end
     
-    Cfg.env.paths.logRoot = fullfile(...
-        Cfg.env.paths.analysisRoot,'logs');
-    [~,~,~] = mkdir(Cfg.env.paths.logRoot);
+    if ~isfield(Cfg.env.paths,'logRoot')
+        Cfg.env.paths.logRoot = fullfile(...
+            Cfg.env.paths.analysisRoot,'logs');
+    end        
     
-    Cfg.env.paths.crashLogRoot = fullfile(...
-        Cfg.env.paths.ctapRoot,'logs');
-    [~,~,~] = mkdir(Cfg.env.paths.crashLogRoot);
+    if ~isfield(Cfg.env.paths,'crashLogRoot')
+        Cfg.env.paths.crashLogRoot = fullfile(...
+            Cfg.env.paths.ctapRoot,'logs');
+    end
     
     % Log Files
-    Cfg.env.logFile = fullfile(Cfg.env.paths.logRoot,...
+    if ~isfield(Cfg.env,'logFile')
+        Cfg.env.logFile = fullfile(Cfg.env.paths.logRoot,...
                                sprintf('runlog_%s.txt',datestr(now, 30)) );
-    
+    end                           
+
     % SQLite database file for storing function data
     %(such as numbers of trials etc.)
     Cfg.env.funDataDB = fullfile(Cfg.env.paths.qualityControlRoot,...

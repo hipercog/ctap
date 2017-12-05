@@ -1,4 +1,4 @@
-function MeasMeta = gather_measurement_metadata(Subject, Measurement, varargin)
+function [MeasMeta WholeFileFakeSegment] = gather_measurement_metadata(Subject, Measurement, varargin)
 %GATHER_MEASUREMENT_METADATA - Collect information from MC
 %
 % Description:
@@ -17,7 +17,11 @@ function MeasMeta = gather_measurement_metadata(Subject, Measurement, varargin)
 %   Keyword     Type, description, values
 %
 % Outputs:
-%   'MeasMeta'      ??, ??
+%   'MeasMeta'      ??, ?? (output this as INFO struct in the ATTK format)
+%   WholeFileFakeSegment (output this as SEGMENT struct in the ATTK format,
+%                         which creates a 'segment' that is actually the
+%                         whole file.
+%   
 %
 % Assumptions:
 %
