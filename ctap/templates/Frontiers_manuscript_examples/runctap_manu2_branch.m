@@ -32,10 +32,19 @@
 % On the Matlab console, execute >> runctap_manu2_branch
 
 
-% function runctap_manu2_branch(data_dir_in, sbj_filt, PREPRO)
 %% Setup
+% set the input directory where your data is stored
 data_dir_in = '/home/ben/Benslab/CTAP/CTAPIIdata';
+% specify the file type of your data
+data_type = '*.bdf';
+% use sbj_filt to select all (or a subset) of available recordings
 sbj_filt = setdiff(1:12, [3 7]);
+% use ctapID to uniquely name the base folder of the output directory tree
+ctapID = 'sccn-branch-pipe';
+% use keyword 'all' to select all stepSets, or use some index
+set_select = 'all';
+% set the electrode for which to calculate and plot ERPs after preprocessing
+erploc = 'C20';
 
 % Runtime options for CTAP:
 PREPRO = false;
@@ -43,17 +52,19 @@ STOP_ON_ERROR = true;
 OVERWRITE_OLD_RESULTS = true;
 
 
-%% CREATE THE CONFIGURATION STRUCT!
+%% Create the CONFIGURATION struct
 
 % First, define step sets and their parameters
-[Cfg, ~] = sbf_cfg(data_dir_in, 'sccn-branch-pipe');
+[Cfg, ~] = sbf_cfg(data_dir_in, ctapID);
 
 % Next, create measurement config (MC) based on folder, & select subject subset
 [Cfg.MC, Cfg.pipe.runMeasurements] =...
-    confilt_meas_dir(data_dir_in, '*.bdf', sbj_filt);
+    confilt_meas_dir(data_dir_in, data_type, sbj_filt);
+%TODO - REMOVE NECESSITY TO CREATE Filt BY CUTTING OUT OF CTAP_pipeline_brancher
+Filt.subject = {Cfg.MC.subject.subject};
+Filt.subject = Filt.subject(ismember([Cfg.MC.subject.subjectnr], sbj_filt));
 
-
-%% Select pipe array and first and last pipe to run
+% Select pipe array and first and last pipe to run
 pipeArr = {@sbf_pipe1,...
            @sbf_pipe2A,...
            @sbf_pipe2B};
@@ -62,20 +73,21 @@ last = length(pipeArr);
 %You can also run only a subset of pipes, e.g. 2:length(pipeArr)
 
 
-%% Run
+%% Run the pipe
 if PREPRO
     tic %#ok<*UNRCH>
     CTAP_pipeline_brancher(Cfg, Filt, pipeArr...
                         , first, last...
                         , STOP_ON_ERROR, OVERWRITE_OLD_RESULTS)
     toc
-    clear PREPRO STOP_ON_ERROR OVERWRITE_OLD_RESULTS bsbj_filt
+    clear PREPRO STOP_ON_ERROR OVERWRITE_OLD_RESULTS sbj_filt
 end
 
-% Finally, obtain ERPs of known conditions from the processed data
+
+%% Finally, obtain ERPs of known conditions from the processed data
 % For this we use a helper function to rebuild the branching tree of paths
 % to the export directories
-CTAP_postproc_brancher(Cfg, Filt, pipeArr, first, last)
+CTAP_postproc_brancher(Cfg, pipeArr, first, last)%@oddball_erps, erploc
 clear Filt pipeArr first last
 
 
@@ -132,9 +144,9 @@ function [Cfg, out] = sbf_pipe1(Cfg)
     out.load_chanlocs = struct(...
         'overwrite', true,...
         'delchan', 1);
-    out.load_chanlocs.field = {{251:254 'type' 'EOG'}...
-                             , {255:256 'type' 'ECG'}};
-    out.load_chanlocs.tidy  = {{'type' 'FID'} {'type' 'ECG'}};
+    out.load_chanlocs.field = {{{'EXG1' 'EXG2' 'EXG3' 'EXG4'} 'type' 'EOG'}...
+                             , {{'EXG5' 'EXG6' 'EXG7' 'EXG8'} 'type' 'NA'}};
+    out.load_chanlocs.tidy  = {{'type' 'FID'} {'type' 'NA'}};
 
     out.fir_filter = struct(...
         'locutoff', 1);
@@ -145,8 +157,10 @@ function [Cfg, out] = sbf_pipe1(Cfg)
     out.run_ica.channels = {'EEG' 'EOG'};
 
     out.peek_data = struct(...
-        'plotEEGset', false,...
-        'plotEEGHist', false);
+        'plotAllPeeks', false,...
+        'peekStats', true,...
+        'savePeekData', true,...
+        'savePeekICA', true);
 
 
     %%%%%%%% Store to Cfg %%%%%%%%
@@ -183,6 +197,12 @@ function [Cfg, out] = sbf_pipe2A(Cfg)
         'method', 'variance',...
         'channelType', {'EEG'}); %tune thresholds!
 
+    out.peek_data = struct(...
+        'plotAllPeeks', false,...
+        'peekStats', true,...
+        'savePeekData', true,...
+        'savePeekICA', true);
+    
     %%%%%%%% Store to Cfg %%%%%%%%
     Cfg.pipe.runSets = {stepSet(:).id}; % step sets to run, default: whole thing
     Cfg.pipe.stepSets = stepSet; % record of all step sets
@@ -214,6 +234,12 @@ function [Cfg, out] = sbf_pipe2B(Cfg)
         'method', 'rejspec',...
         'channelType', {'EEG'});
 
+    out.peek_data = struct(...
+        'plotAllPeeks', false,...
+        'peekStats', true,...
+        'savePeekData', true,...
+        'savePeekICA', true);
+    
     %%%%%%%% Store to Cfg %%%%%%%%
     Cfg.pipe.runSets = {stepSet(:).id}; % step sets to run, default: whole thing
     Cfg.pipe.stepSets = stepSet; % record of all step sets

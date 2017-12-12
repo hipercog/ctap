@@ -54,7 +54,7 @@ out.blink2event.invert = true;  %code assumes blinks are positive,
 out.select_evdata.evtype = 'testRegion';
 
 % plot only a single figure each time, not a set of figures.
-% out.peek_data.plotEEGset = false;
+% out.peek_data.plotAllPeeks = false;
 
 % Amplitude thresholding from continuous data (bad segments)
 out.detect_bad_segments = struct(...

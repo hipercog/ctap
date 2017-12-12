@@ -216,7 +216,7 @@ end
 % exclIdx = find(ismember(allStepMap, exclStp));
 
 % Get the contents of the requested pipe description
-[runPipeFuns, runStepMap] = sbf_get_pipe_desc(Cfg, runSets);
+[runPipeFuns, runStepMap] = sbf_get_pipe_desc(Cfg, runSets); %#ok<ASGLU>
 uniqFuns = unique(runPipeFuns);
 leftout = ones(numel(uniqFuns),1);
 

@@ -1,7 +1,8 @@
 %% Plot ERPs of saved .sets
-function [ERPS, ERP] = oddball_erps(Cfg, PLOT)
+function [ERPS, ERP] = oddball_erps(Cfg, loc_label, PLOT)
 
-    if nargin < 2, PLOT = true; end
+    if nargin < 3, PLOT = true; end
+    if nargin < 2, loc_label = ''; end
     
     setpth = fullfile(Cfg.env.paths.analysisRoot, Cfg.pipe.runSets{end});
     
@@ -19,22 +20,24 @@ function [ERPS, ERP] = oddball_erps(Cfg, PLOT)
     cond = {'short' 'long'};
     codes = 100:50:250;
     for i = 1:numel(fnames)
-        eeg = ctapeeg_load_data(fullfile(setpth, fnames{i}) );
+        eeg = ctapeeg_load_data(fullfile(setpth, fnames{i}));
+        loc = get_eeg_inds(eeg, {loc_label});
         eeg.event(isnan(str2double({eeg.event.type}))) = [];
 
         for c = 1:2
             stan = pop_epoch(eeg, cellstr(num2str(codes(3:4)' + (c-1))), [-1 1]);
             devi = pop_epoch(eeg, cellstr(num2str(codes(1:2)' + (c-1))), [-1 1]);
 
-            ERPS{i, c * 2 - 1} = ctap_get_erp(stan);
-            ERPS{i, c * 2} = ctap_get_erp(devi);
+            ERPS{i, c * 2 - 1} = ctap_get_erp(stan, loc);
+            ERPS{i, c * 2} = ctap_get_erp(devi, loc);
             if PLOT
+                [~, fn, ~] = fileparts(strrep(fnames{i}, '_session_meas', ''));
                 ctaptest_plot_erp([ERPS{i, c * 2 - 1}; ERPS{i, c * 2}]...
                     , NaN...
                     , stan.pnts, eeg.srate...
                     , {[cond{c} ' standard'] [cond{c} ' deviant']}...
                     , fullfile(Cfg.env.paths.exportRoot, sprintf(...
-                        'ERP%s-%s_%s.png', fnames{i}, cond{c}, 'tones')))
+                        'ERP%s_%s_%s-%s.png', loc_label, fn, cond{c}, 'tones')))
             end
 
         end
@@ -43,18 +46,5 @@ function [ERPS, ERP] = oddball_erps(Cfg, PLOT)
     %%%%%%%% Obtain condition-wise grand average ERP and plot %%%%%%%%
     ERP = grdavg_oddball_erp(ERPS, cond, eeg.srate...
                             , Cfg.env.paths.exportRoot, 'all', PLOT);
-%     for c = 1:2:4
-%         ERP_std = mean(cell2mat(erps(:,c)), 1);
-%         ERP_dev = mean(cell2mat(erps(:,c + 1)), 1);
-%         ccnd = cond{ceil(c/2)};
-%         if PLOT
-%             ctaptest_plot_erp([ERP_std; ERP_dev]...
-%                 , {cell2mat(erps(:,c)); cell2mat(erps(:,c + 1))}...
-%                 , numel(ERP_std), eeg.srate...
-%                 , {[ccnd ' standard'] [ccnd ' deviant']}...
-%                 , fullfile(Cfg.env.paths.exportRoot...
-%                     , sprintf('ERP%s-%s_%s.png', 'all', ccnd, 'tones')))
-%         end
-%     end
 
 end

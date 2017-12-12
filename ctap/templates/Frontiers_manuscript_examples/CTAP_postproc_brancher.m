@@ -1,4 +1,4 @@
-function CTAP_postproc_brancher(Cfg, Filt, pipeArr, first, last)
+function CTAP_postproc_brancher(Cfg, pipeArr, first, last)
 %CTAP_postproc_brancher - Applies a post-processing function to pipes in pipeArr
 %
 % Description:
@@ -50,10 +50,10 @@ for i = first:last
         k_Cfg.MC = Cfg.MC;
 
         % define the measurements
-        k_Cfg.pipe.runMeasurements = get_measurement_id(Cfg.MC, Filt);
+%        k_Cfg.pipe.runMeasurements = get_measurement_id(Cfg.MC, Filt);
         
         % Run the required post-processing function
-        oddball_erps(k_Cfg) % TODO: REPLACE WITH A DYNAMIC FUNCTION ARGUMENT
+        oddball_erps(k_Cfg, 'C20') % TODO: REPLACE WITH A DYNAMIC FUNCTION ARGUMENT?
 
         clear('k_*');
     end

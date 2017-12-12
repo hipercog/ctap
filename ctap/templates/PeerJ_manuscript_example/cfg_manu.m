@@ -78,7 +78,7 @@ out.tidy_chanlocs.types =...
     {{'1:128' 'EEG'}, {'129 130 131 132' 'EOG'}, {'133 134' 'REF'}};
 
 % plot only a single figure each time, not a set of figures.
-% out.peek_data.plotEEGset = false;
+% out.peek_data.plotAllPeeks = false;
 out.peek_data.peekevent = {'sa_blink'};
 
 

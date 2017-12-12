@@ -57,7 +57,7 @@ Cfg = ctap_auto_config(Cfg, PipeParams);
 %% Sweep config
 i = 1; 
 SWPipe(i).funH = { @CTAP_detect_bad_segments };
-SWPipe(i).id = [num2str(i) '_blink_correction'];
+SWPipe(i).id = [num2str(i) '_segment_detection'];
 
 SWPipeParams.detect_bad_segments.method = 'quantileTh';
 SWPipeParams.detect_bad_segments.normalEEGAmpLimits = [-1, 1]; %disable

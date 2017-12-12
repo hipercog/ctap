@@ -7,7 +7,7 @@ if nargin < 3
     bl = [find(epocs.times > epocs.xmin * 1000, 1)...
           find(epocs.times < 0, 1, 'last')];
 end
-if nargin < 2
+if nargin < 2 || isempty(loc)
     loc = 1;
 end
 

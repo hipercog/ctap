@@ -37,6 +37,11 @@ p.addRequired('chloc_cellstr', @iscellstr);
 
 p.parse(EEG, chloc_cellstr);
 
+if all(cellfun(@isempty, chloc_cellstr))
+    warning('get_eeg_inds:bad_input', 'Cannot find indices of empty strings')
+    return
+end
+
 chinds = find(ismember({EEG.chanlocs.type}, chloc_cellstr));
 
 if isempty(chinds)

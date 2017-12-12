@@ -71,9 +71,9 @@ Cfg = ctap_auto_config(Cfg, PipeParams);
 
 %% Sweep config
 i = 1; 
-SWPipe(i).funH = {  @CTAP_detect_bad_channels,... %detect blink related ICs
+SWPipe(i).funH = {  @CTAP_detect_bad_channels,... %detect bad channels
                     @CTAP_reject_data}; % reject ICs
-SWPipe(i).id = [num2str(i) '_blink_correction'];
+SWPipe(i).id = [num2str(i) '_badchan_correction'];
 
 SWPipeParams.detect_bad_channels.method = 'variance';
 

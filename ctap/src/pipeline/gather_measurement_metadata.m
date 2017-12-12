@@ -86,3 +86,13 @@ if ~isempty(Arg.measurementFields)
         end
     end
 end
+
+% Create a SEGMENT structure that is in fact a segment for the whole file
+WholeFileFakeSegment = struct();
+WholeFileFakeSegment.labels = {'timestamp'  'duration'  'label'  'latency'  'value'};
+WholeFileFakeSegment.units = {'yyyymmddTHHMMSS' 'samples' 'n/a' 'n/a' 'n/a'};
+if ~exist('EEG','var')
+    WholeFileFakeSegment.data = {datestr(now(),'yyyymmddTHHMMSS') 0 'NA' 0 'NA'};
+else
+    WholeFileFakeSegment.data = {datestr(EEG.startDateTime,'yyyymmddTHHMMSS') EEG.pnts 'NA' 1 'NA'};
+end
