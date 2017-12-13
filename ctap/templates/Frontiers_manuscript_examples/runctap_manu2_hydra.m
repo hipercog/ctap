@@ -1,4 +1,4 @@
-%% Branching CTAP script to clean SCCN data
+%% Clean SCCN data CTAP script
 % As referenced in the second CTAP article:
 % Cowley BU, Korpela J, (2018) Computational Testing for Automated Preprocessing 
 % 2: practical demonstration of a system for scientific data-processing workflow 
@@ -9,8 +9,8 @@
 % Install / download:
 %   * Matlab R2016b or newer
 %   * EEGLAB, latest version,
-%       git clone https://adelorme@bitbucket.org/sccn_eeglab/eeglab.git
-%   * CTAP,
+%     git clone https://adelorme@bitbucket.org/sccn_eeglab/eeglab.git
+%   * CTAP
 %       git clone https://github.com/bwrc/ctap.git
 %   * The 13 files of EEG data in .bdf format from the study 'Auditory Two-
 %       Choice Response Task with an Ignored Feature Difference', available at
@@ -29,10 +29,10 @@
 % path to this directory into the variable 'data_dir_in', below
 
 % # 5
-% On the Matlab console, execute >> runctap_manu2_branch
+% On the Matlab console, execute >> runctap_manu2_hydra
 
 
-%% Setup
+%% Setup MAIN parameters
 % set the input directory where your data is stored
 data_dir_in = '/home/ben/Benslab/CTAP/CTAPIIdata';
 % specify the file type of your data
@@ -40,14 +40,14 @@ data_type = '*.bdf';
 % use sbj_filt to select all (or a subset) of available recordings
 sbj_filt = setdiff(1:12, [3 7]);
 % use ctapID to uniquely name the base folder of the output directory tree
-ctapID = 'sccn-branch-pipe';
+ctapID = 'sccn-hydra-pipe';
 % use keyword 'all' to select all stepSets, or use some index
 set_select = 'all';
 % set the electrode for which to calculate and plot ERPs after preprocessing
 erploc = 'C20';
 
 % Runtime options for CTAP:
-PREPRO = false;
+PREPRO = true;
 STOP_ON_ERROR = true;
 OVERWRITE_OLD_RESULTS = true;
 
@@ -84,10 +84,6 @@ end
 % For this we use a helper function to rebuild the branching tree of paths
 % to the export directories
 CTAP_postproc_brancher(Cfg, pipeArr, first, last)%@oddball_erps, erploc
-
-%TODO: ADD FEATURE EXPORT??
-% CTAP_postproc_brancher(Cfg, pipeArr, first, last)%@export_features_CTAP, erploc
-
 clear pipeArr first last
 
 
@@ -183,6 +179,7 @@ function [Cfg, out] = sbf_pipe2A(Cfg)
                         @CTAP_reject_data,...
                         @CTAP_detect_bad_comps,... %detect blink related ICs
                         @CTAP_filter_blink_ica,...
+                        @CTAP_sweep,...
                         @CTAP_detect_bad_channels,...%bad channels by variance
                         @CTAP_reject_data,...
                         @CTAP_interp_chan,...
@@ -193,9 +190,18 @@ function [Cfg, out] = sbf_pipe2A(Cfg)
         'method', {'adjust' 'blink_template'},...
         'adjustarg', {'horiz' ''});
 
+    out.sweep = struct(...
+        'function', 'CTAP_detect_bad_channels',...
+        'sweep_param', 'bounds',...
+        'bounds', 1.5:0.3:7);
+    out.sweep.SWPipe.funH = {@CTAP_detect_bad_channels, @CTAP_reject_data};
+    out.sweep.SWPipe.id = '1_sweep';
+    
+    out.sweep.SWPipeParams.method = 'variance';
+    
     out.detect_bad_channels = struct(...
         'method', 'variance',...
-        'channelType', {'EEG'}); %tune thresholds!
+        'channelType', {'EEG'});
 
     out.peek_data = struct(...
         'plotAllPeeks', false,...

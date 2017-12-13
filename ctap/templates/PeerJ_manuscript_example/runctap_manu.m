@@ -46,15 +46,12 @@ end
 
 
 %% Create measurement config (MC) based on folder
-% Measurement config based on synthetic source files
-MC = path2measconf(data_dir_out, '*.set');
-Cfg.MC = MC;
-
-
-%% Select measurements to process
-clear('Filt')
-Filt.subjectnr = 1;
-Cfg.pipe.runMeasurements = get_measurement_id(Cfg.MC, Filt);
+% Select measurements to process
+sbj_filt = 1; 
+% Next, create measurement config (MC) based on folder of synthetic source 
+% files, & select subject subset
+[Cfg.MC, Cfg.pipe.runMeasurements] =...
+    confilt_meas_dir(data_dir_out, '*.set', sbj_filt);
 
 
 %% Select step sets to process
@@ -84,8 +81,7 @@ toc;
 %% Export features
 %%{
 tic;
-export_features_CTAP([Cfg.id '_db'], {'bandpowers','PSDindices'},...
-                     Filt, Cfg.MC, Cfg);
+export_features_CTAP([Cfg.id '_db'], {'bandpowers','PSDindices'}, Cfg.MC, Cfg);
 toc;
 %}
 

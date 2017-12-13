@@ -1,4 +1,4 @@
-function CTAP_export_features2(id, featureIDArr, measFilt, MC, Cfg)
+function export_features_CTAP2(id, featureIDArr, measFilt, MC, Cfg)
 %CTAP_export_features2 - Export of CTAP study-level features into a text file
 %
 % Description:
@@ -52,51 +52,57 @@ function CTAP_export_features2(id, featureIDArr, measFilt, MC, Cfg)
 % Please see the file LICENSE for details.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-    %% Initialize
-    % Create directory (if needed)
-    if ~isdir(Cfg.env.paths.exportRoot)
-        mkdir(Cfg.env.paths.exportRoot);
-    end
 
-    %% Create an array of source files
-    disp(sprintf('Exporting features from: %s', Cfg.env.paths.featuresRoot));
-    sourcefile_arr = export_features_CTAP2_getfeaturefiles(id, featureIDArr, measFilt, MC, Cfg);
+%% Initialize
+% Create directory (if needed)
+if ~isdir(Cfg.env.paths.exportRoot)
+    mkdir(Cfg.env.paths.exportRoot);
+end
 
-    savefile = fullfile(Cfg.env.paths.exportRoot, sprintf('%s.txt',id));
-    
-	labels = {'subjectnr' 'subject' 'casename', ...
-              'feature' 'feature2' 'value'};
-    format_array = {'%d', '%s', '%s', '%s', '%s', '%020.5f'};
-    
-    [pathstr, name, saveExt] = fileparts(savefile);
-    
-    j = 0;
-    for i=1:numel(sourcefile_arr)
-        result = export_features_CTAP2_onefile(sourcefile_arr{i});        
-        for k=1:numel(result)
-            if ~isempty(result{k})
-                j = j +1;
-                if j == 1
-                    % Write header and data
-                    cell2txtfile(savefile, labels, result{k}, format_array,...
-                        'delimiter', '\t',...
-                        'writemode', 'wt',...
-                        'allownans', 'false');
-                else
-                    % Append
-                    cell2txtfile(savefile, {}, result{k}, format_array,...
-                        'delimiter', '\t',...
-                        'writemode', 'at',...
-                        'allownans', 'false');
-                end
+
+%% Create an array of source files
+myReport(sprintf('Exporting features from: %s', Cfg.env.paths.featuresRoot));
+sourcefile_arr = export_features_CTAP2_getfeaturefiles(...
+                                        featureIDArr, measFilt, MC, Cfg);
+
+savefile = fullfile(Cfg.env.paths.exportRoot, sprintf('%s.txt',id));
+
+labels = {'subjectnr' 'subject' 'casename', ...
+          'feature' 'feature2' 'value'};
+format_array = {'%d', '%s', '%s', '%s', '%s', '%020.5f'};
+
+[pathstr, name, saveExt] = fileparts(savefile); %#ok<*ASGLU>
+
+j = 0;
+for i=1:numel(sourcefile_arr)
+    result = export_features_CTAP2_onefile(sourcefile_arr{i});        
+    for k=1:numel(result)
+        if ~isempty(result{k})
+            j = j +1;
+            if j == 1
+                % Write header and data
+                cell2txtfile(savefile, labels, result{k}, format_array,...
+                    'delimiter', '\t',...
+                    'writemode', 'wt',...
+                    'allownans', 'false');
+            else
+                % Append
+                cell2txtfile(savefile, {}, result{k}, format_array,...
+                    'delimiter', '\t',...
+                    'writemode', 'at',...
+                    'allownans', 'false');
             end
         end
-       
-    end 
+    end
+
+end 
        
 end
 
-function sourcefile_arr = export_features_CTAP2_getfeaturefiles(id, featureIDArr, measFilt, MC, Cfg)
+
+function sourcefile_arr =...
+    export_features_CTAP2_getfeaturefiles(featureIDArr, measFilt, MC, Cfg)
+
     sourcefile_arr={};
     if isempty(measFilt)
         % Load all measurements available
@@ -125,6 +131,7 @@ function sourcefile_arr = export_features_CTAP2_getfeaturefiles(id, featureIDArr
         end%i
     end%if
 end
+
 
 function result = export_features_CTAP2_onefile(sourcefile)
 	result = cell(1);

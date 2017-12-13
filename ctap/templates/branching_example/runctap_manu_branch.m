@@ -31,13 +31,12 @@ end
 
 
 %% Create measurement config (MC) based on folder
-% Measurement config based on synthetic source files
-MC = path2measconf(data_dir_out, '*.set');
-
-
-%% Select measurements to process
-clear('Filt')
-Filt.subjectnr = 1;
+% Select measurements to process
+sbj_filt = 1; 
+% Next, create measurement config (MC) based on folder of synthetic source 
+% files, & select subject subset
+[Cfg.MC, Cfg.pipe.runMeasurements] =...
+    confilt_meas_dir(data_dir_out, '*.set', sbj_filt);
 
 
 %% Select pipes
@@ -60,7 +59,7 @@ for i = 1:length(pipeArr)
         i_Cfg.env.paths = cfg_create_paths(Cfg.env.paths.ctapRoot,...
                                                i_Cfg.id, i_Cfg.srcid{k});
         i_Cfg = ctap_auto_config(i_Cfg, i_ctap_args);
-        i_Cfg.MC = MC;
+        i_Cfg.MC = Cfg.MC;
         
         % Run the pipe
         i_Cfg.pipe.runMeasurements = get_measurement_id(MC, Filt);
@@ -68,8 +67,8 @@ for i = 1:length(pipeArr)
                             'debug', STOP_ON_ERROR,...
                             'overwrite', OVERWRITE_OLD_RESULTS);
         
-        export_features_CTAP([i_Cfg.id '_db'], {'bandpowers','PSDindices'},...
-                              Filt, MC, i_Cfg);
+        export_features_CTAP([i_Cfg.id '_db']...
+                            , {'bandpowers','PSDindices'}, Cfg.MC, i_Cfg);
     end
     
     % Cleanup

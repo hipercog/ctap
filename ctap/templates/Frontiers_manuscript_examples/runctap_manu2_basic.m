@@ -76,7 +76,7 @@ if PREPRO
                         'debug', STOP_ON_ERROR,...
                         'overwrite', OVERWRITE_OLD_RESULTS);
     toc;
-    clear PREPRO STOP_ON_ERROR OVERWRITE_OLD_RESULTS Filt ctap_args sbj_filt
+    clear PREPRO STOP_ON_ERROR OVERWRITE_OLD_RESULTS ctap_args sbj_filt
 end
 
 

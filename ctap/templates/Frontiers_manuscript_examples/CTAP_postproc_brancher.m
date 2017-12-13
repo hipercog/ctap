@@ -48,9 +48,6 @@ for i = first:last
         % Assign arguments to the selected functions, perform various checks
         k_Cfg = ctap_auto_config(k_Cfg, i_ctap_args);
         k_Cfg.MC = Cfg.MC;
-
-        % define the measurements
-%        k_Cfg.pipe.runMeasurements = get_measurement_id(Cfg.MC, Filt);
         
         % Run the required post-processing function
         oddball_erps(k_Cfg, 'C20') % TODO: REPLACE WITH A DYNAMIC FUNCTION ARGUMENT?

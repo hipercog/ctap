@@ -214,7 +214,7 @@ if Arg.savePeekICA
         latency = starts(i) + Arg.secs(1) * EEG.srate;
         duration = latency + dur * EEG.srate;
         outdata = activations(chidx, latency:duration);
-        save(fullfile(savepath, sprintf('ICA_%d', labels{i})), 'data')
+        save(fullfile(savepath, sprintf('ICA_%s', labels{i})), 'data')
     end
 end
 

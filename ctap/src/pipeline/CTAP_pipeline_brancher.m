@@ -1,4 +1,4 @@
-function CTAP_pipeline_brancher(Cfg, Filt, pipeArr, first, last, dbg, ovw)
+function CTAP_pipeline_brancher(Cfg, pipeArr, first, last, dbg, ovw)
 %CTAP_pipeline_brancher - Branches the pipes defined in pipeArr
 %
 % Description:
@@ -10,7 +10,6 @@ function CTAP_pipeline_brancher(Cfg, Filt, pipeArr, first, last, dbg, ovw)
 %
 % Inputs:
 %   'Cfg'       struct, pipe configuration structure, see specifications above
-%   'Filt'      struct,
 %   'pipeArr'   function handle array, specifies the pipe-config funtions
 %   'first'     scalar, index of first pipe to process
 %   'last'      scalar, index of last pipe to process
@@ -73,12 +72,12 @@ for i = first:last
         k_Cfg.MC = Cfg.MC;
 
         % Run the pipe
-        k_Cfg.pipe.runMeasurements = get_measurement_id(Cfg.MC, Filt);
         CTAP_branchedpipe_looper(k_Cfg, 'debug', dbg, 'overwrite', ovw)
 
+% TODO: CALL THIS USING CTAP_postproc_brancher() INSTEAD.
         if isfield(Cfg, 'export')
             export_features_CTAP([k_Cfg.id '_db']...
-                , {'bandpowers', 'PSDindices'}, Filt, Cfg.MC, k_Cfg...
+                , {'bandpowers', 'PSDindices'}, Cfg.MC, k_Cfg...
                 , 'debug', dbg, 'overwrite', k_Cfg.export.ovw...
                 , 'srcFilt', k_Cfg.export.featureSavePoints);
         end

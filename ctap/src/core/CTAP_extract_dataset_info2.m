@@ -1,6 +1,5 @@
 function [EEG, Cfg] = CTAP_extract_dataset_info2(EEG, Cfg)
-%CTAP_extract_dataset_info2  - extract info about EEG file
-%                              as features
+%CTAP_extract_dataset_info2  - extract info about EEG file as features
 %
 % Description:
 %   Saves results into Cfg.env.paths.featuresRoot/dataset_info2.
@@ -32,17 +31,17 @@ if isfield(Cfg.ctap, 'extract_dataset_info2')
     Arg = joinstruct(Arg, Cfg.ctap.extract_dataset_info2);%override with user params
 end
 
-[INFO SEGMENT] = gather_measurement_metadata(Cfg.subject, Cfg.measurement);
+[INFO, SEGMENT] = gather_measurement_metadata(Cfg.subject, Cfg.measurement); %#ok<ASGLU>
 
 dataset_info2 = struct();
 dataset_info2.srate = EEG.srate;
-dataset_info2.samples = size(EEG.data,2);
-dataset_info2.lengthSeconds = dataset_info2.samples/dataset_info2.srate;
-dataset_info2.nbchan = EEG.nbchan;
+dataset_info2.samples = size(EEG.data, 2);
+dataset_info2.lengthSeconds = dataset_info2.samples / dataset_info2.srate;
 dataset_info2.startDateTime = EEG.startDateTime;
-dataset_info2.segments = length(find(strcmp({EEG.event.type}, 'boundary')))+1;
+dataset_info2.segments = sum(ismember({EEG.event.type}, 'boundary')) + 1;
+dataset_info2.nbchan = EEG.nbchan; %#ok<*STRNU>
 
-savepath = fullfile(Cfg.env.paths.featuresRoot,'dataset_info2');
+savepath = fullfile(Cfg.env.paths.featuresRoot, 'dataset_info2');
 if ~isdir(savepath)
     mkdir(savepath); 
 end

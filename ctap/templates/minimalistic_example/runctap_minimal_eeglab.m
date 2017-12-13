@@ -13,18 +13,14 @@ dataRoot = fileparts(dataFile);
 batch_id = 'eeglabmini';
 [Cfg, my_args] = cfg_minimal_eeglab(dataRoot, cd(), batch_id);
 
-% Data files
-MC = path2measconf(dataRoot, '*_data.set');
-%MC = read_measinfo_spreadsheet(Cfg.env.measurementInfo);
-Cfg.MC = MC;
-
 
 %% Select measurements to process
-% Select measurements to run
-clear('Filt');
-Filt.subjectnr = 1; %all subjects 1:26
-MeasSub = struct_filter(MC.measurement, Filt);
-Cfg.pipe.runMeasurements = {MeasSub.casename};
+% Select measurements to process
+sbj_filt = 1; 
+% Next, create measurement config (MC) based on folder of synthetic source 
+% files, & select subject subset
+[Cfg.MC, Cfg.pipe.runMeasurements] =...
+    confilt_meas_dir(dataRoot, '*_data.set', sbj_filt);
 
 
 %% Define pipeline
@@ -103,8 +99,7 @@ toc;
 %% Export features
 %{
 tic;
-export_features_CTAP([batch_id '_db'], {'bandpowers','PSDindices'},...
-    Filt, MC, Cfg);
+export_features_CTAP([batch_id '_db'], {'bandpowers','PSDindices'}, Cfg.MC, Cfg);
 toc;
 %}
 

@@ -1,4 +1,4 @@
-function export_features_CTAP(id, featureIDArr, measFilt, MC, Cfg, varargin)
+function export_features_CTAP(id, featureIDArr, MC, Cfg, varargin)
 %EXPORT_FEATURES_CTAP - Export data into sqlite or csv database 
 %
 % Description:
@@ -14,8 +14,6 @@ function export_features_CTAP(id, featureIDArr, measFilt, MC, Cfg, varargin)
 %   featureIDArr    [1,M] cell of strings, Names of the feature collections
 %                   to export. Available values are the subfolder names in 
 %                   Cfg.env.paths.featuresRoot.
-%   measFilt        struct, Filter that defines a subset of measurements to
-%                   load. struct([]) loads all available measurements.
 %   MC              struct, Subject and measurement metadata struct
 %   Cfg             struct, CTAP configuration structure
 %
@@ -58,7 +56,7 @@ function export_features_CTAP(id, featureIDArr, measFilt, MC, Cfg, varargin)
 p = inputParser;
 p.addRequired('id', @ischar);
 p.addRequired('featureIDArr', @iscell);
-p.addRequired('measFilt', @isstruct);
+% p.addRequired('measFilt', @isstruct);
 p.addRequired('MC', @isstruct);
 p.addRequired('Cfg', @isstruct);
 
@@ -66,7 +64,7 @@ p.addParameter('srcFilt', {}, @iscell);
 p.addParameter('debug', false, @islogical);
 p.addParameter('overwrite', false, @islogical);
 
-p.parse(id, featureIDArr, measFilt, MC, Cfg, varargin{:});
+p.parse(id, featureIDArr, MC, Cfg, varargin{:});
 Arg = p.Results;
 
 
@@ -126,17 +124,17 @@ if verLessThan('matlab', '9.1.0') %< 'r2016b'
             idx = ismember(ft_paths, srcPath_sub{pt});
             src_file_arr = strcat(ft_paths(idx), filesep, ft_files(idx));
 
-            if ~isempty(measFilt)
-                % Remove all measurements that don't match measFilt
-                meas_sub = struct_filter(MC.measurement, measFilt);
-                sfarr_meas_sub_idx = false(1, numel(src_file_arr));
-                for m = 1:numel(meas_sub)
-                    tmp = ~cell2mat(cellfun(@isempty, strfind(src_file_arr...
-                        , meas_sub(m).casename), 'UniformOutput', false));
-                    sfarr_meas_sub_idx = sfarr_meas_sub_idx | tmp(:)';
-                end
-                src_file_arr(~sfarr_meas_sub_idx) = [];
-            end%if
+%             if ~isempty(measFilt)
+%                 % Remove all measurements that don't match measFilt
+%                 meas_sub = struct_filter(MC.measurement, measFilt);
+%                 sfarr_meas_sub_idx = false(1, numel(src_file_arr));
+%                 for m = 1:numel(meas_sub)
+%                     tmp = ~cell2mat(cellfun(@isempty, strfind(src_file_arr...
+%                         , meas_sub(m).casename), 'UniformOutput', false));
+%                     sfarr_meas_sub_idx = sfarr_meas_sub_idx | tmp(:)';
+%                 end
+%                 src_file_arr(~sfarr_meas_sub_idx) = [];
+%             end%if
             %% Export everything into DB file: CSV, sqlite
             sbf_export_data
         end
@@ -185,11 +183,11 @@ else
             idx = ismember(ft_paths, srcPath_sub{pt});
             src_file_arr = strcat(ft_paths(idx), filesep, ft_files(idx));
 
-            if ~isempty(measFilt)
-                % Remove all measurements that don't match measFilt
-                meas_sub = struct_filter(MC.measurement, measFilt);
-                src_file_arr(~contains(src_file_arr, {meas_sub.casename})) = [];
-            end%if
+%             if ~isempty(measFilt)
+%                 % Remove all measurements that don't match measFilt
+%                 meas_sub = struct_filter(MC.measurement, measFilt);
+%                 src_file_arr(~contains(src_file_arr, {meas_sub.casename})) = [];
+%             end%if
             %% Export everything into DB file: CSV, sqlite
             sbf_export_data
         end

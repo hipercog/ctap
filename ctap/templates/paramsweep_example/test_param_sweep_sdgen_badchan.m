@@ -111,12 +111,12 @@ if RERUN_SWEEP
         EEGprepro = pop_loadset(infile, inpath);
 
         % Note: This step does sweeping ONLY, preprocess using some other means
-        [SWEEG, PARAMS] = CTAP_pipeline_sweeper(EEGprepro, SWPipe, SWPipeParams, Cfg, ...
-                                          SweepParams);
+        [SWEEG, PARAMS] = CTAP_pipeline_sweeper(...
+                            EEGprepro, SWPipe, SWPipeParams, Cfg, SweepParams);
         sweepres_file = fullfile(PARAM.path.sweepresDir, ...
                                  sprintf('sweepres_%s.mat', k_id));
-        save(sweepres_file, 'SWEEG', 'PARAMS','SWPipe','PipeParams', 'SweepParams',...
-             '-v7.3');
+        save(sweepres_file...
+            , 'SWEEG', 'PARAMS','SWPipe','PipeParams', 'SweepParams', '-v7.3');
         clear('SWEEG');
     end
 end
@@ -140,8 +140,8 @@ for k = 1:numel(Cfg.MC.measurement)
     EEGprepro = pop_loadset(CTAP_infile, CTAP_inpath);
     
     % Sweep results
-    sweepres_file = fullfile(PARAM.path.sweepresDir, ...
-                             sprintf('sweepres_%s.mat', k_id));
+    sweepres_file =...
+        fullfile(PARAM.path.sweepresDir, sprintf('sweepres_%s.mat', k_id));
     load(sweepres_file);
     
     %Number of blink related components
