@@ -82,18 +82,19 @@ function [EEG, varargout] = ctapeeg_detect_bad_channels(EEG, varargin)
 
 
 sbf_check_input() % parse the varargin, set defaults
+EEGtmp = EEG;
 
 
 %% Temporarily re-reference to given single reference point
 if ~isempty(strfind(Arg.method, 'fast'))
-    % Re-reference for Faster
+    % Re-reference for FASTER
     if ~isempty(Arg.refChannel)
         EEG = ctapeeg_reref_data(EEG, 'ref', Arg.refChannel);
-%        EEG = pop_reref(EEG, Arg.refChannel);
     else
         varargout{2} = myReport('FAIL :: reference channel not found ...');
     end
-    
+    faster_vars = {'chanCorrelation' 'variance' 'hurst'};
+
 end
 
 % Remove channel baselines
@@ -101,18 +102,27 @@ end
 
 result = struct('method_data', '', 'scores', []);
 
+
 %% Call the CHOSEN method
 switch Arg.method
     case 'faster'
-        % latent parameters: any|all, metric
-        chbad = channel_properties(EEG, Arg.channels, Arg.refChannel);
-        [~, all_bad, ~] = min_z(chbad, struct('z', Arg.bounds(2)));
-        bad_chan_match = Arg.channels(all_bad');
+        % Get the 3 magic FASTER properties for each channel
+        chprp = channel_properties(EEG, Arg.channels, Arg.refChannel);
+        % Choose which properties to match on
+        if iscell(Arg.match_measures)
+            match_measures = ismember(faster_vars, Arg.match_measures);
+        end
+        % identify the bad channels by z-score thresholding on each measure
+        rej_opt = struct('z', Arg.bounds, 'measures', match_measures);
+        chbad = min_z(chprp, Arg.match_logic, rej_opt);
+        bad_chan_match = Arg.channels(chbad');
+        % build the output table
         result.scores =...
-            table(chbad(:,1), chbad(:,2), chbad(:,3)...
+            table(chprp(:,1), chprp(:,2), chprp(:,3)...
             , 'RowNames', {EEG.chanlocs(Arg.channels).labels}'...
-            , 'VariableNames', {'variance' 'meanCorr' 'Hurst'});
-        
+            , 'VariableNames', faster_vars);
+
+
     case 'recufast'
         recu_out = recufast_badness_detector(...
                   EEG, struct(), Arg.channels, Arg.bounds, Arg.iters, 'chan',...
@@ -121,7 +131,8 @@ switch Arg.method
         result.scores = table(recu_out.bad_bin(2, :)' ...
             , 'RowNames', {EEG.chanlocs(Arg.channels).labels}'...
             , 'VariableNames', {'recursiveFASTER'});
-        
+
+
     case 'maha_fast'
         [bad_chan_match, ~, scores] =...
             eeg_detect_bad_channels(EEG, EEG.chanlocs(Arg.refChannel.labels,...
@@ -130,7 +141,8 @@ switch Arg.method
         result.scores = table(scores...
             , 'RowNames', {EEG.chanlocs(Arg.channels).labels}'...
             , 'VariableNames', {'maha_fast'});
-        
+
+
     case 'variance'
         res = vari_bad_chans(EEG, Arg.channels, Arg.bounds);
         bad_chan_match = res.dead | res.loose;
@@ -138,8 +150,8 @@ switch Arg.method
             , 'RowNames', {EEG.chanlocs(Arg.channels).labels}'...
             , 'VariableNames', {'variance'});
         result.method_data.th = res.th;
-        
-        
+
+
     case 'recuvari'
         recu_out = recurse_variance_bad_chans(...
                     EEG, struct, Arg.channels, Arg.bounds, Arg.iters,...
@@ -148,7 +160,8 @@ switch Arg.method
         result.scores = table(recu_out.badchbin(2,:)' ...
             , 'RowNames', {EEG.chanlocs(Arg.channels).labels}'...
             , 'VariableNames', {'variance'});
-        
+
+
     case 'rejspec'
         [~, bad_chan_match] = pop_rejchanspec( EEG,...
                 'elec', Arg.channels,...
@@ -170,16 +183,12 @@ if ~istable(result.scores)
 end
 
 
-%% Re-reference back to original
-if ~isempty(strfind(Arg.method, 'fast'))
-    EEG = ctapeeg_reref_data(EEG, 'ref', get_refchan_inds(EEG, Arg.orig_ref));
-end
-
-
 %% Report parameters used and result
 Arg.channels = {EEG.chanlocs(Arg.channels).labels};
 varargout{1} = Arg;
 varargout{2} = result;
+% Return EEG back to original
+EEG = EEGtmp;
 
 
 %% Subfunctions
@@ -229,6 +238,8 @@ varargout{2} = result;
                 
             case 'faster'
                 Arg.bounds = [-2 2];
+                Arg.match_logic = @all;
+                Arg.match_measures = faster_vars;
 
             case 'maha_fast'
                 Arg.factorVal = 3;

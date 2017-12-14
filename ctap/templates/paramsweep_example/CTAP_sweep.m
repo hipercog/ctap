@@ -28,7 +28,18 @@ function [EEG, Cfg] = CTAP_sweep(EEG, Cfg)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-%% Perform checks.
+%% create Arg and assign any defaults to be chosen at the CTAP_ level
+Arg = struct;
+Arg.overwrite = true;
+Arg.figVisible = false;
+% check and assign the defined parameters to structure Arg, for brevity
+if isfield(Cfg.ctap, 'sweep')
+    Arg = joinstruct(Arg, Cfg.ctap.sweep);%override with user params
+end
+
+
+%% ASSIST
+% Perform checks.
 if ~isfield(Cfg.ctap.sweep, 'function')
     error('CTAP_sweep:bad_params', 'Must define target function to sweep!')
 end
@@ -40,16 +51,11 @@ if ~isfield(Cfg.ctap.sweep, Cfg.ctap.sweep.sweep_param)
         , 'Must define set or range of target parameter values to sweep over!')
 end
 
+% Make paths
+savepath = get_savepath(Cfg, mfilename, 'sweep');
+savepath = fullfile(savepath, EEG.CTAP.measurement.casename);
+prepare_savepath(savepath, 'deleteExisting', Arg.overwrite);
 
-%% create Arg and assign any defaults to be chosen at the CTAP_ level
-Arg = struct;
-% check and assign the defined parameters to structure Arg, for brevity
-if isfield(Cfg.ctap, 'sweep')
-    Arg = joinstruct(Arg, Cfg.ctap.sweep);%override with user params
-end
-
-
-%% ASSIST
 % If not given, Build the pseudo-pipe for sweeping config
 if ~isfield(Arg, 'SWPipe')
     SWPipe.funH = {@Arg.function,...
@@ -80,7 +86,8 @@ SweepParams.values = num2cell(Arg.(Arg.sweep_param));
 %     , 'SWEEG', 'PARAMS','SWPipe','PipeParams', 'SweepParams', '-v7.3')
 
 
-% TODO: REWRITE THIS ANALYSIS CODE TO WORK HERE...
+
+%% TODO: REWRITE THIS ANALYSIS CODE TO WORK HERE...
 %Number of blink related components
 n_sweeps = numel(SWEEG);
 dmat = NaN(n_sweeps, 2);
@@ -88,34 +95,40 @@ cost_arr = NaN(n_sweeps, 1);
 
 ep_win = [-1, 1]; %sec
 ch_inds = horzcat(78:83, 91:96); %frontal
-EEGclean.event = EEGprepro.event;
-EEG_clean_ep = pop_epoch( EEGclean, {'blink'}, ep_win);
+EEGclean.event = EEG.event; % FIXME - WHERE DOES EEGclean COME FROM NOW?!
+EEG_clean_ep = pop_epoch(EEGclean, {'blink'}, ep_win);
 
-tmp_savedir = fullfile(PARAM.path.sweepresDir, k_id);
-mkdir(tmp_savedir);
+
+%% Plot badness    
+% tmp_savedir = fullfile(PARAM.path.sweepresDir, k_id);
+% mkdir(tmp_savedir);
 for i = 1:n_sweeps
     dmat(i,:) = [SweepParams.values{i},...
                 numel(SWEEG{i}.CTAP.badchans.variance.chans) ];
     fprintf('mad: %1.2f, n_chans: %d\n', dmat(i,1), dmat(i,2));
 
     % PLOT BAD CHANS
-    figh = ctaptest_plot_bad_chan(EEGprepro...
-        , 'badness', get_eeg_inds(EEGprepro, SWEEG{i}.CTAP.badchans.variance.chans)...
+    figh = ctaptest_plot_bad_chan(EEG...
+        , 'badness', get_eeg_inds(EEG, SWEEG.CTAP.badchans.variance.chans)...
         , 'sweep_i', i...
-        , 'savepath', tmp_savedir); %#ok<*NASGU>
+        , 'savepath', savepath); %#ok<*NASGU>
 end
-%plot(cost_arr, '-o')
 
-figH = figure();
+
+%% Plot sweep
+figH = figure('Position', get(0,'ScreenSize'), 'Visible', Arg.figVisible);
 plot(dmat(:,1), dmat(:,2), '-o');
 xlabel('MAD multiplication factor');
 ylabel('Number of artefactual channels');
-saveas(figH, fullfile(PARAM.path.sweepresDir,...
-        sprintf('sweep_N-bad-chan_%s.png', k_id)));
+saveas(figH, fullfile(savepath, 'sweep_N-bad-chan.png'));
 close(figH);
 
 
-% Test quality of identifications
+%% Test quality of identifications
+% TODO: FIND INFLECTION POINT. ALGORITHM:
+%       - STEP BACK FROM LAST PARAM RANGE VALUE,
+%       - SELECT FIRST POINT WHERE DIFF TO LAST POINT > 1SD OF ALL
+% 
 th_value = 2;
 th_idx = find( [SweepParams.values{:}] <= th_value , 1, 'last' );
 
@@ -129,6 +142,7 @@ tmp2 = setdiff(EEG.CTAP.artifact.variance_table.name, ...
 
 chm = ismember(EEG.CTAP.artifact.variance_table.name, tmp2);
 EEG.CTAP.artifact.variance_table(chm,:)  
+
 
 
 %% Finally, set the relevant parameter field of target function to be 'result'

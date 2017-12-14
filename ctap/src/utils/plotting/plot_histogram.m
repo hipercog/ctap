@@ -57,6 +57,9 @@ h = histogram(data, nbins,...
               'FaceColor', [180, 180, 220]/255);
 binpos = h.BinEdges(1:end-1);
 dx = h.BinWidth;
+if ~isscalar(dx)
+    dx = mean(diff(binpos));
+end
 
 
 %% Fits to normal distribution

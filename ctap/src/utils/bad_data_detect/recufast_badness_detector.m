@@ -97,7 +97,7 @@ p.addRequired('bounds', @ismatrix);
 p.addRequired('recuLim', @isscalar);
 p.addRequired('datatype', @ischar);
 
-p.addParameter('indexby', false, @islogical);
+p.addParameter('indexby', @all, @(f) isa(f, 'function_handle'));
 p.addParameter('epchans', get_eeg_inds(ineeg, {'EEG'}), @isvector);
 p.addParameter('outdir', '', @ischar);
 p.addParameter('report', false, @islogical);
@@ -135,8 +135,8 @@ end
 
 
 %% FASTER-toolbox based bad channels
-[badnew, badcnt] = FASTER_badness(...
-    ineeg, index, bounds, recuLim, find(cecidx)...
+[badnew, badcnt] = FASTER_badness(ineeg...
+    , index, bounds, recuLim, find(cecidx)...
     , Arg.indexby, Arg.epchans, Arg.blinks, Arg.outdir, Arg.report);
 idx = ismember(result.bad_bin(1, :), badnew);
 result.bad_bin(2, idx) = result.bad_bin(2, idx) + badcnt;
@@ -188,27 +188,21 @@ switch cecidx
         badness = epoch_properties(EEG, epchans, index);
         
     case 3
-        if blinks,  EOG = get_eeg_inds(EEG, {'EOG'});
-        else        EOG = [];
-        end
+        EOG = [];
+        if blinks, EOG = get_eeg_inds(EEG, {'EOG'}); end
         badness = component_properties(EEG, EOG, 1, index);
         
 end
 
-[any_bad, ~, all_bad] = min_z(badness, struct('z', bounds(2)));
-
-if strcmp(indexby, 'all')
-    chk_bad = index( all_bad );
-else
-    chk_bad = index( any_bad );
-end
-
+badtest = min_z(badness, indexby, struct('z', bounds));
+chk_bad = index( badtest );
 % sum count of indices on which channel has failed, 
 % and multiply by the z-score bound which was exceeded.
+%TODO: ACCOUNT FOR BOTH LOWER AND UPPER BOUND NOW BEING USED IN min_z()
 bad_count = sum(all_bad, 2) .* bounds(2);
 bad_count(bad_count == 0) = [];
-if iscolumn(chk_bad), chk_bad = chk_bad'; end
-if iscolumn(bad_count), bad_count = bad_count'; end    
+chk_bad = chk_bad(:)'; %turn column into row
+bad_count = bad_count(:)'; %turn column into row
 
 
 %% reporting
