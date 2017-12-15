@@ -218,14 +218,13 @@ function sbf_check_input() % parse the varargin, set defaults
         vargs = varargin{1}; %(assume a struct wrapped in a cell)
     end
 
-    % If desired, the default values can be changed here:
     try Arg.method = vargs.method;
     catch
-        if numel(icacomps) > 32, Arg.method = 'recufast';
-        else Arg.method = 'extreme_values';
-        end
+        error('ctapeeg_detect_bad_comps:bad_param', ...
+            'It is necessary to define the chosen ''method'': see help')
     end
 
+    % If desired, the default values can be changed here:
     switch Arg.method %#ok<*ALIGN>
         case 'recufast'
             Arg.bounds = [-3 3];

@@ -1,4 +1,4 @@
-function [MC, runMC] = confilt_meas_dir(data_dir_in, ext, subj_filt)
+function [MC, runMC] = confilt_meas_dir(data_dir_in, ext, sbj_filt)
 %CONFILT_MEAS_DIR Create measurement config (MC) based on folder
 
     % first create measurement structure from given dir and file extension
@@ -6,7 +6,9 @@ function [MC, runMC] = confilt_meas_dir(data_dir_in, ext, subj_filt)
     % Select measurements to process, matching given 'subj_filt' vector to 
     %  file-order indices
     Filt.subject = {MC.subject.subject};
-    Filt.subject = Filt.subject(ismember([MC.subject.subjectnr], subj_filt));
+    if ~isempty(sbj_filt)
+        Filt.subject = Filt.subject(ismember([MC.subject.subjectnr], sbj_filt));
+    end
     runMC = get_measurement_id(MC, Filt);
 
 end

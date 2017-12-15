@@ -115,15 +115,14 @@ if Arg.logStats
         , 'outdir', savepath, 'id', 'peekall');
     
     % Write the stats for each peek for each subject to 1 log file
-    stalog = fullfile(Cfg.env.paths.logRoot, 'peek_stats_log.txt');
-    myReport(sprintf('\n%s peek channel statistics at step set %d, function %d'...
-        , EEG.CTAP.measurement.casename, Cfg.pipe.current.set...
-        , Cfg.pipe.current.funAtSet), stalog);
-    myReport(['Row' statab.Properties.VariableNames], stalog);
-    celtab = [statab.Properties.RowNames table2cell(statab)];
-    for r = 1:size(statab, 1)
-        myReport(celtab(r, :), stalog);
-    end
+    stalog = fullfile(Cfg.env.paths.logRoot, 'peek_stats_log.xlsx');
+    rptname = sprintf('%s_set%d_fun%d'...
+        , EEG.CTAP.measurement.casename...
+        , Cfg.pipe.current.set...
+        , Cfg.pipe.current.funAtSet);
+    myReport(sprintf('Writing channel-wise peek statistics for %s to %s.'...
+        , rptname, stalog), Cfg.env.logFile);
+    writetable(statab, stalog, 'WriteRowNames', True, 'Sheet', rptname)
 
 end
 
@@ -148,7 +147,7 @@ peekmatch = ismember({EEG.event.type}, 'ctapeeks');
 if any(peekmatch)%peek events are present - use them
     starts = [EEG.event(peekmatch).latency]; 
 else
-    %create new peeks
+    %create new peeks from existing user-defined events
     if isfield(Arg, 'peekevent')
         % based on events
         peekidx = find(ismember({EEG.event.type}, Arg.peekevent));
@@ -156,19 +155,22 @@ else
             peekidx = peekidx(Arg.peekindex);
         else
             npk = numel(peekidx);
-            if npk > 10
-                peekidx = peekidx(1:round(npk / 10):end);
+            if npk > Arg.numpeeks
+                peekidx = peekidx(1:round(npk / Arg.numpeeks):end);
             end
         end
         starts = [EEG.event(peekidx).latency];
         starts = starts(0 < starts); %remove possible negative values
-        
+
+    %create new peeks from data-selection events (as this data will not be cut!)
     elseif isfield(Cfg.ctap, 'select_evdata') &&...
             isfield(Cfg.ctap.select_evdata, 'evtype')
         peekmatch = ismember({EEG.event.type}, Cfg.ctap.select_evdata.evtype);
         starts = [EEG.event(peekmatch).latency] + 1;
+
+    %create new peeks at uniformly-distributed random times
     else
-        %num peeks = as many as will fit with room to spare at the end, up to 10
+        %num peeks = as many as will fit with space at the end, < Arg.numpeeks
         npk = min(Arg.numpeeks, round((EEG.xmax * EEG.trials - dur) / dur));
         % start latency of peeks is linear spread, randomly jittered
         starts = linspace(1, EEG.xmax * EEG.trials - dur, npk) +...
@@ -191,6 +193,12 @@ else
     labels = cellfun(@(x) sprintf('peek%d',x), num2cell(1:sum(peekmatch)), 'Un', 0);
 end
 starts = single(starts);
+
+% Save defined peek-times
+peektab = table(starts / EEG.srate...
+            , 'RowNames', labels...
+            , 'VariableNames', 'peekLatencySecs');
+writetable(peektab, fullfile(savepath, 'peek_times'))
 
 
 %% save EEG data from each peek
@@ -233,7 +241,9 @@ end
 
 %% Plot raw data from channels
 if ~Arg.plotAllPeeks
-   starts = starts(1); 
+    pkidx = 1;
+    starts = starts(pkidx);
+    labels = labels(pkidx);
 end
 
 if Arg.plotEEG

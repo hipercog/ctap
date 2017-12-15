@@ -40,7 +40,7 @@ varargout{1} = Arg;
 
 %% ...reref
 ref_inds = [];
-if ischar(Arg.ref)
+if ischar(Arg.ref) || iscell(Arg.ref)
     ref_inds = get_refchan_inds(EEG, Arg.ref);
 elseif isnumeric(Arg.ref)
     ref_inds = Arg.ref;

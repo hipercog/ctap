@@ -170,13 +170,22 @@ end
 
 %get original (allSets) and requested (runSets) stepSet indices
 allSets = 1:numel(Cfg.pipe.stepSets);
-if strcmp(Cfg.pipe.runSets{1}, 'all')
+runSets = [];
+if isnumeric(Cfg.pipe.runSets)
+    if all(ismember(Cfg.pipe.runSets, allSets))
+        runSets = Cfg.pipe.runSets;
+    end
+elseif strcmp(Cfg.pipe.runSets{1}, 'all')
     runSets = allSets;
     Cfg.pipe.runSets = {Cfg.pipe.stepSets(allSets).id};
     %'all' replaced to simplify usage of this field -- 'all' not allowed
     % in general, just a convenience feature
 else
     runSets = find(ismember({Cfg.pipe.stepSets.id}, Cfg.pipe.runSets));
+end
+if isempty(runSets)
+    error('ctap_auto_config:bad_runSets', '%s was badly specified'...
+        , myReport({'SHSH' Cfg.pipe.runSets}));
 end
 
 % Add field Cfg.pipe.totalSets if missing

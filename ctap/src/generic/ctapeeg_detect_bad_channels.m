@@ -202,16 +202,16 @@ EEG = EEGtmp;
             vargs = varargin{1}; %(assume a struct wrapped in a cell)
         end
 
-        % If desired, the default values can be changed here:
+        try Arg.method = vargs.method;
+        catch
+            error('ctapeeg_detect_bad_channels:bad_param', ...
+                'It is necessary to define the chosen ''method'': see help')
+        end
+        
+        % If desired, the default values can be changed below:
         try Arg.channels = vargs.channels;
         catch
             Arg.channels = get_eeg_inds(EEG, {'EEG'});
-        end
-        try Arg.method = vargs.method;
-        catch
-            if numel(Arg.channels) > 32, Arg.method = 'maha_fast';
-            else Arg.method = 'variance';
-            end
         end
 
         if ~isempty(strfind(Arg.method, 'fast'))

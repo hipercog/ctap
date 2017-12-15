@@ -44,7 +44,7 @@ function [ERPS, ERP] = oddball_erps(Cfg, loc_label, PLOT)
     end
 
     %%%%%%%% Obtain condition-wise grand average ERP and plot %%%%%%%%
-    ERP = grdavg_oddball_erp(ERPS, cond, eeg.srate...
-                            , Cfg.env.paths.exportRoot, 'all', PLOT);
+    ERP = grdavg_oddball_erp(ERPS, cond, eeg.srate, Cfg.env.paths.exportRoot...
+                            , 'all', loc_label, PLOT);
 
 end
