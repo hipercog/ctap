@@ -103,8 +103,7 @@ if isfield(Arg, 'filetype') && strcmp(Arg.filetype, 'custom') == 1
     end
 end
     
-argsCellArray = struct2varargin(Arg);
-[EEG, params, ~] = ctapeeg_load_chanlocs(EEG, argsCellArray{:});
+[EEG, params, ~] = ctapeeg_load_chanlocs(EEG, struct2varargin(Arg));
 
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

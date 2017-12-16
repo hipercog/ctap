@@ -41,8 +41,6 @@ data_type = '*.bdf';
 sbj_filt = [];%setdiff(1:12, [3 7]);
 % use ctapID to uniquely name the base folder of the output directory tree
 ctapID = 'sccn-hydra-pipe';
-% use keyword 'all' to select all stepSets, or use some index
-set_select = 'all';
 % set the electrode for which to calculate and plot ERPs after preprocessing
 erploc = 'C20';
 
@@ -64,7 +62,7 @@ OVERWRITE_OLD_RESULTS = true;
 % Select pipe array and first and last pipe to run
 pipeArr = {@sbf_pipe1,...
            @sbf_pipe2A,...
-           @sbf_pipe2B};
+           @sbf_peekpipe};
 first = 1;
 last = 2;%length(pipeArr);
 %You can also run only a subset of pipes, e.g. 2:length(pipeArr)
@@ -133,7 +131,6 @@ function [Cfg, out] = sbf_pipe1(Cfg)
                         @CTAP_reref_data,... 
                         @CTAP_fir_filter%,...
 %                         @CTAP_blink2event,...
-%                         @CTAP_peek_data,...
 %                         @CTAP_run_ica 
                         };
     stepSet(i).id = [num2str(i) '_load'];
@@ -152,12 +149,6 @@ function [Cfg, out] = sbf_pipe1(Cfg)
         'method', 'fastica',...
         'overwrite', true);
     out.run_ica.channels = {'EEG' 'EOG'};
-
-    out.peek_data = struct(...
-        'plotAllPeeks', false,...
-        'peekStats', true,...
-        'savePeekData', true,...
-        'savePeekICA', true);
 
 
     %%%%%%%% Store to Cfg %%%%%%%%
@@ -184,8 +175,7 @@ function [Cfg, out] = sbf_pipe2A(Cfg)
                         @CTAP_sweep,...
                         @CTAP_detect_bad_channels,...%bad channels by variance
                         @CTAP_reject_data,...
-                        @CTAP_interp_chan,...
-                        @CTAP_peek_data };
+                        @CTAP_interp_chan };
     stepSet(i).id = [num2str(i) '_artifact_correction'];
 
     out.detect_bad_comps = struct(...
@@ -204,12 +194,6 @@ function [Cfg, out] = sbf_pipe2A(Cfg)
     out.detect_bad_channels = struct(...
         'method', 'variance',...
         'channelType', {'EEG'});
-
-    out.peek_data = struct(...
-        'plotAllPeeks', false,...
-        'peekStats', true,...
-        'savePeekData', true,...
-        'savePeekICA', true);
     
     %%%%%%%% Store to Cfg %%%%%%%%
     Cfg.pipe.runSets = {stepSet(:).id}; % step sets to run, default: whole thing
@@ -217,38 +201,30 @@ function [Cfg, out] = sbf_pipe2A(Cfg)
 end
 
 
-%% Configure pipe 2
-function [Cfg, out] = sbf_pipe2B(Cfg)
+%% Configure pipe for peeking at other pipe outputs
+function [Cfg, out] = sbf_peekpipe(Cfg)
 
     %%%%%%%% Define hierarchy %%%%%%%%
-    Cfg.id = 'pipe2B';
-    Cfg.srcid = {'pipe1#1_load'};
+    Cfg.id = mfilename;
+    Cfg.id = Cfg.id(5:end);
+    Cfg.srcid = {'pipe1#1_load'...
+                'pipe1#pipe2A#1_artifact_correction'};
 
     %%%%%%%% Define pipeline %%%%%%%%
-    % IC correction
-    i = 1;  %stepSet
-    stepSet(i).funH = { @CTAP_detect_bad_comps,... %FASTER bad IC detection
-                        @CTAP_reject_data,...
-                        @CTAP_detect_bad_channels,...%bad channels by spectra
-                        @CTAP_reject_data,...
-                        @CTAP_interp_chan,...
-                        @CTAP_peek_data };
-    stepSet(i).id = [num2str(i) '_artifact_correction'];
-
-    out.detect_bad_comps = struct(...
-        'method', 'faster');
-
-    out.detect_bad_channels = struct(...
-        'method', 'rejspec',...
-        'channelType', {'EEG'});
+    i = 1; %next stepSet
+    stepSet(i).funH = { @CTAP_peek_data };
+    stepSet(i).id = [num2str(i) '_final_peek'];
+    stepSet(i).save = false;
 
     out.peek_data = struct(...
+        'secs', [10 30],... %start few seconds after data starts
+        'peekStats', true,... %get statistics for each peek!
+        'overwrite', false,...
         'plotAllPeeks', false,...
-        'peekStats', true,...
         'savePeekData', true,...
         'savePeekICA', true);
-    
+
     %%%%%%%% Store to Cfg %%%%%%%%
-    Cfg.pipe.runSets = {stepSet(:).id}; % step sets to run, default: whole thing
-    Cfg.pipe.stepSets = stepSet; % record of all step sets
+    Cfg.pipe.stepSets = stepSet;
+    Cfg.pipe.runSets = {stepSet(:).id};
 end
