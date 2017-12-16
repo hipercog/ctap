@@ -31,14 +31,15 @@ function chinds = get_eeg_inds(EEG, chloc_cellstr)
 
 %% Parse input arguments and set varargin defaults
 p = inputParser;
-
 p.addRequired('EEG', @isstruct);
 p.addRequired('chloc_cellstr', @iscellstr);
-
 p.parse(EEG, chloc_cellstr);
 
+%safety init the output argument
+chinds = [];
 if all(cellfun(@isempty, chloc_cellstr))
-    warning('get_eeg_inds:bad_input', 'Cannot find indices of empty strings')
+    warning('get_eeg_inds:bad_input'...
+        , '%s:Cannot find indices of empty strings', mfilename)
     return
 end
 

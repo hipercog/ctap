@@ -101,43 +101,48 @@ missidx = [];
 % of channel location information based on the name of the channel
 for i = 1:numel(EEG.chanlocs)
     % Get the channel name
-    chan_name = EEG.chanlocs(i).labels;
+    chname = EEG.chanlocs(i).labels;
     
     % Try to find a matching index in chlocs for this channel name
     %%%% - BY DIRECT MATCH
-    index = find(strcmpi(chan_name, chlocs));
+    index = find(strcmpi(chname, chlocs));
     %%%% - BY PARTIAL MATCH
-    if isempty(index) && Arg.partial_match
+    if ~any(index) && Arg.partial_match
         % try to find partial matches for labels - either chan_name
         % contained in one of chlocs, or one of chlocs contained in chan_name
-        index = contains(chlocs, chan_name, 'IgnoreCase', true) | cellfun(...
-          @(x) contains(chan_name, x, 'IgnoreCase', true), chlocs, 'Uni', 0);
+        x = cellfun(@(x) contains(chname, x, 'IgnoreCase', true), chlocs, 'Uni', 0);
+        index = contains(chlocs, chname, 'IgnoreCase', true) | [x{:}];
 
+        % if multiple partial matches found, take one with closest strdist
         if sum(index) > 1
-            dst = cellfun(@(x) strdist(x, chan_name), chlocs(index), 'Uni', 0);
-            [~, dst] = min([dst{:}]);
-            index = find(index);
-            index = index(dst);
+            dst = cell2mat(cellfun(@(x)...
+                            strdist(x, chname), chlocs(index), 'Uni', 0));
+            if isscalar(find(dst == min(dst)))
+                [~, flip] = min(dst);
+                index(setdiff(1:numel(index), flip)) = 0;
+            end
         end
     end
     %%%% - BY SHORTEST STRING DISTANCE MATCH
-    if isempty(index) && Arg.dist_match
+    if ~any(index) && Arg.dist_match
         % try to find label that's uniquely closest by strdist
-        dst = cell2mat(cellfun(@(x) strdist(x, chan_name), chlocs, 'Uni', 0));
+        dst = cell2mat(cellfun(@(x) strdist(x, chname), chlocs, 'Uni', 0));
         if isscalar(find(dst == min(dst)))
-            [~, index] = min(dst);
+            [~, flip] = min(dst);
+            index(flip) = 1;
         end
     end
     
     % If an index was found, assign it. Otherwise mark as missing index
-    if ~isempty(index)
+    if any(index)
         EEGtmp = assign_chlocs(i, eloc(index), EEGtmp...
-            , 'writelabel', Arg.writelabel);
+                                , 'writelabel', Arg.writelabel...
+                                , 'writeblank', Arg.writeblank);
         chlocs{index} = 'loc_picked';
     else
         warning off backtrace
         warning(['SET_CHANNEL_LOCATIONS:'...
-            ' No channel location data found for channel ' chan_name '.']);
+            ' No channel location data found for channel ' chname '.']);
         warning on backtrace
         missidx = [missidx i]; %#ok<AGROW>
     end

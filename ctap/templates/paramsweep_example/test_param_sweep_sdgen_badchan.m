@@ -159,13 +159,16 @@ for k = 1:numel(Cfg.MC.measurement)
     for i = 1:n_sweeps
         dmat(i,:) = [SweepParams.values{i},...
                     numel(SWEEG{i}.CTAP.badchans.variance.chans) ];
-        fprintf('mad: %1.2f, n_chans: %d\n', dmat(i,1), dmat(i,2));
+        myReport(sprintf('mad: %1.2f, n_chans: %d\n', dmat(i,1), dmat(i,2))...
+            , fullfile(tmp_savedir, 'sweeplog.txt'));
 
         % PLOT BAD CHANS
-        figh = ctaptest_plot_bad_chan(EEGprepro...
-            , 'badness', get_eeg_inds(EEGprepro, SWEEG{i}.CTAP.badchans.variance.chans)...
-            , 'sweep_i', i...
-            , 'savepath', tmp_savedir);
+        chinds = get_eeg_inds(EEGprepro, SWEEG{i}.CTAP.badchans.variance.chans);
+        if any(chinds)
+            figh = ctaptest_plot_bad_chan(EEGprepro, chinds...
+                , 'sweep_i', i...
+                , 'savepath', tmp_savedir);
+        end
     end
     %plot(cost_arr, '-o')
 
@@ -184,7 +187,7 @@ for k = 1:numel(Cfg.MC.measurement)
     %EEG.CTAP.artifact.variance.multiplier
 
     th_value = 2;
-    th_idx = max(find( [SweepParams.values{:}] <= th_value ));
+    th_idx = find( [SweepParams.values{:}] <= th_value , 1, 'last' );
 
     %SWEEG{th_idx}.CTAP.badchans.variance.chans
 
@@ -194,7 +197,7 @@ for k = 1:numel(Cfg.MC.measurement)
 
     % wrecked channels not identified
     tmp2 = setdiff(EEG.CTAP.artifact.variance_table.name, ...
-            SWEEG{th_idx}.CTAP.badchans.variance.chans)
+            SWEEG{th_idx}.CTAP.badchans.variance.chans);
 
     chm = ismember(EEG.CTAP.artifact.variance_table.name, tmp2);
     EEG.CTAP.artifact.variance_table(chm,:)   

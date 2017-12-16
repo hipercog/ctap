@@ -61,10 +61,10 @@ OVERWRITE_OLD_RESULTS = true;
 
 % Select pipe array and first and last pipe to run
 pipeArr = {@sbf_pipe1,...
-           @sbf_pipe2A,...
+           @sbf_pipe2,...
            @sbf_peekpipe};
 first = 1;
-last = 2;%length(pipeArr);
+last = length(pipeArr);
 %You can also run only a subset of pipes, e.g. 2:length(pipeArr)
 
 
@@ -139,7 +139,7 @@ function [Cfg, out] = sbf_pipe1(Cfg)
         'overwrite', true,...
         'delchan', 1);
     out.load_chanlocs.field = {{{'EXG1' 'EXG2' 'EXG3' 'EXG4'} 'type' 'EOG'}...
-                             , {{'EXG5' 'EXG6' 'EXG7' 'EXG8'} 'type' 'NA'}};
+     , {{'EXG5' 'EXG6' 'EXG7' '1EX8' '1EX5' '1EX6' '1EX7' '1EX8'} 'type' 'NA'}};
     out.load_chanlocs.tidy  = {{'type' 'FID'} {'type' 'NA'}};
 
     out.fir_filter = struct(...
@@ -158,10 +158,10 @@ end
 
 
 %% Configure pipe 2
-function [Cfg, out] = sbf_pipe2A(Cfg)
+function [Cfg, out] = sbf_pipe2(Cfg)
 
     %%%%%%%% Define hierarchy %%%%%%%%
-    Cfg.id = 'pipe2A';
+    Cfg.id = 'pipe2';
     Cfg.srcid = {'pipe1#1_load'};
 
     %%%%%%%% Define pipeline %%%%%%%%
@@ -208,7 +208,7 @@ function [Cfg, out] = sbf_peekpipe(Cfg)
     Cfg.id = mfilename;
     Cfg.id = Cfg.id(5:end);
     Cfg.srcid = {'pipe1#1_load'...
-                'pipe1#pipe2A#1_artifact_correction'};
+                'pipe1#pipe2#1_artifact_correction'};
 
     %%%%%%%% Define pipeline %%%%%%%%
     i = 1; %next stepSet

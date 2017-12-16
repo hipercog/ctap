@@ -104,7 +104,7 @@ varargout{2} = filelocs;
         Arg.delchan = [];
         %TODO: NEXT PARAMS ARE ONLY FOR set_channel_locations(). HOW TO
         %JUST PASS USER'S CHOICE WITHOUT EXTRA DEFINITIONS HERE?? (LIKE R's ...)
-        Arg.writelabel = false;
+        Arg.writelabel = true;
         Arg.writeblank = false;
         Arg.partial_match = true;
         Arg.dist_match = true;

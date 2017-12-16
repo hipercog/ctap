@@ -31,7 +31,7 @@ function [EEG, Cfg] = CTAP_sweep(EEG, Cfg)
 %% create Arg and assign any defaults to be chosen at the CTAP_ level
 Arg = struct;
 Arg.overwrite = true;
-Arg.figVisible = false;
+Arg.figVisible = 'off';
 % check and assign the defined parameters to structure Arg, for brevity
 if isfield(Cfg.ctap, 'sweep')
     Arg = joinstruct(Arg, Cfg.ctap.sweep);%override with user params
@@ -105,13 +105,16 @@ cost_arr = NaN(n_sweeps, 1);
 for i = 1:n_sweeps
     dmat(i,:) = [SweepParams.values{i},...
                 numel(SWEEG{i}.CTAP.badchans.variance.chans) ];
-    fprintf('mad: %1.2f, n_chans: %d\n', dmat(i,1), dmat(i,2));
+    myReport(sprintf('mad: %1.2f, n_chans: %d\n', dmat(i,1), dmat(i,2))...
+        , fullfile(svpath, 'sweeplog.txt'));
 
     % PLOT BAD CHANS
-    figh = ctaptest_plot_bad_chan(EEG...
-        , 'badness', get_eeg_inds(EEG, SWEEG.CTAP.badchans.variance.chans)...
-        , 'sweep_i', i...
-        , 'savepath', svpath); %#ok<*NASGU>
+    chinds = get_eeg_inds(EEG, SWEEG{i}.CTAP.badchans.variance.chans);
+    if any(chinds)
+        figh = ctaptest_plot_bad_chan(EEG, chinds...
+            , 'sweep_i', i...
+            , 'savepath', svpath); %#ok<*NASGU>
+    end
 end
 
 
@@ -129,20 +132,29 @@ close(figH);
 %       - STEP BACK FROM LAST PARAM RANGE VALUE,
 %       - SELECT FIRST POINT WHERE DIFF TO LAST POINT > 1SD OF ALL
 % OR:
-%       - TAKE VALUE FOR WHICH BADNESS IS HIGHEST <10%
-th_value = 2;
-th_idx = find( [SweepParams.values{:}] <= th_value , 1, 'last' );
+%       - TAKE VALUE FOR WHICH BADNESS IS CLOSEST TO 10%
+pc = EEG.nbchan / 10;
+r = round((max(dmat(:,2)) - min(dmat(:,2))) / numel(dmat(:,2)));
+x = interp(dmat(:,1), r);
+y = interp(dmat(:,2), r);
+[~, i] = min(abs(y - pc));
+result = x(i);
 
-% channels identified as artifactual which are actually clean
-setdiff(SWEEG{th_idx}.CTAP.badchans.variance.chans, ...
-        EEG.CTAP.artifact.variance_table.name)
 
-% wrecked channels not identified
-tmp2 = setdiff(EEG.CTAP.artifact.variance_table.name, ...
-        SWEEG{th_idx}.CTAP.badchans.variance.chans);
-
-chm = ismember(EEG.CTAP.artifact.variance_table.name, tmp2);
-EEG.CTAP.artifact.variance_table(chm,:)  
+%%%% CODE FROM HYDRA SCRIPT - NEEDS GROUND TRUTH DATA TO WORK
+% th_value = 2;
+% th_idx = find( [SweepParams.values{:}] <= th_value , 1, 'last' );
+% 
+% % channels identified as artifactual which are actually clean
+% setdiff(SWEEG{th_idx}.CTAP.badchans.variance.chans, ...
+%         EEG.CTAP.artifact.variance_table.name)
+% 
+% % wrecked channels not identified
+% tmp2 = setdiff(EEG.CTAP.artifact.variance_table.name, ...
+%         SWEEG{th_idx}.CTAP.badchans.variance.chans);
+% 
+% chm = ismember(EEG.CTAP.artifact.variance_table.name, tmp2);
+% EEG.CTAP.artifact.variance_table(chm,:)  
 
 
 
