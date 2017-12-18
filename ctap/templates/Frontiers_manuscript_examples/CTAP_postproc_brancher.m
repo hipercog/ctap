@@ -1,21 +1,26 @@
-function CTAP_postproc_brancher(Cfg, pipeArr, first, last)
+function CTAP_postproc_brancher(Cfg, dynFunc, dfArgs, pipeArr, varargin)
 %CTAP_postproc_brancher - Applies a post-processing function to pipes in pipeArr
 %
 % Description:
 %
 % Syntax:
-%   CTAP_postproc_brancher(Cfg, Filt, pipeArr, first, last)
+%   CTAP_postproc_brancher(Cfg, dynFunc, dfArgs, pipeArr, first, last, dbg)
 %
 % Inputs:
 %   'Cfg'       struct, pipe configuration structure, see specifications above
-%   'Filt'      struct,
+%   'dynFunc'   function handle, specifies the user-defined function to
+%                               execute at each pipe in pipeArr. Must
+%                               implement the interface dynFunc(Cfg, varargin)
+%   'dfArgs'    cell array, name-value pair arguments to pass to 'dynFunc'
 %   'pipeArr'   function handle array, specifies the pipe-config funtions
+% Varargin:
 %   'first'     scalar, index of first pipe to process
 %   'last'      scalar, index of last pipe to process
+%   'dbg'       boolean, see CTAP_pipeline_looper
 %
 %
 % Version History:
-% 1.01.2017 Created (Benjamin Cowley, FIOH)
+% 1.01.2017 Created (Benjamin Cowley)
 %
 % Copyright(c) 2015 FIOH:
 % Benjamin Cowley (Benjamin.Cowley@ttl.fi), Jussi Korpela (jussi.korpela@ttl.fi)
@@ -25,14 +30,25 @@ function CTAP_postproc_brancher(Cfg, pipeArr, first, last)
 % Please see the file LICENSE for details.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+p = inputParser;
+p.addRequired('Cfg', @isstruct)
+p.addRequired('dynFunc', @(f) isa(f, 'functionHandle'))
+p.addRequired('dfArgs', @iscell)
+p.addRequired('pipeArr', @iscell)
+p.addParameter('first', 1, @isnumeric)
+p.addParameter('last', numel(pipeArr), @isnumeric)
+p.addParameter('dbg', false, @islogical)
+p.parse(Cfg, dynFunc, dfArgs, pipeArr, varargin{:});
+Arg = p.Results;
+
 
 Cfg.pipe.totalSets = 0;
-for i = 1:first - 1
+for i = 1:Arg.first - 1
     [i_Cfg, ~] = pipeArr{i}(Cfg);
     Cfg.pipe.totalSets = sbf_get_total_sets(i_Cfg);
 end
 
-for i = first:last
+for i = Arg.first:Arg.last
     
     % Set Cfg
     [i_Cfg, i_ctap_args] = pipeArr{i}(Cfg);
@@ -50,7 +66,15 @@ for i = first:last
         k_Cfg.MC = Cfg.MC;
         
         % Run the required post-processing function
-        oddball_erps(k_Cfg, 'C20') % TODO: REPLACE WITH A DYNAMIC FUNCTION ARGUMENT?
+        try
+            dynFunc(k_Cfg, dfArgs{:})
+        catch ME
+            if Arg.dbg
+                error('CTAP_postproc_brancher:dyn_function', '%s', ME.message)
+            else
+                warning('CTAP_postproc_brancher:dyn_function', '%s', ME.message)
+            end
+        end
 
         clear('k_*');
     end

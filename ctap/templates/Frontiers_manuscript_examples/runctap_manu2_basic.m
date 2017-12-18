@@ -76,13 +76,22 @@ if PREPRO
                         'debug', STOP_ON_ERROR,...
                         'overwrite', OVERWRITE_OLD_RESULTS);
     toc;
-    clear PREPRO STOP_ON_ERROR OVERWRITE_OLD_RESULTS ctap_args sbj_filt
 end
 
 
 %% Finally, obtain ERPs of known conditions from the processed data
-ERPS = oddball_erps(Cfg, erploc);
+try
+    ERPS = oddball_erps(Cfg, 'loc_label', erploc);
+catch ME
+    if STOP_ON_ERROR
+        error('runctap_manu2_basic:erps', '%s', ME.message)
+    else
+        warning('runctap_manu2_basic:erps', '%s', ME.message)
+    end
+end
 
+%cleanup the global workspace
+clear PREPRO STOP_ON_ERROR OVERWRITE_OLD_RESULTS ctap_args
 
 
 %% Subfunctions
@@ -115,7 +124,7 @@ Cfg.eeg.veogChannelNames = {'EXG3' 'EXG4'};
 %% Load and prepare - 
 % Define the functions and parameters to load data & chanlocs, perform 
 % 'safeguard' re-reference, find a blink subset to provide an IC template, 
-% peek at the initial state, FIR filter, and compute an ICA decomposition.
+% FIR filter, and compute an ICA decomposition.
 % Parameters are grouped with functions for easier reading, but are a
 % separate struct and can be defined elsewhere if preferred.
 i = 1; %stepSet 1
@@ -124,8 +133,7 @@ stepSet(i).funH = { @CTAP_load_data,...
                     @CTAP_reref_data,... 
                     @CTAP_blink2event,...
                     @CTAP_fir_filter,...
-                    @CTAP_run_ica,...
-                    @CTAP_peek_data };
+                    @CTAP_run_ica };
 stepSet(i).id = [num2str(i) '_load'];
 
 out.load_chanlocs = struct(...
@@ -133,7 +141,7 @@ out.load_chanlocs = struct(...
     'delchan', 1,...
     'index_match', false);
 out.load_chanlocs.field = {{{'EXG1' 'EXG2' 'EXG3' 'EXG4'} 'type' 'EOG'}...
-     , {{'EXG5' 'EXG6' 'EXG7' '1EX8' '1EX5' '1EX6' '1EX7' '1EX8'} 'type' 'NA'}};
+     , {{'EXG5' 'EXG6' 'EXG7' 'EXG8' '1EX5' '1EX6' '1EX7' '1EX8'} 'type' 'NA'}};
 out.load_chanlocs.tidy  = {{'type' 'FID'} {'type' 'NA'}};
 
 out.fir_filter = struct(...
@@ -144,20 +152,16 @@ out.run_ica = struct(...
     'overwrite', true);
 out.run_ica.channels = {'EEG' 'EOG'};
 
-out.peek_data = struct(...
-    'plotAllPeeks', false,...
-    'peekStats', true,...
-    'savePeekData', true,...
-    'savePeekICA', true);
-
 
 %% Artefact correction -
+% Before correcting anything, peek at the initial state of the data;
 % Use ADJUST toolbox to detect ICs related to horizontal saccade, and remove; 
-% the CTAP method to detect blink-related ICs, and filter them; 
-% and the variance method to detect bad channels, and interpolate them.
+% Use the CTAP method to detect blink-related ICs, and filter them; 
+% Use the variance method to detect bad channels, and interpolate them.
 % Finally peek the data again, to compare with first peek & assess improvement
 i = i+1;  %stepSet 2
-stepSet(i).funH = { @CTAP_detect_bad_comps,... %ADJUST for horizontal eye moves
+stepSet(i).funH = { @CTAP_peek_data,...
+                    @CTAP_detect_bad_comps,... %ADJUST for horizontal eye moves
                     @CTAP_reject_data,...
                     @CTAP_detect_bad_comps,... %detect blink related ICs
                     @CTAP_filter_blink_ica,...
@@ -166,6 +170,12 @@ stepSet(i).funH = { @CTAP_detect_bad_comps,... %ADJUST for horizontal eye moves
                     @CTAP_interp_chan,...
                     @CTAP_peek_data };
 stepSet(i).id = [num2str(i) '_artifact_correction'];
+
+out.peek_data = struct(...
+    'plotAllPeeks', false,...
+    'peekStats', true,...
+    'savePeekData', true,...
+    'savePeekICA', true);
 
 out.detect_bad_comps = struct(...
     'method', {'adjust' 'blink_template'},...

@@ -82,7 +82,8 @@ end
 %% Finally, obtain ERPs of known conditions from the processed data
 % For this we use a helper function to rebuild the branching tree of paths
 % to the export directories
-CTAP_postproc_brancher(Cfg, pipeArr, first, last)%@oddball_erps, erploc
+CTAP_postproc_brancher(Cfg, @oddball_erps, {'loc_label', erploc}, pipeArr...
+                    , 'first', first, 'last', last, 'dbg', STOP_ON_ERROR)
 
 %TODO: ADD FEATURE EXPORT??
 % CTAP_postproc_brancher(Cfg, pipeArr, first, last)%@export_features_CTAP, erploc
@@ -141,9 +142,10 @@ function [Cfg, out] = sbf_pipe1(Cfg)
 
     out.load_chanlocs = struct(...
         'overwrite', true,...
-        'delchan', 1);
+        'delchan', 1,...
+        'index_match', false);
     out.load_chanlocs.field = {{{'EXG1' 'EXG2' 'EXG3' 'EXG4'} 'type' 'EOG'}...
-     , {{'EXG5' 'EXG6' 'EXG7' '1EX8' '1EX5' '1EX6' '1EX7' '1EX8'} 'type' 'NA'}};
+     , {{'EXG5' 'EXG6' 'EXG7' 'EXG8' '1EX5' '1EX6' '1EX7' '1EX8'} 'type' 'NA'}};
     out.load_chanlocs.tidy  = {{'type' 'FID'} {'type' 'NA'}};
 
     out.fir_filter = struct(...

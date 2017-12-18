@@ -99,7 +99,7 @@ if any(args)
     prepare_savepath(savepath, 'deleteExisting', Arg.overwrite);
     
     plotz = {'Histogram' 'Raw EEG' 'Independent Components' 'Channel stats'};
-    myReport(sprintf('\n'), Cfg.env.logFile);
+    myReport(newline, Cfg.env.logFile);
     msg = myReport(sprintf('Saving Diagnostics to ''%s''\nFor %s'...
         , savepath, sprintf('''%s'', ', plotz{args})), Cfg.env.logFile);
 
@@ -116,13 +116,14 @@ if Arg.logStats
     
     % Write the stats for each peek for each subject to 1 log file
     stalog = fullfile(Cfg.env.paths.logRoot, 'peek_stats_log.xlsx');
+    rptname = strrep(EEG.CTAP.measurement.casename, '_session_meas', '');
     rptname = sprintf('%s_set%d_fun%d'...
-        , EEG.CTAP.measurement.casename...
+        , rptname(1:min(17, length(rptname)))...
         , Cfg.pipe.current.set...
         , Cfg.pipe.current.funAtSet);
     myReport(sprintf('Writing channel-wise peek statistics for %s to %s.'...
         , rptname, stalog), Cfg.env.logFile);
-    writetable(statab, stalog, 'WriteRowNames', True, 'Sheet', rptname)
+    writetable(statab, stalog, 'WriteRowNames', true, 'Sheet', rptname)
 
 end
 
@@ -195,10 +196,10 @@ end
 starts = single(starts);
 
 % Save defined peek-times
-peektab = table(starts / EEG.srate...
+peektab = table(ascol(starts / EEG.srate)...
             , 'RowNames', labels...
             , 'VariableNames', 'peekLatencySecs');
-writetable(peektab, fullfile(savepath, 'peek_times'))
+writetable(peektab, fullfile(savepath, 'peek_times'), 'WriteRowNames', true)
 
 
 %% save EEG data from each peek
