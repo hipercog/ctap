@@ -63,9 +63,8 @@ OVERWRITE_OLD_RESULTS = true;
 pipeArr = {@sbf_pipe1,...
            @sbf_pipe2,...
            @sbf_peekpipe};
-first = 1;
+first = 2;
 last = length(pipeArr);
-%You can also run only a subset of pipes, e.g. 2:length(pipeArr)
 
 
 %% Run the pipe
@@ -74,15 +73,18 @@ if PREPRO
     CTAP_pipeline_brancher(Cfg, pipeArr, first, last...
                         , STOP_ON_ERROR, OVERWRITE_OLD_RESULTS)
     toc
-    clear PREPRO STOP_ON_ERROR OVERWRITE_OLD_RESULTS sbj_filt
 end
 
 
 %% Finally, obtain ERPs of known conditions from the processed data
 % For this we use a helper function to rebuild the branching tree of paths
 % to the export directories
-CTAP_postproc_brancher(Cfg, pipeArr, first, last)%@oddball_erps, erploc
-clear pipeArr first last
+CTAP_postproc_brancher(Cfg, @oddball_erps, {'loc_label', erploc}, pipeArr...
+                    , 'first', first, 'last', last, 'dbg', STOP_ON_ERROR)
+
+
+%cleanup the global workspace
+clear PREPRO STOP_ON_ERROR OVERWRITE_OLD_RESULTS sbj_filt pipeArr first last
 
 
 
@@ -140,7 +142,7 @@ function [Cfg, out] = sbf_pipe1(Cfg)
         'overwrite', true,...
         'delchan', 1);
     out.load_chanlocs.field = {{{'EXG1' 'EXG2' 'EXG3' 'EXG4'} 'type' 'EOG'}...
-     , {{'EXG5' 'EXG6' 'EXG7' '1EX8' '1EX5' '1EX6' '1EX7' '1EX8'} 'type' 'NA'}};
+     , {{'EXG5' 'EXG6' 'EXG7' 'EXG8' '1EX5' '1EX6' '1EX7' '1EX8'} 'type' 'NA'}};
     out.load_chanlocs.tidy  = {{'type' 'FID'} {'type' 'NA'}};
 
     out.fir_filter = struct(...
@@ -186,7 +188,7 @@ function [Cfg, out] = sbf_pipe2(Cfg)
     out.sweep = struct(...
         'function', 'CTAP_detect_bad_channels',...
         'sweep_param', 'bounds',...
-        'bounds', 1.5:0.3:7);
+        'bounds', 1.5:0.3:4);
     out.sweep.SWPipe.funH = {@CTAP_detect_bad_channels, @CTAP_reject_data};
     out.sweep.SWPipe.id = '1_sweep';
     
@@ -195,6 +197,13 @@ function [Cfg, out] = sbf_pipe2(Cfg)
     out.detect_bad_channels = struct(...
         'method', 'variance',...
         'channelType', {'EEG'});
+    out.peek_data = struct(...
+        'secs', [10 30],... %start few seconds after data starts
+        'peekStats', true,... %get statistics for each peek!
+        'overwrite', false,...
+        'plotAllPeeks', false,...
+        'savePeekData', true,...
+        'savePeekICA', true);
     
     %%%%%%%% Store to Cfg %%%%%%%%
     Cfg.pipe.runSets = {stepSet(:).id}; % step sets to run, default: whole thing

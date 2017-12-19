@@ -38,11 +38,11 @@ data_dir_in = '/home/ben/Benslab/CTAP/CTAPIIdata';
 % specify the file type of your data
 data_type = '*.bdf';
 % use sbj_filt to select all (or a subset) of available recordings
-sbj_filt = setdiff(1:12, [3 7]);
+sbj_filt = [];% setdiff(1:12, [3 7]);
 % use ctapID to uniquely name the base folder of the output directory tree
-ctapID = 'sccn-basic-pipe';
+ctapID = 'sccn-basic-pipe_v1';
 % use keyword 'all' to select all stepSets, or use some index
-set_select = 'all';
+set_select = 2;
 % set the electrode for which to calculate and plot ERPs after preprocessing
 erploc = 'C20';
 
@@ -59,7 +59,7 @@ OVERWRITE_OLD_RESULTS = true;
 [Cfg, ctap_args] = sbf_cfg(data_dir_in, ctapID);
 
 % Select step sets to process
-Cfg.pipe.runSets = {set_select};
+Cfg.pipe.runSets = set_select;
 
 % Next, create measurement config (MC) based on folder, & select subject subset
 [Cfg.MC, Cfg.pipe.runMeasurements] =...

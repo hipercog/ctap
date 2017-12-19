@@ -112,6 +112,9 @@ switch Arg.method
         if iscell(Arg.match_measures)
             match_measures = ismember(faster_vars, Arg.match_measures);
         end
+        if isscalar(Arg.bounds)
+            Arg.bounds = [(abs(Arg.bounds) * -1) abs(Arg.bounds)];
+        end
         % identify the bad channels by z-score thresholding on each measure
         rej_opt = struct('z', Arg.bounds, 'measures', match_measures);
         chbad = min_z(chprp, Arg.match_logic, rej_opt);

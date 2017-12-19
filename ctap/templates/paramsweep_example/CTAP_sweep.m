@@ -32,6 +32,7 @@ function [EEG, Cfg] = CTAP_sweep(EEG, Cfg)
 Arg = struct;
 Arg.overwrite = true;
 Arg.figVisible = 'off';
+Arg.choose_result = 'inflection';
 % check and assign the defined parameters to structure Arg, for brevity
 if isfield(Cfg.ctap, 'sweep')
     Arg = joinstruct(Arg, Cfg.ctap.sweep);%override with user params
@@ -79,94 +80,77 @@ SweepParams.paramName = Arg.sweep_param;
 SweepParams.values = num2cell(Arg.(Arg.sweep_param));
 
 
-
 %% CORE - SWEEP THE LEG!
 [SWEEG, PARAMS] =...
-            CTAP_pipeline_sweeper(EEG, SWPipe, SWPipeParams, Cfg, SweepParams);
-
-% save(fullfile(PARAM.path.sweepresDir...
-%     , sprintf('sweepres_%s.mat', Cfg.MC.measurement(k).casename))...
-%     , 'SWEEG', 'PARAMS','SWPipe','PipeParams', 'SweepParams', '-v7.3')
+CTAP_pipeline_sweeper(EEG, SWPipe, SWPipeParams, Cfg, SweepParams); %#ok<*ASGLU>
 
 
-
-%% TODO: REWRITE THIS WHOLE SECTION OF ANALYSIS CODE TO WORK HERE...
+%% ANALYZE THE SWEEP OUTCOMES...
 n_sweeps = numel(SWEEG);
 dmat = NaN(n_sweeps, 2);
 cost_arr = NaN(n_sweeps, 1);
 
-% ep_win = [-1, 1]; %sec
-% ch_inds = horzcat(78:83, 91:96); %frontal
-% EEGclean.event = EEG.event; % FIXME - WHERE DOES EEGclean COME FROM NOW?!
-% EEG_clean_ep = pop_epoch(EEGclean, {'blink'}, ep_win);
+% REPORT BADNESS
+switch Arg.function
+case 'CTAP_detect_bad_channels'
+    for i = 1:n_sweeps
+        dmat(i,:) = [SweepParams.values{i},...
+                    numel(SWEEG{i}.CTAP.badchans.variance.chans) ];
+        myReport(sprintf('mad: %1.2f, n_chans: %d\n', dmat(i,1), dmat(i,2))...
+            , fullfile(svpath, 'sweeplog.txt'));
 
-
-% Plot badness
-for i = 1:n_sweeps
-    dmat(i,:) = [SweepParams.values{i},...
-                numel(SWEEG{i}.CTAP.badchans.variance.chans) ];
-    myReport(sprintf('mad: %1.2f, n_chans: %d\n', dmat(i,1), dmat(i,2))...
-        , fullfile(svpath, 'sweeplog.txt'));
-
-    % PLOT BAD CHANS
-    chinds = get_eeg_inds(EEG, SWEEG{i}.CTAP.badchans.variance.chans);
-    if any(chinds)
-        figh = ctaptest_plot_bad_chan(EEG, chinds...
-            , 'sweep_i', i...
-            , 'savepath', svpath); %#ok<*NASGU>
+        % PLOT BADNESS
+        if ~isempty(SWEEG{i}.CTAP.badchans.variance.chans)
+            figh = ctaptest_plot_bad_chan(EEG...
+                , get_eeg_inds(EEG, SWEEG{i}.CTAP.badchans.variance.chans)...
+                , 'sweep_i', i...
+                , 'savepath', svpath); %#ok<*NASGU>
+        end
     end
+    
+    % Plot sweep
+    figH = figure('Position', get(0,'ScreenSize'), 'Visible', Arg.figVisible);
+    plot(dmat(:,1), dmat(:,2), '-o');
+    xlabel('MAD multiplication factor');
+    ylabel('Number of artefactual channels');
+    saveas(figH, fullfile(svpath, 'sweep_N-bad-chan.png'));
+    close(figH);
+
+%TODO: ADD OUTPUT FOR BAD COMPONENT AND BAD EPOCH SWEEPS
+    
+end
+
+% FIND INFLECTION POINT.
+% ALGORITHM:
+if strcmp(Arg.choose_result, 'inflection')
+    % SELECT FIRST POINT WHERE DIFF TO LAST POINT IS CLOSEST TO 1SD OF Y
+    [~, i] = min(abs(abs(diff(dmat(:,2))) - std(dmat(:,2))));
+    result = mean([dmat(i, 1) dmat(i + 1, 1)]);
+else
+    % TAKE VALUE FOR WHICH BADNESS IS CLOSEST TO 10%
+    r = round((max(dmat(:,2)) - min(dmat(:,2))) / numel(dmat(:,2)));
+    x = interp(dmat(:,1), r);
+    y = interp(dmat(:,2), r);
+    pc = EEG.nbchan / 10;
+    [~, i] = min(abs(y - pc));
+    result = x(i);
 end
 
 
-% Plot sweep
-figH = figure('Position', get(0,'ScreenSize'), 'Visible', Arg.figVisible);
-plot(dmat(:,1), dmat(:,2), '-o');
-xlabel('MAD multiplication factor');
-ylabel('Number of artefactual channels');
-saveas(figH, fullfile(svpath, 'sweep_N-bad-chan.png'));
-close(figH);
-
-
-% Test quality of identifications
-% TODO: FIND INFLECTION POINT. ALGORITHM:
-%       - STEP BACK FROM LAST PARAM RANGE VALUE,
-%       - SELECT FIRST POINT WHERE DIFF TO LAST POINT > 1SD OF ALL
-% OR:
-%       - TAKE VALUE FOR WHICH BADNESS IS CLOSEST TO 10%
-pc = EEG.nbchan / 10;
-r = round((max(dmat(:,2)) - min(dmat(:,2))) / numel(dmat(:,2)));
-x = interp(dmat(:,1), r);
-y = interp(dmat(:,2), r);
-[~, i] = min(abs(y - pc));
-result = x(i);
-
-
-%%%% CODE FROM HYDRA SCRIPT - NEEDS GROUND TRUTH DATA TO WORK
-% th_value = 2;
-% th_idx = find( [SweepParams.values{:}] <= th_value , 1, 'last' );
-% 
-% % channels identified as artifactual which are actually clean
-% setdiff(SWEEG{th_idx}.CTAP.badchans.variance.chans, ...
-%         EEG.CTAP.artifact.variance_table.name)
-% 
-% % wrecked channels not identified
-% tmp2 = setdiff(EEG.CTAP.artifact.variance_table.name, ...
-%         SWEEG{th_idx}.CTAP.badchans.variance.chans);
-% 
-% chm = ismember(EEG.CTAP.artifact.variance_table.name, tmp2);
-% EEG.CTAP.artifact.variance_table(chm,:)  
+%%%% TODO: Test quality of identifications based on full HYDRA implementation - 
+%%%% GENERATE GROUND TRUTH DATA AND ARTEFACTS FROM EEG, AND SEE WHAT IS CAUGHT
 
 
 
 %% Finally, set the relevant parameter field of target function to be 'result'
-Cfg.ctap.(Arg.function).(Arg.sweep_param) = result;
+Cfg.ctap.(param_field).(Arg.sweep_param) = result;
 
 
 %% ERROR/REPORT
 %... the complete parameter set from the function call ...
 Cfg.ctap.sweep = Arg;
 %log outcome to console and to log file
-msg = myReport(sprintf('HYDRA has swept function %s in parameter %s.',...
-    Arg.function, Arg.sweep_param), Cfg.env.logFile);
+msg = myReport(sprintf('HYDRA swept function ''%s'', parameter ''%s'', to %d',...
+    Arg.function, Arg.sweep_param, result), Cfg.env.logFile);
 %create a history element
 EEG.CTAP.history(end+1) = create_CTAP_history_entry(msg, mfilename, Arg);

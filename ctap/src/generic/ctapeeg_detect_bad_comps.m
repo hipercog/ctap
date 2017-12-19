@@ -138,6 +138,9 @@ switch Arg.method
         if iscell(Arg.match_measures)
             match_measures = ismember(faster_vars, Arg.match_measures);
         end
+        if isscalar(Arg.bounds)
+            Arg.bounds = [(abs(Arg.bounds) * -1) abs(Arg.bounds)];
+        end
         % identify the bad components by z-score thresholding on each measure
         rej_opt = struct('z', Arg.bounds, 'measures', match_measures);
         icbad = min_z(icprp, Arg.match_logic, rej_opt);

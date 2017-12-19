@@ -71,7 +71,7 @@ if isfield(Cfg.ctap, 'peek_data')
     Arg = joinstruct(Arg, Cfg.ctap.peek_data); %override with user params
 end
 %...but ICs must be present
-Arg.plotICA = Arg.plotICA && ~isempty(EEG.icaweights);
+Arg.plotICA = Arg.plotICA & ~isempty(EEG.icaweights);
 %...and seconds must be a relative [min max] pair
 if isscalar(Arg.secs), Arg.secs = [0 Arg.secs]; end
 Arg.secs = sort(Arg.secs);
@@ -193,12 +193,12 @@ else
     % dangerous to resort to this, make sure labels always exist!
     labels = cellfun(@(x) sprintf('peek%d',x), num2cell(1:sum(peekmatch)), 'Un', 0);
 end
-starts = single(starts);
+starts = int64(starts);
 
 % Save defined peek-times
 peektab = table(ascol(starts / EEG.srate)...
             , 'RowNames', labels...
-            , 'VariableNames', 'peekLatencySecs');
+            , 'VariableNames', {'peekLatencySecs'});
 writetable(peektab, fullfile(savepath, 'peek_times'), 'WriteRowNames', true)
 
 
@@ -206,24 +206,24 @@ writetable(peektab, fullfile(savepath, 'peek_times'), 'WriteRowNames', true)
 if Arg.savePeekData
     % grab data for a number of "peek" windows and save matrices as mat files
     for i = 1:numel(starts)
-        latency = starts(i) + Arg.secs(1) * EEG.srate;
-        duration = latency + dur * EEG.srate;
+        latency = int16(starts(i) + Arg.secs(1) * EEG.srate);
+        duration = int16(latency + dur * EEG.srate);
         outdata = EEG.data(chidx, latency:duration); %#ok<*NASGU>
-        save(fullfile(savepath, sprintf('signal_%s', labels{i})), 'data')
+        save(fullfile(savepath, sprintf('signal_%s', labels{i})), 'outdata')
     end
 end
 
 
 %% save ICA data from each peek
-if Arg.savePeekICA
+if Arg.savePeekICA && ~isempty(EEG.icaweights)
     activations = icaact(EEG.data(EEG.icachansind, :),...
                          EEG.icaweights * EEG.icasphere, 0);
     % grab ICA values for a number of "peek" windows, save matrices as mat files
     for i = 1:numel(starts)
-        latency = starts(i) + Arg.secs(1) * EEG.srate;
-        duration = latency + dur * EEG.srate;
-        outdata = activations(chidx, latency:duration);
-        save(fullfile(savepath, sprintf('ICA_%s', labels{i})), 'data')
+        latency = int16(starts(i) + Arg.secs(1) * EEG.srate);
+        duration = int16(latency + dur * EEG.srate);
+        outdata = activations(:, latency:duration);
+        save(fullfile(savepath, sprintf('ICA_%s', labels{i})), 'outdata')
     end
 end
 

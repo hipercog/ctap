@@ -161,31 +161,38 @@ if isfield(Cfg, 'export')
 end
 
 
-%% Measure pipe
-%Discard the 'test' step set if present and not requested
-if ~any(ismember(Cfg.pipe.runSets, 'test'))
-    testtest = ismember({Cfg.pipe.stepSets.id}, 'test');
-    if any(testtest), Cfg.pipe.stepSets(testtest) = []; end
+%% Measure pipe - parse given stepSets and runSets
+
+% 1st, if runSets is numeric, convert to stepSet.id cell string array
+if isnumeric(Cfg.pipe.runSets) 
+    if all(ismember(Cfg.pipe.runSets, 1:numel(Cfg.pipe.stepSets)))
+        Cfg.pipe.runSets = {Cfg.pipe.stepSets(Cfg.pipe.runSets).id};
+    else
+        error('ctap_auto_config:bad_runSets', 'runSets (%s) is not valid'...
+            , myReport({'SHSH' Cfg.pipe.runSets}))
+    end
 end
 
-%get original (allSets) and requested (runSets) stepSet indices
+% 2nd, Discard the 'test' step set if present and not requested
+if ~any(ismember(Cfg.pipe.runSets, 'test'))
+    Cfg.pipe.stepSets(ismember({Cfg.pipe.stepSets.id}, 'test')) = [];
+end
+
+% 3rd, get original (allSets) stepSet indices
 allSets = 1:numel(Cfg.pipe.stepSets);
-runSets = [];
-if isnumeric(Cfg.pipe.runSets)
-    if all(ismember(Cfg.pipe.runSets, allSets))
-        runSets = Cfg.pipe.runSets;
-    end
-elseif strcmp(Cfg.pipe.runSets{1}, 'all')
+
+% 4th, get requested (runSets) stepSet indices
+if strcmpi(Cfg.pipe.runSets{1}, 'all')
     runSets = allSets;
     Cfg.pipe.runSets = {Cfg.pipe.stepSets(allSets).id};
     %'all' replaced to simplify usage of this field -- 'all' not allowed
     % in general, just a convenience feature
 else
     runSets = find(ismember({Cfg.pipe.stepSets.id}, Cfg.pipe.runSets));
-end
-if isempty(runSets)
-    error('ctap_auto_config:bad_runSets', '%s was badly specified'...
-        , myReport({'SHSH' Cfg.pipe.runSets}));
+    if isempty(runSets)
+        error('ctap_auto_config:bad_runSets', '%s was badly specified'...
+            , myReport({'SHSH' Cfg.pipe.runSets}))
+    end
 end
 
 % Add field Cfg.pipe.totalSets if missing

@@ -88,7 +88,8 @@ CTAP_postproc_brancher(Cfg, @oddball_erps, {'loc_label', erploc}, pipeArr...
 %TODO: ADD FEATURE EXPORT??
 % CTAP_postproc_brancher(Cfg, pipeArr, first, last)%@export_features_CTAP, erploc
 
-clear pipeArr first last
+%cleanup the global workspace
+clear PREPRO STOP_ON_ERROR OVERWRITE_OLD_RESULTS sbj_filt pipeArr first last
 
 
 
@@ -216,7 +217,9 @@ function [Cfg, out] = sbf_pipe2B(Cfg)
     stepSet(i).id = [num2str(i) '_artifact_correction'];
 
     out.detect_bad_comps = struct(...
-        'method', 'faster');
+        'method', 'faster',...
+        'bounds', [-2.5 2.5],...
+        'match_logic', @any);
 
     out.detect_bad_channels = struct(...
         'method', 'rejspec',...
@@ -232,8 +235,7 @@ end
 function [Cfg, out] = sbf_peekpipe(Cfg)
 
     %%%%%%%% Define hierarchy %%%%%%%%
-    Cfg.id = mfilename;
-    Cfg.id = Cfg.id(5:end);
+    Cfg.id = 'peekpipe';
     Cfg.srcid = {'pipe1#1_load'...
                 'pipe1#pipe2A#1_artifact_correction'... 
                 'pipe1#pipe2B#1_artifact_correction'};
