@@ -208,8 +208,7 @@ end
 function [Cfg, out] = sbf_peekpipe(Cfg)
 
     %%%%%%%% Define hierarchy %%%%%%%%
-    Cfg.id = mfilename;
-    Cfg.id = Cfg.id(5:end);
+    Cfg.id = 'peekpipe';
     Cfg.srcid = {'pipe1#1_load'...
                 'pipe1#pipe2#1_artifact_correction'};
 
