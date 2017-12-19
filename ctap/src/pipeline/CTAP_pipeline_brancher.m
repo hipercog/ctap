@@ -55,6 +55,8 @@ for i = first:last
     % Set Cfg
     [i_Cfg, i_ctap_args] = pipeArr{i}(Cfg);
     Cfg.pipe.totalSets = sbf_get_total_sets(i_Cfg);
+    myReport(sprintf('Begin analysis run at %s with pipe:%s ''%s'''...
+        , datestr(now), newline, i_Cfg.id));
 
     for k = 1:length(i_Cfg.srcid)
         looplogfile = 'looplog.txt';
@@ -174,10 +176,8 @@ for fn = 1:numel(fnames)
     end
 end
 
-myReport({
-    sprintf('Begin analysis run at %s with stepSets:\n', datestr(now))
-    sprintf('%s\n', char(Cfg.pipe.runSets)')},...
-    Cfg.env.logFile);
+myReport(sprintf('Pipe analysis has stepSets:%s %s %s',...
+    newline, char(Cfg.pipe.runSets)', newline), Cfg.env.logFile);
 EEG = struct;
 
 

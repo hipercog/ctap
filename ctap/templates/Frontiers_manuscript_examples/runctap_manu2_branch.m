@@ -45,7 +45,7 @@ ctapID = 'sccn-branch-pipe';
 erploc = 'C20';
 
 % Runtime options for CTAP:
-PREPRO = false;
+PREPRO = true;
 STOP_ON_ERROR = true;
 OVERWRITE_OLD_RESULTS = true;
 
