@@ -32,7 +32,7 @@ function CTAP_postproc_brancher(Cfg, dynFunc, dfArgs, pipeArr, varargin)
 
 p = inputParser;
 p.addRequired('Cfg', @isstruct)
-p.addRequired('dynFunc', @(f) isa(f, 'functionHandle'))
+p.addRequired('dynFunc', @(f) isa(f, 'function_handle'))
 p.addRequired('dfArgs', @iscell)
 p.addRequired('pipeArr', @iscell)
 p.addParameter('first', 1, @isnumeric)
@@ -53,6 +53,8 @@ for i = Arg.first:Arg.last
     % Set Cfg
     [i_Cfg, i_ctap_args] = pipeArr{i}(Cfg);
     Cfg.pipe.totalSets = sbf_get_total_sets(i_Cfg);
+    myReport(sprintf('Post-processing pipe ''%s'' at %s with function:%s ''%s'''...
+        , i_Cfg.id, datestr(now), newline, func2str(dynFunc)));
 
     for k = 1:length(i_Cfg.srcid)
         

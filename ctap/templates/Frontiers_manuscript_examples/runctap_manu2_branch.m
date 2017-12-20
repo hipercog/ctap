@@ -45,7 +45,7 @@ ctapID = 'sccn-branch-pipe';
 erploc = 'C20';
 
 % Runtime options for CTAP:
-PREPRO = true;
+PREPRO = false;
 STOP_ON_ERROR = true;
 OVERWRITE_OLD_RESULTS = true;
 
@@ -65,7 +65,7 @@ pipeArr = {@sbf_pipe1,...
            @sbf_pipe2B,...
            @sbf_peekpipe};
 first = 1;
-last = length(pipeArr);
+last = length(pipeArr) - 1;
 %You can also run only a subset of pipes, e.g. 2:length(pipeArr)
 
 
@@ -75,7 +75,6 @@ if PREPRO
     CTAP_pipeline_brancher(Cfg, pipeArr, first, last...
                         , STOP_ON_ERROR, OVERWRITE_OLD_RESULTS)
     toc
-    clear PREPRO STOP_ON_ERROR OVERWRITE_OLD_RESULTS sbj_filt
 end
 
 
