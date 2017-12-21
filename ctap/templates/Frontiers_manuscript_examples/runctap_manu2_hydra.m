@@ -38,7 +38,7 @@ data_dir_in = '/home/ben/Benslab/CTAP/CTAPIIdata';
 % specify the file type of your data
 data_type = '*.bdf';
 % use sbj_filt to select all (or a subset) of available recordings
-sbj_filt = [];%setdiff(1:12, [3 7]);
+sbj_filt = setdiff(1:12, [3 7]);
 % use ctapID to uniquely name the base folder of the output directory tree
 ctapID = 'sccn-hydra-pipe';
 % set the electrode for which to calculate and plot ERPs after preprocessing
@@ -46,7 +46,7 @@ erploc = 'C20';
 
 % Runtime options for CTAP:
 PREPRO = true;
-STOP_ON_ERROR = true;
+STOP_ON_ERROR = false;
 OVERWRITE_OLD_RESULTS = true;
 
 
@@ -80,7 +80,7 @@ end
 % For this we use a helper function to rebuild the branching tree of paths
 % to the export directories
 CTAP_postproc_brancher(Cfg, @oddball_erps, {'loc_label', erploc}, pipeArr...
-                    , 'first', first, 'last', last, 'dbg', STOP_ON_ERROR)
+                    , 'first', 2, 'last', 2, 'dbg', STOP_ON_ERROR)
 
 
 %cleanup the global workspace
@@ -132,10 +132,9 @@ function [Cfg, out] = sbf_pipe1(Cfg)
                         @CTAP_load_chanlocs,...
                         @CTAP_peek_data,...
                         @CTAP_reref_data,... 
-                        @CTAP_fir_filter%,...
-%                         @CTAP_blink2event,...
-%                         @CTAP_run_ica 
-                        };
+                        @CTAP_fir_filter,...
+                        @CTAP_blink2event,...
+                        @CTAP_run_ica };
     stepSet(i).id = [num2str(i) '_load'];
 
     out.load_chanlocs = struct(...
@@ -170,11 +169,10 @@ function [Cfg, out] = sbf_pipe2(Cfg)
     %%%%%%%% Define pipeline %%%%%%%%
     % IC correction
     i = 1;  %stepSet
-    stepSet(i).funH = { 
-%         @CTAP_detect_bad_comps,... %ADJUST for horiz eye moves
-%                         @CTAP_reject_data,...
-%                         @CTAP_detect_bad_comps,... %detect blink related ICs
-%                         @CTAP_filter_blink_ica,...
+    stepSet(i).funH = { @CTAP_detect_bad_comps,... %ADJUST for horiz eye moves
+                        @CTAP_reject_data,...
+                        @CTAP_detect_bad_comps,... %detect blink related ICs
+                        @CTAP_filter_blink_ica,...
                         @CTAP_sweep,...
                         @CTAP_detect_bad_channels,...%bad channels by variance
                         @CTAP_reject_data,...
@@ -219,6 +217,7 @@ function [Cfg, out] = sbf_peekpipe(Cfg)
     stepSet(i).save = false;
 
     out.peek_data = struct(...
+        'TODO', 'fix a single set of indices/events for peeks!',...
         'secs', [10 30],... %start few seconds after data starts
         'peekStats', true,... %get statistics for each peek!
         'overwrite', false,...
