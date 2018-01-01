@@ -147,9 +147,9 @@ else
                     'dataSetLabels', {'Before correction', 'After correction'});
 
     savepath = get_savepath(Cfg, mfilename, 'qc', 'suffix', 'blinkERP');
-    prepare_savepath(savepath);
-    saveas(figh, fullfile(savepath...
-        , [EEG.CTAP.measurement.casename '_blinkERP.png']), 'png');
+    savename = [EEG.CTAP.measurement.casename '_blinkERP.png'];
+    prepare_savepath(savepath, 'filenames', savename);
+    saveas(figh, fullfile(savepath, savename), 'png');
     close(figh);
   
 end
