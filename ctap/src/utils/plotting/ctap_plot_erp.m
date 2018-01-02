@@ -1,4 +1,4 @@
-function figh = ctaptest_plot_erp(erp, src, pnts, srate, lgnd, savename)
+function figh = ctap_plot_erp(erp, src, pnts, srate, lgnd, savename)
 
     figh = figure;
     plot(erp', 'Linewidth', 2)

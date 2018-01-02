@@ -158,6 +158,6 @@ end
 %% ERROR/REPORT
 Cfg.ctap.filter_blink_ica = Arg;
 
-msg = sprintf('FIR filtered blin ICs data: %s', EEG.setname); 
+msg = sprintf('FIR filtered blink ICs data: %s', EEG.setname); 
 myReport(msg, Cfg.env.logFile);
 EEG.CTAP.history(end+1) = create_CTAP_history_entry(msg, mfilename, Arg);

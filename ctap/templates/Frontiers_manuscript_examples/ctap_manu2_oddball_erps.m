@@ -1,5 +1,5 @@
 %% Plot ERPs of saved .sets
-function [ERPS, ERP] = oddball_erps(Cfg, varargin)
+function [ERPS, ERP] = ctap_manu2_oddball_erps(Cfg, varargin)
 
     p = inputParser;
     p.addRequired('Cfg', @isstruct)
@@ -36,19 +36,19 @@ function [ERPS, ERP] = oddball_erps(Cfg, varargin)
             ERPS{i, c * 2} = ctap_get_erp(devi, loc);
             if Arg.PLOT
                 [~, fn, ~] = fileparts(strrep(fnames{i}, '_session_meas', ''));
-                ctaptest_plot_erp([ERPS{i, c * 2 - 1}; ERPS{i, c * 2}]...
+                ctap_plot_erp([ERPS{i, c * 2 - 1}; ERPS{i, c * 2}]...
                     , NaN...
                     , stan.pnts, eeg.srate...
                     , {[cond{c} ' standard'] [cond{c} ' deviant']}...
                     , fullfile(Cfg.env.paths.exportRoot, sprintf(...
-                        'ERP%s_%s_%s-%s.png', Arg.loc_label, fn, cond{c}, 'tones')))
+                    'ERP%s_%s_%s-%s.png', Arg.loc_label, fn, cond{c}, 'tones')))
             end
 
         end
     end
 
     %%%%%%%% Obtain condition-wise grand average ERP and plot %%%%%%%%
-    ERP = grdavg_oddball_erp(ERPS, cond, eeg.srate, Cfg.env.paths.exportRoot...
-                            , 'all', Arg.loc_label, Arg.PLOT);
+    ERP = ctap_manu2_grdavg_oddball_erp(ERPS, cond, eeg.srate...
+                    , Cfg.env.paths.exportRoot, 'all', Arg.loc_label, Arg.PLOT);
 
 end

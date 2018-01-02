@@ -79,8 +79,8 @@ end
 %% Finally, obtain ERPs of known conditions from the processed data
 % For this we use a helper function to rebuild the branching tree of paths
 % to the export directories
-CTAP_postproc_brancher(Cfg, @oddball_erps, {'loc_label', erploc}, pipeArr...
-                    , 'first', 2, 'last', 2, 'dbg', STOP_ON_ERROR)
+CTAP_postproc_brancher(Cfg, @ctap_manu2_oddball_erps, {'loc_label', erploc}...
+                        , pipeArr, 'first', 2, 'last', 2, 'dbg', STOP_ON_ERROR)
 
 
 %cleanup the global workspace

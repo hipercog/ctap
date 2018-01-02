@@ -34,7 +34,7 @@
 
 %% Setup
 % set the input directory where your data is stored
-data_dir_in = '/home/ben/Benslab/CTAP/CTAPIIdata';
+data_dir_in = '/home/ben/Benslab/CTAP/CTAPIIdata/testing';
 % specify the file type of your data
 data_type = '*.bdf';
 % use sbj_filt to select all (or a subset) of available recordings
@@ -45,7 +45,7 @@ ctapID = 'sccn-branch-pipe';
 erploc = 'C20';
 
 % Runtime options for CTAP:
-PREPRO = false;
+PREPRO = true;
 STOP_ON_ERROR = true;
 OVERWRITE_OLD_RESULTS = true;
 
@@ -64,7 +64,7 @@ pipeArr = {@sbf_pipe1,...
            @sbf_pipe2A,...
            @sbf_pipe2B,...
            @sbf_peekpipe};
-first = 1;
+first = 2;
 last = length(pipeArr) - 1;
 %You can also run only a subset of pipes, e.g. 2:length(pipeArr)
 
@@ -81,11 +81,12 @@ end
 %% Finally, obtain ERPs of known conditions from the processed data
 % For this we use a helper function to rebuild the branching tree of paths
 % to the export directories
-CTAP_postproc_brancher(Cfg, @oddball_erps, {'loc_label', erploc}, pipeArr...
-                    , 'first', first, 'last', last, 'dbg', STOP_ON_ERROR)
+CTAP_postproc_brancher(Cfg, @ctap_manu2_oddball_erps, {'loc_label', erploc}...
+                , pipeArr, 'first', first, 'last', last, 'dbg', STOP_ON_ERROR)
 
 %TODO: ADD FEATURE EXPORT??
-% CTAP_postproc_brancher(Cfg, pipeArr, first, last)%@export_features_CTAP, erploc
+% CTAP_postproc_brancher(Cfg, @export_features_CTAP, {'loc_label', erploc}...
+%                 , pipeArr, 'first', first, 'last', last, 'dbg', STOP_ON_ERROR)
 
 %cleanup the global workspace
 clear PREPRO STOP_ON_ERROR OVERWRITE_OLD_RESULTS sbj_filt pipeArr first last
