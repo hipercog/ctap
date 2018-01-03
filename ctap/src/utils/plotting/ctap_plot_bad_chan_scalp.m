@@ -1,5 +1,5 @@
-function figh = ctaptest_plot_bad_chan(EEG, badness, varargin)
-% CTAPTEST_PLOT_BAD_CHAN plots a head map of channel locations from EEG
+function figh = ctap_plot_bad_chan_scalp(EEG, badness, varargin)
+% CTAP_PLOT_BAD_CHAN_SCALP plots a head map of channel locations from EEG
 % (points only), with bad channels marked in red Xs and labelled.
 %
 
@@ -9,7 +9,7 @@ p.addRequired('EEG', @isstruct);
 p.addRequired('badness', @isnumeric); %TODO: could use this as optional input,
 % with default = [EEG.CTAP.artifact.variance.channel_idx]...but 'artifact'
 % field is not generated except when using synthetic data?
-p.addParameter('sweep_i', 0, @isnumeric);
+p.addParameter('context', '', @ischar);
 p.addParameter('savepath', '', @isdir);
 p.parse(EEG, badness, varargin{:});
 Arg = p.Results;
@@ -49,8 +49,8 @@ topoplot([], EEG.chanlocs...
 
 %% Save plots if given a savepath
 if ~isempty(Arg.savepath)
-    savename = sprintf('%s-badChan-sweep-%d.png'...
-        , EEG.CTAP.measurement.casename, Arg.sweep_i);
+    savename = sprintf('%s-badChan-%s.png'...
+        , EEG.CTAP.measurement.casename, Arg.context);
     print(figh, '-dpng', fullfile(Arg.savepath, savename)); 
     close(figh);
 end

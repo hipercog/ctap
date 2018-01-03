@@ -65,7 +65,7 @@ pipeArr = {@sbf_pipe1,...
            @sbf_pipe2B,...
            @sbf_peekpipe};
 first = 2;
-last = length(pipeArr) - 1;
+last = 2;% length(pipeArr) - 1;
 %You can also run only a subset of pipes, e.g. 2:length(pipeArr)
 
 
