@@ -54,7 +54,8 @@ if isempty(idx)
     if ~isfield(chlocs, 'X') || ~isfield(chlocs, 'Y')
         if isfield(chlocs, 'theta') && isfield(chlocs, 'radius')
             [x, y] = pol2cart([chlocs.theta], [chlocs.r]);
-            [chlocs.X, chlocs.Y] = deal(x, y);
+            x = num2cell(x);    y = num2cell(y);
+            [chlocs.X, chlocs.Y] = deal(x{:}, y{:});
         end
     end
     switch canon
@@ -98,7 +99,7 @@ if isempty(idx)
             xy = [min([chlocs.X]) / 2; min([chlocs.Y]) / 2];
 
     end
-    if exist(xy, 'var')
+    if isempty(idx)
         [~, idx] = min(eucl_dist(xy, [[chlocs.X]; [chlocs.Y]]));
     end
 

@@ -32,7 +32,7 @@
 % On the Matlab console, execute >> runctap_manu2_branch
 
 
-%% Setup
+%% Setup MAIN parameters
 % set the input directory where your data is stored
 data_dir_in = '/home/ben/Benslab/CTAP/CTAPIIdata/testing';
 % specify the file type of your data
@@ -64,8 +64,8 @@ pipeArr = {@sbf_pipe1,...
            @sbf_pipe2A,...
            @sbf_pipe2B,...
            @sbf_peekpipe};
-first = 1;
-last = length(pipeArr) - 1;
+first = 3;
+last = length(pipeArr);
 %You can also run only a subset of pipes, e.g. 2:length(pipeArr)
 
 
@@ -114,7 +114,7 @@ function [Cfg, out] = sbf_cfg(project_root_folder, ID)
     % Define other important stuff
     Cfg.eeg.reference = {'average'};
 
-    % EOG channel specification for artifact detection purposes
+    % NOTE! EOG channel specification for artifact detection purposes.
     Cfg.eeg.heogChannelNames = {'EXG1' 'EXG4'};
     Cfg.eeg.veogChannelNames = {'H24' 'EXG2'};
 

@@ -1,4 +1,4 @@
-%% Clean SCCN data CTAP script
+%% Linear CTAP script to clean SCCN data
 % As referenced in the second CTAP article:
 % Cowley BU, Korpela J, (2018) Computational Testing for Automated Preprocessing 
 % 2: practical demonstration of a system for scientific data-processing workflow 
@@ -9,8 +9,8 @@
 % Install / download:
 %   * Matlab R2016b or newer
 %   * EEGLAB, latest version,
-%     git clone https://adelorme@bitbucket.org/sccn_eeglab/eeglab.git
-%   * CTAP
+%       git clone https://adelorme@bitbucket.org/sccn_eeglab/eeglab.git
+%   * CTAP,
 %       git clone https://github.com/bwrc/ctap.git
 %   * The 13 files of EEG data in .bdf format from the study 'Auditory Two-
 %       Choice Response Task with an Ignored Feature Difference', available at
@@ -40,9 +40,9 @@ data_type = '*.bdf';
 % use sbj_filt to select all (or a subset) of available recordings
 sbj_filt = setdiff(1:12, [3 7]);
 % use ctapID to uniquely name the base folder of the output directory tree
-ctapID = 'sccn-basic-pipe_test';
+ctapID = 'sccn-basic-pipe';
 % use keyword 'all' to select all stepSets, or use some index
-set_select = 'all';
+set_select = 2;%'all';
 % set the electrode for which to calculate and plot ERPs after preprocessing
 erploc = 'C20';
 
@@ -53,7 +53,6 @@ OVERWRITE_OLD_RESULTS = true;
 
 
 %% Create the CONFIGURATION struct
-
 % First, define step sets & their parameters: sbf_cfg() is written by the USER
 [Cfg, ctap_args] = sbf_cfg(data_dir_in, ctapID);
 
@@ -79,8 +78,10 @@ end
 
 
 %% Finally, obtain ERPs of known conditions from the processed data
+%  Wrap it in try-catch because it is not inside the looper, and if we want to
+%  run another script after this one, we don't want to crash on errors.
 try
-    ERPS = oddball_erps(Cfg, 'loc_label', erploc);
+    ERPS = ctap_manu2_oddball_erps(Cfg, 'loc_label', erploc);
 catch ME
     if STOP_ON_ERROR
         error('runctap_manu2_basic:erps', '%s', ME.message)
@@ -113,7 +114,12 @@ Cfg.eeg.chanlocs = Cfg.env.paths.projectRoot;
 
 %% Define other important stuff
 Cfg.eeg.reference = {'average'};
-% EOG channel specification for artifact detection purposes
+
+% NOTE! EOG channel specification for artifact detection purposes. The
+% HeadIT dataset did not use a traditional EOG montage with extra channels
+% above and below the eye, as there were EEG channels mounted all the
+% way down the forehead. Thus, EXG1-4 were mounted below and beside the
+% eyes. We use H24 over EXG2 to approximate a bipolar lead for vertical EOG
 Cfg.eeg.heogChannelNames = {'EXG1' 'EXG4'};
 Cfg.eeg.veogChannelNames = {'H24' 'EXG2'};
 

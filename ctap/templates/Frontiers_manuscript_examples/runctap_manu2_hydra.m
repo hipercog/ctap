@@ -9,8 +9,8 @@
 % Install / download:
 %   * Matlab R2016b or newer
 %   * EEGLAB, latest version,
-%     git clone https://adelorme@bitbucket.org/sccn_eeglab/eeglab.git
-%   * CTAP
+%       git clone https://adelorme@bitbucket.org/sccn_eeglab/eeglab.git
+%   * CTAP,
 %       git clone https://github.com/bwrc/ctap.git
 %   * The 13 files of EEG data in .bdf format from the study 'Auditory Two-
 %       Choice Response Task with an Ignored Feature Difference', available at
@@ -63,7 +63,7 @@ OVERWRITE_OLD_RESULTS = true;
 pipeArr = {@sbf_pipe1,...
            @sbf_pipe2,...
            @sbf_peekpipe};
-first = 1;
+first = 2;
 last = length(pipeArr);
 
 
@@ -187,7 +187,7 @@ function [Cfg, out] = sbf_pipe2(Cfg)
     out.sweep = struct(...
         'function', 'CTAP_detect_bad_channels',...
         'sweep_param', 'bounds',...
-        'bounds', 1.5:0.3:4);
+        'bounds', 1.0:0.2:4);
     out.sweep.SWPipe.funH = {@CTAP_detect_bad_channels, @CTAP_reject_data};
     out.sweep.SWPipe.id = '1_sweep';
     
