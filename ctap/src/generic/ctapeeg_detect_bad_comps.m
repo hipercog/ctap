@@ -22,6 +22,8 @@ function [EEG, varargout] = ctapeeg_detect_bad_comps(EEG, varargin)
 %   FOR 'FASTER' method
 %   'bounds'      sigma thresholds to detect bad components with FASTER method
 %                 Default = [-2 2]
+%   'match_logic' choice of logic to aggregate measures, either 'any' or 'all'
+%                 Default = 'all'
 % 
 %   FOR 'recufast' recursive FASTER method
 %   'bounds'      sigma thresholds to detect bad components with recufast method
@@ -98,6 +100,7 @@ function [EEG, varargout] = ctapeeg_detect_bad_comps(EEG, varargin)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 icacomps = 1:size(EEG.icaact,1);
+faster_vars = {'medianGradient' 'spectralSlope' 'kurtosis' 'hurst' 'eogCorrelation'};
 
 sbf_check_input() % parse the varargin, set defaults
 
@@ -114,7 +117,8 @@ switch Arg.method
             , 'RowNames', cellstr(num2str(Arg.comps'))...
             , 'VariableNames', {sprintf('prop_of_%d_sample_bins_lt%d_gt%d_stdev'...
             , Arg.frame_size, Arg.thr(1), Arg.thr(2))});
-        
+
+
     case 'abnormal_spectra'
         [rejval, ~] = reject_component_spectrum(...
             EEG, 'frame_size', Arg.frame_size, 'thr', Arg.thr,...
@@ -124,19 +128,30 @@ switch Arg.method
         result.scores = table(rejval...
             , 'RowNames', cellstr(num2str(icacomps'))...
             , 'VariableNames', {'numBinsXBandsthr'});
-        
-    case 'faster'
-        % latent parameters: blink, any|all, metric
+
+
+    case 'faster' %TODO: latent parameters = blink
+        % Get the 5 magic FASTER properties for each component
         EOG = get_eeg_inds(EEG, {'EOG'});
-        icbad = component_properties(EEG, EOG, 1, icacomps);
-        [~, all_bad, ~] = min_z(icbad, struct('z', Arg.bounds(2)));
-        bad_comp_match = icacomps(all_bad');
+        icprp = component_properties(EEG, EOG, 1, icacomps);
+        % Choose which properties to match on
+        if iscell(Arg.match_measures)
+            match_measures = ismember(faster_vars, Arg.match_measures);
+        end
+        if isscalar(Arg.bounds)
+            Arg.bounds = [(abs(Arg.bounds) * -1) abs(Arg.bounds)];
+        end
+        % identify the bad components by z-score thresholding on each measure
+        rej_opt = struct('z', Arg.bounds, 'measures', match_measures);
+        icbad = min_z(icprp, Arg.match_logic, rej_opt);
+        bad_comp_match = icacomps(icbad');
+        % build the output table
         result.scores =...
-            table(icbad(:,1), icbad(:,2), icbad(:,3), icbad(:,4), icbad(:,5)...
+            table(icprp(:,1), icprp(:,2), icprp(:,3), icprp(:,4), icprp(:,5)...
             , 'RowNames', cellstr(num2str(icacomps'))...
-            , 'VariableNames'...
-            , {'corICxEOG' 'kurtosis' 'spectralSlope' 'Hurst' 'medianGrad'});
-        
+            , 'VariableNames', faster_vars);
+
+
     case 'recufast'
         recu_out = recufast_badness_detector(...
                     EEG, struct(), icacomps, Arg.bounds, Arg.iters, 'comp',...
@@ -146,7 +161,8 @@ switch Arg.method
             table(recu_out.bad_bin(2, :)' ...
             , 'RowNames', cellstr(num2str(icacomps'))...
             , 'VariableNames', {'recursiveFASTER'});
-        
+
+
     case 'adjust'
         if ~iscell(Arg.adjustarg), Arg.adjustarg = {Arg.adjustarg}; end
         [bad_comp_match, horiz, verti, blink, disco] = ctapeeg_ADJUST(EEG...
@@ -158,13 +174,15 @@ switch Arg.method
         idx = ismember({'horiz' 'verti' 'blink' 'disco'}, Arg.adjustarg);
         result.scores = tmp(:, idx);
 
+
     case 'blink_template'
         [bad_comp_match, tmp] = ctapeeg_detect_ICs_blinktemplate(EEG, Arg);
         result.method_data = tmp.blinkERP;
         result.scores = table(tmp.thArr...
             , 'RowNames', cellstr(num2str(icacomps'))...
             , 'VariableNames', {'blinkSimilarityRads'});
-        
+
+
     case 'recu_blink_tmpl'
         [bad_comp_match, tmp] = ctapeeg_recudetect_blink_ICs(EEG...
             , rmfield(Arg, 'method'));
@@ -193,64 +211,65 @@ varargout{2} = result;
 
 
 %% Subfunctions
-    function sbf_check_input() % parse the varargin, set defaults
-        % Unpack and store varargin
-        if isempty(varargin)
-            vargs = struct;
-        elseif numel(varargin) > 1 %(assume parameter/name pairs)
-            vargs = cell2struct(varargin(2:2:end), varargin(1:2:end), 2);
-        else
-            vargs = varargin{1}; %(assume a struct wrapped in a cell)
-        end
-
-        % If desired, the default values can be changed here:
-        try Arg.method = vargs.method;
-        catch
-            if numel(icacomps) > 32, Arg.method = 'recufast';
-            else Arg.method = 'extreme_values';
-            end
-        end
-
-        switch Arg.method %#ok<*ALIGN>
-            case 'recufast'
-                Arg.bounds = [-3 3];
-                Arg.iters  = 5;
-                Arg.report = false;
-                Arg.outdir = '';
-                
-            case 'faster'
-                Arg.bounds = [-2 2];
-
-            case 'adjust'
-                Arg.adjustarg = {'horiz' 'verti' 'blink' 'disco'};
-
-            case 'extreme_values'
-                Arg.frame_size = EEG.srate;
-                Arg.thr = [0 2];
-                Arg.comps = icacomps;
-                Arg.std_ratio_thr = .6;
-
-            case 'abnormal_spectra'
-                Arg.frame_size = EEG.srate;
-                Arg.thr = [-90 100];
-                Arg.freq_lims = [25 45];
-                Arg.cmpSpcMethod = 'multitaper';
-                
-            case 'blink_template'
-                Arg.thr = 0.5; %threshold value (def=radians)
-                
-            case 'recu_blink_tmpl'
-                Arg.veog = {'VEOG'};
-                Arg.test_pc = 25;
-                
-            otherwise
-                error('ctapeeg_detect_bad_comps:bad_method',...
-                    'Method %s not recognised, aborting', Arg.method)
-
-        end
-        
-        % Arg fields are canonical, vargs values are canonical: intersect-join
-        Arg = intersect_struct(Arg, vargs);
+function sbf_check_input() % parse the varargin, set defaults
+    % Unpack and store varargin
+    if isempty(varargin)
+        vargs = struct;
+    elseif numel(varargin) > 1 %(assume parameter/name pairs)
+        vargs = cell2struct(varargin(2:2:end), varargin(1:2:end), 2);
+    else
+        vargs = varargin{1}; %(assume a struct wrapped in a cell)
     end
+
+    try Arg.method = vargs.method;
+    catch
+        error('ctapeeg_detect_bad_comps:bad_param', ...
+            'It is necessary to define the chosen ''method'': see help')
+    end
+
+    % If desired, the default values can be changed here:
+    switch Arg.method %#ok<*ALIGN>
+        case 'recufast'
+            Arg.bounds = [-3 3];
+            Arg.iters  = 5;
+            Arg.report = false;
+            Arg.outdir = '';
+
+        case 'faster'
+            Arg.bounds = [-2 2];
+            Arg.match_logic = @all;
+            Arg.match_measures = faster_vars;
+
+        case 'adjust'
+            Arg.adjustarg = {'horiz' 'verti' 'blink' 'disco'};
+
+        case 'extreme_values'
+            Arg.frame_size = EEG.srate;
+            Arg.thr = [0 2];
+            Arg.comps = icacomps;
+            Arg.std_ratio_thr = .6;
+
+        case 'abnormal_spectra'
+            Arg.frame_size = EEG.srate;
+            Arg.thr = [-90 100];
+            Arg.freq_lims = [25 45];
+            Arg.cmpSpcMethod = 'multitaper';
+
+        case 'blink_template'
+            Arg.thr = 0.5; %threshold value (def=radians)
+
+        case 'recu_blink_tmpl'
+            Arg.veog = {'VEOG'};
+            Arg.test_pc = 25;
+
+        otherwise
+            error('ctapeeg_detect_bad_comps:bad_method',...
+                'Method %s not recognised, aborting', Arg.method)
+
+    end
+
+    % Arg fields are canonical, vargs values are canonical: intersect-join
+    Arg = intersect_struct(Arg, vargs);
+end
 
 end % ctapeeg_detect_bad_comps()

@@ -60,7 +60,7 @@ function [EEG, Cfg] = CTAP_load_chanlocs(EEG, Cfg)
 
 
 %% Set optional arguments
-Arg.file = Cfg.eeg.chanlocs; %this is checked in ctap_auto_config()
+Arg.file = ctap_eeg_find_chlocs(Cfg);
 Arg.field = {}; %user must set this based on his own knowledge!
 Arg.tidy = {};
 
@@ -77,12 +77,12 @@ if isfield(Cfg.ctap.load_chanlocs, 'assist') && Cfg.ctap.load_chanlocs.assist
         types = {'loc', 'loc', 'sph', 'sfp', 'xyz', 'asc', 'elc', 'besa'...
               , 'polhemus', 'chanedit'};
         exts = {'locs', 'loc', 'sph', 'sfp', 'xyz', 'asc', 'elc', 'elp'...
-              , 'elp', 'ced'};
-        [~, ~, e] = fileparts(Cfg.eeg.chanlocs);
+            , 'elp', 'ced'};
+        [~, ~, e] = fileparts(Arg.file);
         fext = strrep(e,'.','');
-        e = find(~cellfun(@isempty, strfind(exts, fext)), 1, 'first');
-        if ~isempty(e)
-            Arg.filetype = types{e};
+        e = ismember(exts, fext);
+        if any(e)
+            Arg.filetype = types{find(e, 1)};
         else
             error('Chanlocs extension ''%s'' not recognised', fext);
         end
@@ -94,17 +94,16 @@ end
 %load chanlocs
 if isfield(Arg, 'filetype') && strcmp(Arg.filetype, 'custom') == 1
     try Arg.format;
-    catch ME, 
+    catch ME
         error('FAIL:: %s - no custom chanlocs format given', ME.message);
-    end;
+    end
     try Arg.skiplines; 
     catch 
         Arg.skiplines = 1;   
-    end;
+    end
 end
     
-argsCellArray = struct2varargin(Arg);
-[EEG, params, ~] = ctapeeg_load_chanlocs(EEG, argsCellArray{:});
+[EEG, params, ~] = ctapeeg_load_chanlocs(EEG, struct2varargin(Arg));
 
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -112,8 +111,14 @@ argsCellArray = struct2varargin(Arg);
 if ~isempty(Arg.field)
     for fdx = 1:numel(Arg.field)
         for chidx = 1:numel(Arg.field{fdx}{1})
-            EEG.chanlocs(Arg.field{fdx}{1}(chidx)).(Arg.field{fdx}{2}) =...
-                Arg.field{fdx}{3};
+            if isnumeric(Arg.field{fdx}{1}(chidx))
+                idx = 1:numel(EEG.chanlocs) == Arg.field{fdx}{1}(chidx);
+            else
+                idx = ismember({EEG.chanlocs.labels}, Arg.field{fdx}{1}(chidx));
+            end
+            if any(idx)
+                EEG.chanlocs(idx).(Arg.field{fdx}{2}) = Arg.field{fdx}{3};
+            end
 %DONT USE pop_chanedit() BECAUSE IT CALLS eeg_checkchanlocs()
 %             EEG = pop_chanedit(EEG, 'changefield'...
 %                 , {Arg.field{fdx}{1}(chidx) Arg.field{fdx}{2:3}});
@@ -132,7 +137,7 @@ if ~isempty(Arg.tidy)
     end
     for i = 1:numel(Arg.tidy)
         tidyidx = find(ismember({EEG.chanlocs.(Arg.tidy{i}{1})}, Arg.tidy{i}{2}));
-        EEG = pop_select(EEG, 'nochannel', tidyidx);
+        if ~isempty(tidyidx), EEG = pop_select(EEG, 'nochannel', tidyidx); end
     end
 end
 

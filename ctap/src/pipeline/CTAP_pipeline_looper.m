@@ -72,10 +72,8 @@ for fn = 1:numel(fnames)
     end
 end
 
-myReport({
-    sprintf('Begin analysis run at %s with stepSets:\n', datestr(now))
-    sprintf('%s\n', char(Cfg.pipe.runSets)')},...
-    Cfg.env.logFile);
+myReport(sprintf('Begin analysis run at %s with stepSets:%s %s %s',...
+    datestr(now), newline, char(Cfg.pipe.runSets)', newline), Cfg.env.logFile);
 EEG = struct;
 
 

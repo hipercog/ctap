@@ -57,8 +57,8 @@ function [EEG, varargout] = ctapeeg_stats_table(EEG, varargin)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-sbf_check_input() % parse the varargin, set defaults
-idx = Arg.channels;
+Arg = sbf_check_input(); % parse the varargin, set defaults
+idx = single(Arg.channels);
 nchan = numel(idx);
 %stats don't care about epoch boundaries, I think? so reshape to handy 2D
 data = reshape(EEG.data(idx,:,:), nchan, EEG.pnts * EEG.trials);
@@ -97,7 +97,7 @@ varargout{2} = statab;
 
 
 %% Subfunctions
-    function sbf_check_input() % parse the varargin, set defaults
+    function Arg = sbf_check_input() % parse the varargin, set defaults
         % Unpack and store varargin
         if isempty(varargin)
             vargs = struct;

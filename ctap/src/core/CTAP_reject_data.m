@@ -238,7 +238,12 @@ function sbf_plot_channel_rejections(EEG0, savepath)
     chs = {EEG0.chanlocs(get_eeg_inds(EEG0, {'EEG'})).labels};
     plotNsave_raw(EEG0, savepath, EEG0.setname,...
                   'channels', chs,...
-                  'markChannels', badness);
+                  'markChannels', badness)
+
+    % PLOT SCALP OF BADNESS LOCATIONS
+    ctap_plot_bad_chan_scalp(EEG, badness...
+        , 'context', 'scalp'...
+        , 'savepath', savepath)
 
 end %of sbf_plot_channel_rejections()
 

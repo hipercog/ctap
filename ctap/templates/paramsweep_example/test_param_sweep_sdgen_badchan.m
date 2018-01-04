@@ -71,9 +71,9 @@ Cfg = ctap_auto_config(Cfg, PipeParams);
 
 %% Sweep config
 i = 1; 
-SWPipe(i).funH = {  @CTAP_detect_bad_channels,... %detect blink related ICs
+SWPipe(i).funH = {  @CTAP_detect_bad_channels,... %detect bad channels
                     @CTAP_reject_data}; % reject ICs
-SWPipe(i).id = [num2str(i) '_blink_correction'];
+SWPipe(i).id = [num2str(i) '_badchan_correction'];
 
 SWPipeParams.detect_bad_channels.method = 'variance';
 
@@ -111,12 +111,12 @@ if RERUN_SWEEP
         EEGprepro = pop_loadset(infile, inpath);
 
         % Note: This step does sweeping ONLY, preprocess using some other means
-        [SWEEG, PARAMS] = CTAP_pipeline_sweeper(EEGprepro, SWPipe, SWPipeParams, Cfg, ...
-                                          SweepParams);
+        [SWEEG, PARAMS] = CTAP_pipeline_sweeper(...
+                            EEGprepro, SWPipe, SWPipeParams, Cfg, SweepParams);
         sweepres_file = fullfile(PARAM.path.sweepresDir, ...
                                  sprintf('sweepres_%s.mat', k_id));
-        save(sweepres_file, 'SWEEG', 'PARAMS','SWPipe','PipeParams', 'SweepParams',...
-             '-v7.3');
+        save(sweepres_file...
+            , 'SWEEG', 'PARAMS','SWPipe','PipeParams', 'SweepParams', '-v7.3');
         clear('SWEEG');
     end
 end
@@ -140,8 +140,8 @@ for k = 1:numel(Cfg.MC.measurement)
     EEGprepro = pop_loadset(CTAP_infile, CTAP_inpath);
     
     % Sweep results
-    sweepres_file = fullfile(PARAM.path.sweepresDir, ...
-                             sprintf('sweepres_%s.mat', k_id));
+    sweepres_file =...
+        fullfile(PARAM.path.sweepresDir, sprintf('sweepres_%s.mat', k_id));
     load(sweepres_file);
     
     %Number of blink related components
@@ -159,13 +159,16 @@ for k = 1:numel(Cfg.MC.measurement)
     for i = 1:n_sweeps
         dmat(i,:) = [SweepParams.values{i},...
                     numel(SWEEG{i}.CTAP.badchans.variance.chans) ];
-        fprintf('mad: %1.2f, n_chans: %d\n', dmat(i,1), dmat(i,2));
+        myReport(sprintf('mad: %1.2f, n_chans: %d\n', dmat(i,1), dmat(i,2))...
+            , fullfile(tmp_savedir, 'sweeplog.txt'));
 
         % PLOT BAD CHANS
-        figh = ctaptest_plot_bad_chan(EEGprepro...
-            , 'badness', get_eeg_inds(EEGprepro, SWEEG{i}.CTAP.badchans.variance.chans)...
-            , 'sweep_i', i...
-            , 'savepath', tmp_savedir);
+        chinds = get_eeg_inds(EEGprepro, SWEEG{i}.CTAP.badchans.variance.chans);
+        if any(chinds)
+            figh = ctaptest_plot_bad_chan(EEGprepro, chinds...
+                , 'sweep_i', i...
+                , 'savepath', tmp_savedir);
+        end
     end
     %plot(cost_arr, '-o')
 
@@ -184,7 +187,7 @@ for k = 1:numel(Cfg.MC.measurement)
     %EEG.CTAP.artifact.variance.multiplier
 
     th_value = 2;
-    th_idx = max(find( [SweepParams.values{:}] <= th_value ));
+    th_idx = find( [SweepParams.values{:}] <= th_value , 1, 'last' );
 
     %SWEEG{th_idx}.CTAP.badchans.variance.chans
 
@@ -194,7 +197,7 @@ for k = 1:numel(Cfg.MC.measurement)
 
     % wrecked channels not identified
     tmp2 = setdiff(EEG.CTAP.artifact.variance_table.name, ...
-            SWEEG{th_idx}.CTAP.badchans.variance.chans)
+            SWEEG{th_idx}.CTAP.badchans.variance.chans);
 
     chm = ismember(EEG.CTAP.artifact.variance_table.name, tmp2);
     EEG.CTAP.artifact.variance_table(chm,:)   

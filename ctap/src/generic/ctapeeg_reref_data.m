@@ -1,4 +1,3 @@
-%%  DEPRECATED - functionality included in CTAP_reref_data()
 function [EEG, varargout] = ctapeeg_reref_data(EEG, varargin)
 %CTAPEEG_REREF_DATA rereferencing the dataset
 %
@@ -20,7 +19,8 @@ function [EEG, varargout] = ctapeeg_reref_data(EEG, varargin)
 %   {2}         : vector, reference channel indices
 %
 % NOTE
-%~ %
+% See also CTAP_reref_data()
+%
 % CALLS    eeglab functions
 %
 % Version History:
@@ -41,7 +41,7 @@ varargout{1} = Arg;
 
 %% ...reref
 ref_inds = [];
-if ischar(Arg.ref) || iscellstr(Arg.ref)
+if ischar(Arg.ref) || iscell(Arg.ref)
     ref_inds = get_refchan_inds(EEG, Arg.ref);
 elseif isnumeric(Arg.ref)
     ref_inds = Arg.ref;

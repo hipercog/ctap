@@ -1,4 +1,4 @@
-function CTAP_pipeline_brancher(Cfg, Filt, pipeArr, first, last, dbg, ovw)
+function CTAP_pipeline_brancher(Cfg, pipeArr, first, last, dbg, ovw)
 %CTAP_pipeline_brancher - Branches the pipes defined in pipeArr
 %
 % Description:
@@ -10,7 +10,6 @@ function CTAP_pipeline_brancher(Cfg, Filt, pipeArr, first, last, dbg, ovw)
 %
 % Inputs:
 %   'Cfg'       struct, pipe configuration structure, see specifications above
-%   'Filt'      struct,
 %   'pipeArr'   function handle array, specifies the pipe-config funtions
 %   'first'     scalar, index of first pipe to process
 %   'last'      scalar, index of last pipe to process
@@ -56,6 +55,8 @@ for i = first:last
     % Set Cfg
     [i_Cfg, i_ctap_args] = pipeArr{i}(Cfg);
     Cfg.pipe.totalSets = sbf_get_total_sets(i_Cfg);
+    myReport(sprintf('Begin analysis run at %s with pipe:%s ''%s'''...
+        , datestr(now), newline, i_Cfg.id));
 
     for k = 1:length(i_Cfg.srcid)
         looplogfile = 'looplog.txt';
@@ -73,12 +74,12 @@ for i = first:last
         k_Cfg.MC = Cfg.MC;
 
         % Run the pipe
-        k_Cfg.pipe.runMeasurements = get_measurement_id(Cfg.MC, Filt);
         CTAP_branchedpipe_looper(k_Cfg, 'debug', dbg, 'overwrite', ovw)
 
+% TODO: CALL THIS USING CTAP_postproc_brancher() INSTEAD.
         if isfield(Cfg, 'export')
             export_features_CTAP([k_Cfg.id '_db']...
-                , {'bandpowers', 'PSDindices'}, Filt, Cfg.MC, k_Cfg...
+                , {'bandpowers', 'PSDindices'}, Cfg.MC, k_Cfg...
                 , 'debug', dbg, 'overwrite', k_Cfg.export.ovw...
                 , 'srcFilt', k_Cfg.export.featureSavePoints);
         end
@@ -175,10 +176,8 @@ for fn = 1:numel(fnames)
     end
 end
 
-myReport({
-    sprintf('Begin analysis run at %s with stepSets:\n', datestr(now))
-    sprintf('%s\n', char(Cfg.pipe.runSets)')},...
-    Cfg.env.logFile);
+myReport(sprintf('Pipe analysis has stepSets:%s %s %s',...
+    newline, char(Cfg.pipe.runSets)', newline), Cfg.env.logFile);
 EEG = struct;
 
 

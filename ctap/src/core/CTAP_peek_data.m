@@ -15,8 +15,10 @@ function [EEG, Cfg] = CTAP_peek_data(EEG, Cfg)
 %   Cfg.ctap.peek_data:
 %       .plotEEGHist    logical, Plot EEG histogram?, default: Cfg.grfx.on
 %       .plotEEG        logical, Plot EEG data?, default: Cfg.grfx.on
-%       .plotEEGset     logical, Plot several EEG segments?, default: true
 %       .plotICA        logical, Plot ICA components?, default: Cfg.grfx.on
+%       .plotAllPeeks   logical, Plot all peeks or 1 random one?, default: true
+%       .savePeekData   logical, Save EEG data from each peek, default: false
+%       .savePeekICA    logical, Save IC values from each peek, default: false
 %       .logStats       logical, compute stats for whole data, default: true
 %       .peekStats      logical, compute stats for each peek, default: false
 %       .secs           numeric, seconds to plot from min to max, default: 0 16
@@ -52,10 +54,13 @@ function [EEG, Cfg] = CTAP_peek_data(EEG, Cfg)
 % plot settings follow the global flag, unless specified by user!
 Arg.plotEEGHist = Cfg.grfx.on;
 Arg.plotEEG = Cfg.grfx.on;
-Arg.plotEEGset = true;
 Arg.plotICA = Cfg.grfx.on;
+Arg.plotAllPeeks = true;
+Arg.savePeekData = false;
+Arg.savePeekICA = false;
 Arg.logStats = true;
 Arg.peekStats = false;
+Arg.numpeeks = 10;
 Arg.secs = [0 16];
 Arg.hists = 16; %number of histograms per figure, should be square
 Arg.channels = 'EEG';
@@ -66,24 +71,24 @@ if isfield(Cfg.ctap, 'peek_data')
     Arg = joinstruct(Arg, Cfg.ctap.peek_data); %override with user params
 end
 %...but ICs must be present
-Arg.plotICA = Arg.plotICA && ~isempty(EEG.icaweights);
+Arg.plotICA = Arg.plotICA & ~isempty(EEG.icaweights);
 %...and seconds must be a relative [min max] pair
 if isscalar(Arg.secs), Arg.secs = [0 Arg.secs]; end
 Arg.secs = sort(Arg.secs);
-duration = diff(Arg.secs);
-if ~isscalar(duration) || (duration < 1)
+dur = diff(Arg.secs);
+if ~isscalar(dur) || (dur < 1)
     error('CTAP_peek_data:inputError', 'Arg.secs must be [min max], max-min>1.'); 
 end
 %...and we treat only EEG channels
 if ismember('EEG', Arg.channels)
-    idx = get_eeg_inds(EEG, {'EEG'});
+    chidx = get_eeg_inds(EEG, {'EEG'});
 else
-    idx = find(ismember({EEG.chanlocs.labels}, Arg.channels));
+    chidx = find(ismember({EEG.chanlocs.labels}, Arg.channels));
 end
-if numel(idx) == 0
+if numel(chidx) == 0
    error('CTAP_peek_data:inputError', 'Channels not found. Check Arg.channels'); 
 end
-nchan = numel(idx);
+nchan = numel(chidx);
 
 
 %% Define directory to save stuff to
@@ -94,7 +99,7 @@ if any(args)
     prepare_savepath(savepath, 'deleteExisting', Arg.overwrite);
     
     plotz = {'Histogram' 'Raw EEG' 'Independent Components' 'Channel stats'};
-    myReport(sprintf('\n'), Cfg.env.logFile);
+    myReport(newline, Cfg.env.logFile);
     msg = myReport(sprintf('Saving Diagnostics to ''%s''\nFor %s'...
         , savepath, sprintf('''%s'', ', plotz{args})), Cfg.env.logFile);
 
@@ -106,19 +111,19 @@ end
 %% make and save stats to log file
 if Arg.logStats
     % get stats of each channel in the file, build a matrix of stats
-    [~, ~, statab] = ctapeeg_stats_table(EEG, 'channels', idx...
+    [~, ~, statab] = ctapeeg_stats_table(EEG, 'channels', chidx...
         , 'outdir', savepath, 'id', 'peekall');
     
     % Write the stats for each peek for each subject to 1 log file
-    stalog = fullfile(Cfg.env.paths.logRoot, 'peek_stats_log.txt');
-    myReport(sprintf('\n%s peek channel statistics at step set %d, function %d'...
-        , EEG.CTAP.measurement.casename, Cfg.pipe.current.set...
-        , Cfg.pipe.current.funAtSet), stalog);
-    myReport(['Row' statab.Properties.VariableNames], stalog);
-    celtab = [statab.Properties.RowNames table2cell(statab)];
-    for r = 1:size(statab, 1)
-        myReport(celtab(r, :), stalog);
-    end
+    stalog = fullfile(Cfg.env.paths.logRoot, 'peek_stats_log.xlsx');
+    rptname = strrep(EEG.CTAP.measurement.casename, '_session_meas', '');
+    rptname = sprintf('%s_set%d_fun%d'...
+        , rptname(1:min(17, length(rptname)))...
+        , Cfg.pipe.current.set...
+        , Cfg.pipe.current.funAtSet);
+    myReport(sprintf('Writing channel-wise peek statistics for %s to %s.'...
+        , rptname, stalog), Cfg.env.logFile);
+    writetable(statab, stalog, 'WriteRowNames', true, 'Sheet', rptname)
 
 end
 
@@ -129,7 +134,7 @@ if Arg.plotEEGHist
     fx = Arg.hists;
     for i = 1:fx:nchan
         fh = eeglab_plot_channel_properties(EEG, fx...
-            , 'chans', idx(i:min(i+fx-1, nchan)));
+            , 'chans', chidx(i:min(i+fx-1, nchan)));
         %named after channels shown
         savename = sprintf('EEGHIST_chan%d-%d.png', i, min(i+fx-1, nchan));
         print(fh, '-dpng', fullfile(savepath, savename));
@@ -139,40 +144,42 @@ end
 
 
 %% Define latencies to peek at
-peekmatch = ismember({EEG.event.type}, 'ctapeeks'); 
+peekmatch = ismember({EEG.event.type}, 'ctapeeks');
 if any(peekmatch)%peek events are present - use them
     starts = [EEG.event(peekmatch).latency]; 
 else
-    %create new peeks
+    %create new peeks from existing user-defined events
     if isfield(Arg, 'peekevent')
         % based on events
         peekidx = find(ismember({EEG.event.type}, Arg.peekevent));
         if isfield(Arg, 'peekindex')
             peekidx = peekidx(Arg.peekindex);
         else
-            numpk = numel(peekidx);
-            if numpk > 10
-                peekidx = peekidx(1:round(numpk / 10):end);
+            npk = numel(peekidx);
+            if npk > Arg.numpeeks
+                peekidx = peekidx(1:round(npk / Arg.numpeeks):end);
             end
         end
         starts = [EEG.event(peekidx).latency];
         starts = starts(0 < starts); %remove possible negative values
-        
+
+    %create new peeks from data-selection events (as this data will not be cut!)
     elseif isfield(Cfg.ctap, 'select_evdata') &&...
             isfield(Cfg.ctap.select_evdata, 'evtype')
         peekmatch = ismember({EEG.event.type}, Cfg.ctap.select_evdata.evtype);
         starts = [EEG.event(peekmatch).latency] + 1;
+
+    %create new peeks at uniformly-distributed random times
     else
-        %num peeks = as many as will fit with room to spare at the end, up to 10
-        numpk = min(10, round((EEG.xmax * EEG.trials - duration) / duration));
+        %num peeks = as many as will fit with space at the end, < Arg.numpeeks
+        npk = min(Arg.numpeeks, round((EEG.xmax * EEG.trials - dur) / dur));
         % start latency of peeks is linear spread, randomly jittered
-        starts = linspace(1, EEG.xmax * EEG.trials - duration, numpk) +...
-            [rand(1, numpk - 1) .* duration 0];
+        starts = linspace(1, EEG.xmax * EEG.trials - dur, npk) +...
+            [rand(1, npk - 1) .* dur 0];
     end
     
     % add peek positions as events
-    labels = cellfun(@(x) sprintf('peek%d',x), num2cell(1:numel(starts)),...
-                      'UniformOutput', false);
+    labels = cellfun(@(x) sprintf('peek%d',x), num2cell(1:numel(starts)),'Un', 0);
     EEG.event = eeglab_merge_event_tables(EEG.event,...
                 eeglab_create_event(starts, 'ctapeeks', 'label', labels),...
                 'ignoreDiscontinuousTime');
@@ -184,29 +191,62 @@ if isfield(EEG.event, 'label')
     labels = {EEG.event(peekmatch).label};
 else
     % dangerous to resort to this, make sure labels always exist!
-    labels = cellfun(@(x) sprintf('peek%d',x), num2cell(1:sum(peekmatch)),...
-                'UniformOutput', false);
+    labels = cellfun(@(x) sprintf('peek%d',x), num2cell(1:sum(peekmatch)), 'Un', 0);
+end
+starts = int64(starts);
+
+% Save defined peek-times
+peektab = table(ascol(starts / EEG.srate)...
+            , 'RowNames', labels...
+            , 'VariableNames', {'peekLatencySecs'});
+writetable(peektab, fullfile(savepath, 'peek_times'), 'WriteRowNames', true)
+
+
+%% save EEG data from each peek
+if Arg.savePeekData
+    % grab data for a number of "peek" windows and save matrices as mat files
+    for i = 1:numel(starts)
+        latency = int16(starts(i) + Arg.secs(1) * EEG.srate);
+        duration = int16(latency + dur * EEG.srate);
+        outdata = EEG.data(chidx, latency:duration); %#ok<*NASGU>
+        save(fullfile(savepath, sprintf('signal_%s', labels{i})), 'outdata')
+    end
 end
 
-if ~Arg.plotEEGset
-   starts = starts(1); 
+
+%% save ICA data from each peek
+if Arg.savePeekICA && ~isempty(EEG.icaweights)
+    activations = icaact(EEG.data(EEG.icachansind, :),...
+                         EEG.icaweights * EEG.icasphere, 0);
+    % grab ICA values for a number of "peek" windows, save matrices as mat files
+    for i = 1:numel(starts)
+        latency = int16(starts(i) + Arg.secs(1) * EEG.srate);
+        duration = int16(latency + dur * EEG.srate);
+        outdata = activations(:, latency:duration);
+        save(fullfile(savepath, sprintf('ICA_%s', labels{i})), 'outdata')
+    end
 end
-starts = single(starts);
 
 
 %% calculate stats for each peek separately
 if Arg.peekStats
     % grab stats for a number of "peek" windows and save tables as mat files
     for i = 1:numel(starts)
-        ctapeeg_stats_table(EEG, 'channels', idx...
+        ctapeeg_stats_table(EEG, 'channels', chidx...
             , 'latency', starts(i) + Arg.secs(1) * EEG.srate...
-            , 'duration', duration * EEG.srate...
-            , 'outdir', savepath, 'id', sprintf('peek%d', i));
+            , 'duration', dur * EEG.srate...
+            , 'outdir', savepath, 'id', labels{i});
     end
 end
 
 
 %% Plot raw data from channels
+if ~Arg.plotAllPeeks
+    pkidx = 1;
+    starts = starts(pkidx);
+    labels = labels(pkidx);
+end
+
 if Arg.plotEEG
 
     % set channels to plot in red
@@ -221,7 +261,7 @@ if Arg.plotEEG
     for i = 1:numel(starts)
         % plot n save one peek window over 'idx' EEG channels, max 32 chans/png
         plotNsave_raw(EEG, savepath, sprintf('rawEEG_%s', labels{i})...
-                , 'channels', {EEG.chanlocs(idx).labels}...
+                , 'channels', {EEG.chanlocs(chidx).labels}...
                 , 'markChannels', markChannels...
                 , 'startSample', starts(i)...
                 , 'secs', Arg.secs...
@@ -236,8 +276,7 @@ if Arg.plotICA
     % Make a dataset to plot
     activations = icaact(EEG.data(EEG.icachansind,:),...
                          EEG.icaweights*EEG.icasphere, 0);
-    ch_labels = cellfun(@num2str, num2cell(1:size(activations,1))',...
-                'uniformOutput',false);
+    ch_labels = cellfun(@num2str, num2cell(1:size(activations,1))', 'Uni', 0);
     ch_labels = strcat('IC', ch_labels);
     ICAEEG = create_eeg(activations,...
                         'fs', EEG.srate,...

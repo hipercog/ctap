@@ -11,7 +11,7 @@ function PARAM = param_sweep_setup(projectRoot)
 %% Move to batch scripts
 %{
 SYNDATA = true;
-RECOMPUTE_SYNDATA = true;
+RECOMPUTE_SYNDATA = false;
 RERUN_PREPRO = false;
 RERUN_SWEEP = false;
 STOP_ON_ERROR = true;

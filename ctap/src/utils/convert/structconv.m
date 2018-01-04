@@ -160,7 +160,7 @@ end
                             
                         else
                             if isnumeric( S(i,j,k).(fields{n}) )
-                                R.(fields{n})(i,j,k) = S(i,j,k).(fields{n});
+                                R.(fields{n}){i,j,k} = S(i,j,k).(fields{n});
                             elseif ischar( S(i,j,k).(fields{n}) )
                                 R.(fields{n})(i,j,k) = {S(i,j,k).(fields{n})};
                             elseif iscell( S(i,j,k).(fields{n}) )

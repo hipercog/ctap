@@ -43,7 +43,7 @@ function [EEG, varargout] = ctapeeg_load_chanlocs(EEG, varargin)
 
 
 %% Check input
-sbf_check_input() % parse the varargin, set defaults
+Arg = sbf_check_input(); % parse the varargin, set defaults
 
 
 %% The main work: Import channel locations
@@ -58,7 +58,7 @@ elseif ~isempty(Arg.filetype)
     filelocs = readlocs(Arg.file, 'filetype', Arg.filetype);
 else
     try filelocs = readlocs(Arg.file); 
-    catch ME,
+    catch ME
         error('ctapeeg_load_chanlocs:readlocs_fail', ME.message);
     end
 end
@@ -68,12 +68,13 @@ if ~isempty(Arg.delchan) && isnumeric(Arg.delchan)
     filelocs(Arg.delchan) = [];
 end
 
-if isempty(EEG.chanlocs) || Arg.overwrite
+if isempty(EEG.chanlocs) || (Arg.overwrite && EEG.nbchan == numel(filelocs))
     %no channel information present -> use channel locations as given
     EEG.chanlocs = filelocs;
 else
     %Channel names available -> matching data to channels by channel name
-    EEG = set_channel_locations(EEG, filelocs, Arg.writemissing);
+    argsCellArray = struct2varargin(Arg);
+    EEG = set_channel_locations(EEG, filelocs, argsCellArray{:});
 end
 
 varargout{1} = Arg;
@@ -81,7 +82,7 @@ varargout{2} = filelocs;
 
 
 %% Sub-functions
-    function sbf_check_input() % parse the varargin, set defaults
+    function Arg = sbf_check_input() % parse the varargin, set defaults
         % Unpack and store varargin
         if isempty(varargin)
             vargs = struct;
@@ -89,6 +90,9 @@ varargout{2} = filelocs;
             vargs = cell2struct(varargin(2:2:end), varargin(1:2:end), 2);
         else
             vargs = varargin{1}; %(assume a struct wrapped in a cell)
+        end
+        if ~isstruct(vargs)
+            vargs = cell2struct(vargs(2:2:end), vargs(1:2:end), 2);
         end
 
         % If desired, the default values can be changed here:
@@ -98,7 +102,13 @@ varargout{2} = filelocs;
         Arg.skiplines = 0;
         Arg.overwrite = false;
         Arg.delchan = [];
-        Arg.writemissing = true;
+        %TODO: NEXT PARAMS ARE ONLY FOR set_channel_locations(). HOW TO
+        %JUST PASS USER'S CHOICE WITHOUT EXTRA DEFINITIONS HERE?? (LIKE R's ...)
+        Arg.writelabel = true;
+        Arg.writeblank = false;
+        Arg.partial_match = true;
+        Arg.dist_match = true;
+        Arg.index_match = true;
 
         % Arg fields are canonical, vargs data is canonical: intersect-join
         Arg = intersect_struct(Arg, vargs);

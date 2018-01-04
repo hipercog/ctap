@@ -74,7 +74,7 @@ EEG.CTAP.subject = Cfg.subject;
 EEG.CTAP.measurement = Cfg.measurement;
 
 EEG.CTAP.files.eegFile = Cfg.measurement.physiodata;
-EEG.CTAP.files.channelLocationsFile = Cfg.eeg.chanlocs;
+EEG.CTAP.files.channelLocationsFile = ctap_eeg_find_chlocs(Cfg);
 EEG.CTAP.reference = Cfg.eeg.reference;
 
 % .CTAP.time.fileStart and .CTAP.time.dataStart

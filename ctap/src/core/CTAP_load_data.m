@@ -112,6 +112,14 @@ if (isempty(EEG.event))
    EEG.event(1).type = 'dummy_event';
    EEG.event(1).latency = 1;
    EEG.event(1).duration = 0;
+else
+    %set EEG event type field to be char, to avoid mixing data format and
+    %crashing, e.g. pop_epoch()
+    for idx = 1:numel(EEG.event) 
+        if isnumeric(EEG.event(idx).type) 
+            EEG.event(idx).type = num2str(EEG.event(idx).type);
+        end 
+    end
 end
 
 

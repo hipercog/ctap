@@ -147,9 +147,9 @@ else
                     'dataSetLabels', {'Before correction', 'After correction'});
 
     savepath = get_savepath(Cfg, mfilename, 'qc', 'suffix', 'blinkERP');
-    prepare_savepath(savepath);
-    saveas(figh, fullfile(savepath...
-        , [EEG.CTAP.measurement.casename '_blinkERP.png']), 'png');
+    savename = [EEG.CTAP.measurement.casename '_blinkERP.png'];
+    prepare_savepath(savepath, 'filenames', savename);
+    saveas(figh, fullfile(savepath, savename), 'png');
     close(figh);
   
 end
@@ -158,6 +158,6 @@ end
 %% ERROR/REPORT
 Cfg.ctap.filter_blink_ica = Arg;
 
-msg = sprintf('FIR filtered blin ICs data: %s', EEG.setname); 
+msg = sprintf('FIR filtered blink ICs data: %s', EEG.setname); 
 myReport(msg, Cfg.env.logFile);
 EEG.CTAP.history(end+1) = create_CTAP_history_entry(msg, mfilename, Arg);

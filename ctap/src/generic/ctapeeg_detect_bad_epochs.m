@@ -85,6 +85,7 @@ function [EEG, varargout] = ctapeeg_detect_bad_epochs(EEG, varargin)
 
 
 sbf_check_input() % parse the varargin, set defaults
+faster_vars = {'ampRange' 'variance' 'chanDev'};
 
 % Subset to required channels for:
 % faster, recufast, eegthresh, rejspec
@@ -107,15 +108,27 @@ epochs = 1:numel(EEGtmp.epoch);
 %               [eps_match; 1:EEG.nbchan] integer matrix
 switch Arg.method
     case 'faster'
-        % latent parameters: any|all, metric
-        epbad = epoch_properties(EEGtmp, Arg.channels, epochs);
-        [~, all_bad, ~] = min_z(epbad, struct('z', Arg.bounds(2)));
-        bad_eps_match = epochs(all_bad');
-        result.scores =...
-            table(epbad(:,1), epbad(:,2), epbad(:,3)...
-            , 'RowNames', cellstr(num2str(epochs'))...
-            , 'VariableNames', {'ampRange' 'variance' 'chanDev'});
+        % Get the 3 magic FASTER properties for each epoch
+        epprp = epoch_properties(EEGtmp, Arg.channels, epochs);
         
+        % Choose which properties to match on
+        if iscell(Arg.match_measures)
+            match_measures = ismember(faster_vars, Arg.match_measures);
+        end
+        if isscalar(Arg.bounds)
+            Arg.bounds = [(abs(Arg.bounds) * -1) abs(Arg.bounds)];
+        end
+        % identify the bad epochs by z-score thresholding on each measure
+        rej_opt = struct('z', Arg.bounds, 'measures', match_measures);
+        epbad = min_z(epprp, Arg.match_logic, rej_opt);
+        bad_eps_match = epochs(epbad');
+        % build the output table
+        result.scores =...
+            table(epprp(:,1), epprp(:,2), epprp(:,3)...
+            , 'RowNames', cellstr(num2str(epochs'))...
+            , 'VariableNames', faster_vars);
+
+
     case 'recufast'
         recu_out = recufast_badness_detector(EEGtmp...
                                             , struct()...
@@ -131,6 +144,7 @@ switch Arg.method
         result.scores = table(recu_out.bad_bin(2, :)' ...
             , 'RowNames', cellstr(num2str(epochs'))...
             , 'VariableNames', {'recursiveFASTER'});
+
 
     case 'eegthresh'
         % NOTE: 'bad_eps_match' contains indices of epochs that have an 
@@ -165,7 +179,8 @@ switch Arg.method
         result.scores = table({'no scores available'}...
             , 'RowNames', {'ALL'}...
             , 'VariableNames', {'spectralThresh'});
-        
+
+
     case 'hasEvent'
         % Identify epochs with blinks
         if iscell(EEGtmp.epoch(1).eventtype)
@@ -189,7 +204,8 @@ switch Arg.method
             , 'RowNames', {sprintf('hasEvent_%s', catcellstr(Arg.event))}...
             , 'VariableNames'...
             , strcat({'ep'}, strtrim(cellstr(num2str((1:EEGtmp.trials)')))) );
-        
+
+
     case 'hasEventProperty'
         % Mark as bad epochs whose trigger event has a certain property in
         % EEG.event
@@ -248,17 +264,17 @@ varargout{2} = result;
         else
             vargs = varargin{1}; %(assume a struct wrapped in a cell)
         end
+
+        try Arg.method = vargs.method;
+        catch
+            error('ctapeeg_detect_bad_epochs:bad_param', ...
+                'It is necessary to define the chosen ''method'': see help')
+        end
         
         % If desired, the default values can be changed here:
         try Arg.channels = vargs.channels;
         catch
             Arg.channels = get_eeg_inds(EEG, {'EEG'});
-        end
-        try Arg.method = vargs.method;
-        catch
-            if numel(Arg.channels) > 32, Arg.method = 'faster';
-            else, Arg.method = 'rejspec';
-            end
         end
 
         switch Arg.method
@@ -270,6 +286,8 @@ varargout{2} = result;
                 
             case 'faster'
                 Arg.bounds = [-2 2];
+                Arg.match_logic = @all;
+                Arg.match_measures = faster_vars;
 
             case 'eegthresh'
                 Arg.sec_lim = [EEG.xmin EEG.xmax];

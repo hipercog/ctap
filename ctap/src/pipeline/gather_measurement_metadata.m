@@ -1,4 +1,4 @@
-function MeasMeta = gather_measurement_metadata(Subject, Measurement, varargin)
+function [MeasMeta WholeFileFakeSegment] = gather_measurement_metadata(Subject, Measurement, varargin)
 %GATHER_MEASUREMENT_METADATA - Collect information from MC
 %
 % Description:
@@ -17,7 +17,11 @@ function MeasMeta = gather_measurement_metadata(Subject, Measurement, varargin)
 %   Keyword     Type, description, values
 %
 % Outputs:
-%   'MeasMeta'      ??, ??
+%   'MeasMeta'      ??, ?? (output this as INFO struct in the ATTK format)
+%   WholeFileFakeSegment (output this as SEGMENT struct in the ATTK format,
+%                         which creates a 'segment' that is actually the
+%                         whole file.
+%   
 %
 % Assumptions:
 %
@@ -81,4 +85,14 @@ if ~isempty(Arg.measurementFields)
             fprintf(2,['gather_measurement_metadata: field ''',i_field_name,''' not found in Subject.\n']);
         end
     end
+end
+
+% Create a SEGMENT structure that is in fact a segment for the whole file
+WholeFileFakeSegment = struct();
+WholeFileFakeSegment.labels = {'timestamp'  'duration'  'label'  'latency'  'value'};
+WholeFileFakeSegment.units = {'yyyymmddTHHMMSS' 'samples' 'n/a' 'n/a' 'n/a'};
+if ~exist('EEG','var')
+    WholeFileFakeSegment.data = {datestr(now(),'yyyymmddTHHMMSS') 0 'NA' 0 'NA'};
+else
+    WholeFileFakeSegment.data = {datestr(EEG.startDateTime,'yyyymmddTHHMMSS') EEG.pnts 'NA' 1 'NA'};
 end

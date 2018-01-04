@@ -1,4 +1,4 @@
-function [EEG, missidx] = set_channel_locations(EEG, chanlocsfile, writemissing)
+function [EEG, missidx] = set_channel_locations(EEG, chanlocsfile, varargin)
 %SET_CHANNEL_LOCATIONS Set channel locations from channel locations file.
 %
 % Matching of channel location is performed on basis of the channel name in
@@ -17,8 +17,16 @@ function [EEG, missidx] = set_channel_locations(EEG, chanlocsfile, writemissing)
 %                         information in a format recognised by readlocs.
 %                         Or the channel locations struct already produced
 %                         by readlocs.
-%   'writemissing'  optional, true|false, if any channels are not matched
-%                   by name, match by index instead. Default = false
+% Varargin
+%   'writelabel'    optional, true|false, overwrite label. Default = false
+%   'writeblank'    optional, true|false, if an eloc field is blank, should it 
+%                   overwrite the corresponding field? Default = false
+%   'partial_match' optional, true|false, if a channel has no exact-label match,
+%                   find partial label match instead. Default = true
+%   'dist_match'    optional, true|false, if channel has no exact-/partial-label
+%                   match, find unique closest label instead. Default = true
+%   'index_match'   optional, true|false, if any channels are not matched
+%                   by label, match by index instead. Default = true
 %
 % Output   
 %   'EEG'           EEGLab EEG structure with channel locations added
@@ -37,9 +45,17 @@ function [EEG, missidx] = set_channel_locations(EEG, chanlocsfile, writemissing)
 % Please see the file LICENSE for details.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-if nargin < 3
-    writemissing = false;
-end
+p = inputParser;
+p.KeepUnmatched = true;
+p.addRequired('EEG', @isstruct);
+p.addRequired('chanlocsfile', @isstruct);
+p.addParameter('writelabel', false, @islogical);
+p.addParameter('writeblank', false, @islogical);
+p.addParameter('partial_match', true, @islogical);
+p.addParameter('dist_match', true, @islogical);
+p.addParameter('index_match', true, @islogical);
+p.parse(EEG, chanlocsfile, varargin{:});
+Arg = p.Results;
 
 
 %% Read the channel location information from the file
@@ -52,10 +68,10 @@ else
 end
 % Get the names of the channels in the channel locations struct
 if any(ismember(fieldnames(eloc), 'labels'))
-    chan_locs = {eloc.labels};
+    chlocs = {eloc.labels};
 else
-    chan_locs = struct2cell(eloc(:));
-    chan_locs = chan_locs(1,:);
+    chlocs = struct2cell(eloc(:));
+    chlocs = chlocs(1,:);
 end
 
 % Check if we are using some separator in the channel names, e.g. "C3-A2"
@@ -71,8 +87,9 @@ end
 % We assume now that the channel locations file always separates parts in
 % the channel name using a dash and not an underscore
 if ~isempty(sep)
-    chan_locs = strrep(chan_locs, '-', sep);
+    chlocs = strrep(chlocs, '-', sep);
 end
+% chlocs_orig = chlocs;
 
 % Make a temporary copy of the EEG structure without the data
 EEGtmp = rmfield(EEG, 'data');
@@ -84,48 +101,64 @@ missidx = [];
 % of channel location information based on the name of the channel
 for i = 1:numel(EEG.chanlocs)
     % Get the channel name
-    chan_name = EEG.chanlocs(i).labels;
+    chname = EEG.chanlocs(i).labels;
     
-    % Look up info for this channel
-    index = find(strcmpi(chan_name, chan_locs));
-    
-    if ~isempty(index)
-        % Set the channel location information
-        EEGtmp = assign_chlocs(i, eloc(index), EEGtmp);
-        
-    else
-        % try to find partial matches for labels
-        index = ~cellfun(@isempty, strfind(lower(chan_locs), lower(chan_name)))...
-            | ~cellfun(@isempty, cellfun(@(x) strfind(lower(chan_name), x)...
-                                , lower(chan_locs), 'UniformOutput', false));
-        
-        if sum(index) == 1
-            EEGtmp = assign_chlocs(i, eloc(index), EEGtmp);
-        elseif sum(index) > 1
-            tmp_eloc = statop_on_struct(eloc(index), @mean, @isscalar);
-            tmp_eloc.labels = chan_name;
-            EEGtmp = assign_chlocs(i, tmp_eloc, EEGtmp);
-        else
-            warning off backtrace
-            warning(['SET_CHANNEL_LOCATIONS:'...
-                ' No channel location data found for channel ' chan_name '.']);
-            warning on backtrace
-            missidx = [missidx i]; %#ok<AGROW>
+    % Try to find a matching index in chlocs for this channel name
+    %%%% - BY DIRECT MATCH
+    index = find(strcmpi(chname, chlocs));
+    %%%% - BY PARTIAL MATCH
+    if ~any(index) && Arg.partial_match
+        % try to find partial matches for labels - either chan_name
+        % contained in one of chlocs, or one of chlocs contained in chan_name
+        x = cellfun(@(x) contains(chname, x, 'IgnoreCase', true), chlocs, 'Uni', 0);
+        index = contains(chlocs, chname, 'IgnoreCase', true) | [x{:}];
+
+        % if multiple partial matches found, take one with closest strdist
+        if sum(index) > 1
+            dst = cell2mat(cellfun(@(x)...
+                            strdist(x, chname), chlocs(index), 'Uni', 0));
+            if isscalar(find(dst == min(dst)))
+                [~, flip] = min(dst);
+                index(setdiff(1:numel(index), flip)) = 0;
+            end
+        end
+    end
+    %%%% - BY SHORTEST STRING DISTANCE MATCH
+    if ~any(index) && Arg.dist_match
+        % try to find label that's uniquely closest by strdist
+        dst = cell2mat(cellfun(@(x) strdist(x, chname), chlocs, 'Uni', 0));
+        if isscalar(find(dst == min(dst)))
+            [~, flip] = min(dst);
+            index(flip) = 1;
         end
     end
     
+    % If an index was found, assign it. Otherwise mark as missing index
+    if any(index)
+        EEGtmp = assign_chlocs(i, eloc(index), EEGtmp...
+                                , 'writelabel', Arg.writelabel...
+                                , 'writeblank', Arg.writeblank);
+        chlocs{index} = 'loc_picked';
+    else
+        warning off backtrace
+        warning(['SET_CHANNEL_LOCATIONS:'...
+            ' No channel location data found for channel ' chname '.']);
+        warning on backtrace
+        missidx = [missidx i]; %#ok<AGROW>
+    end
 end
 
 
 %% if requested, write any mis-matched channels from eloc to EEG
-if ~isempty(missidx) && writemissing
+if ~isempty(missidx) && Arg.index_match
     warning off backtrace
     warning('OVERWRITING BY MATCHING INDEXES...')
     warning on backtrace
     owidx = intersect(missidx...
         , setdiff(1:numel(eloc), setdiff(1:numel(EEG.chanlocs), missidx)));
     for i = 1:numel(owidx)
-        EEGtmp = assign_chlocs(owidx(i), eloc(owidx(i)), EEGtmp, true);
+        EEGtmp = assign_chlocs(owidx(i), eloc(owidx(i)), EEGtmp...
+            , 'writelabel', Arg.writelabel);
     end
 end
 

@@ -73,28 +73,37 @@ if isfield(Cfg.env.paths, 'ctapRoot')
     end
     [~,~,~] = mkdir(Cfg.env.paths.analysisRoot);
     
-    
-    Cfg.env.paths.featuresRoot = fullfile(...
-        Cfg.env.paths.analysisRoot, 'features');
-    
-    Cfg.env.paths.exportRoot = fullfile(...
-        Cfg.env.paths.analysisRoot,'export');
+    if ~isfield(Cfg.env.paths,'featuresRoot')
+        Cfg.env.paths.featuresRoot = fullfile(...
+            Cfg.env.paths.analysisRoot,'features');
+    end
 
-    Cfg.env.paths.qualityControlRoot = fullfile(...
-        Cfg.env.paths.analysisRoot,'quality_control');
+    if ~isfield(Cfg.env.paths,'export')
+        Cfg.env.paths.exportRoot = fullfile(...
+            Cfg.env.paths.analysisRoot,'export');
+    end
+
+    if ~isfield(Cfg.env.paths,'quality_control')
+        Cfg.env.paths.qualityControlRoot = fullfile(...
+            Cfg.env.paths.analysisRoot,'quality_control');
+    end
     
-    Cfg.env.paths.logRoot = fullfile(...
-        Cfg.env.paths.analysisRoot,'logs');
-    [~,~,~] = mkdir(Cfg.env.paths.logRoot);
+    if ~isfield(Cfg.env.paths,'logRoot')
+        Cfg.env.paths.logRoot = fullfile(...
+            Cfg.env.paths.analysisRoot,'logs');
+    end        
     
-    Cfg.env.paths.crashLogRoot = fullfile(...
-        Cfg.env.paths.ctapRoot,'logs');
-    [~,~,~] = mkdir(Cfg.env.paths.crashLogRoot);
+    if ~isfield(Cfg.env.paths,'crashLogRoot')
+        Cfg.env.paths.crashLogRoot = fullfile(...
+            Cfg.env.paths.ctapRoot,'logs');
+    end
     
     % Log Files
-    Cfg.env.logFile = fullfile(Cfg.env.paths.logRoot,...
+    if ~isfield(Cfg.env,'logFile')
+        Cfg.env.logFile = fullfile(Cfg.env.paths.logRoot,...
                                sprintf('runlog_%s.txt',datestr(now, 30)) );
-    
+    end                           
+
     % SQLite database file for storing function data
     %(such as numbers of trials etc.)
     Cfg.env.funDataDB = fullfile(Cfg.env.paths.qualityControlRoot,...
@@ -138,7 +147,7 @@ end
 
 if ~isfield(Cfg.eeg, 'heogChannelNames')
     warning('ctap_auto_config:cfgFieldMissing',...
-         ['Field Cfg.eeg.heogChannelNames is recommended for blink'...
+         ['Field Cfg.eeg.heogChannelNames is recommended for ocular'...
          'artefact detection and rejection.']);
 end
 
@@ -152,22 +161,38 @@ if isfield(Cfg, 'export')
 end
 
 
-%% Measure pipe
-%Discard the 'test' step set if present and not requested
-if ~any(ismember(Cfg.pipe.runSets, 'test'))
-    testtest = ismember({Cfg.pipe.stepSets.id}, 'test');
-    if any(testtest), Cfg.pipe.stepSets(testtest) = []; end
+%% Measure pipe - parse given stepSets and runSets
+
+% 1st, if runSets is numeric, convert to stepSet.id cell string array
+if isnumeric(Cfg.pipe.runSets) 
+    if all(ismember(Cfg.pipe.runSets, 1:numel(Cfg.pipe.stepSets)))
+        Cfg.pipe.runSets = {Cfg.pipe.stepSets(Cfg.pipe.runSets).id};
+    else
+        error('ctap_auto_config:bad_runSets', 'runSets (%s) is not valid'...
+            , myReport({'SHSH' Cfg.pipe.runSets}))
+    end
 end
 
-%get original (allSets) and requested (runSets) stepSet indices
+% 2nd, Discard the 'test' step set if present and not requested
+if ~any(ismember(Cfg.pipe.runSets, 'test'))
+    Cfg.pipe.stepSets(ismember({Cfg.pipe.stepSets.id}, 'test')) = [];
+end
+
+% 3rd, get original (allSets) stepSet indices
 allSets = 1:numel(Cfg.pipe.stepSets);
-if strcmp(Cfg.pipe.runSets{1}, 'all')
+
+% 4th, get requested (runSets) stepSet indices
+if strcmpi(Cfg.pipe.runSets{1}, 'all')
     runSets = allSets;
     Cfg.pipe.runSets = {Cfg.pipe.stepSets(allSets).id};
     %'all' replaced to simplify usage of this field -- 'all' not allowed
     % in general, just a convenience feature
 else
     runSets = find(ismember({Cfg.pipe.stepSets.id}, Cfg.pipe.runSets));
+    if isempty(runSets)
+        error('ctap_auto_config:bad_runSets', '%s was badly specified'...
+            , myReport({'SHSH' Cfg.pipe.runSets}))
+    end
 end
 
 % Add field Cfg.pipe.totalSets if missing
@@ -207,7 +232,7 @@ end
 % exclIdx = find(ismember(allStepMap, exclStp));
 
 % Get the contents of the requested pipe description
-[runPipeFuns, runStepMap] = sbf_get_pipe_desc(Cfg, runSets);
+[runPipeFuns, runStepMap] = sbf_get_pipe_desc(Cfg, runSets); %#ok<ASGLU>
 uniqFuns = unique(runPipeFuns);
 leftout = ones(numel(uniqFuns),1);
 
