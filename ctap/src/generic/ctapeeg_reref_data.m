@@ -19,7 +19,8 @@ function [EEG, varargout] = ctapeeg_reref_data(EEG, varargin)
 %   {2}         : vector, reference channel indices
 %
 % NOTE
-%~ %
+% See also CTAP_reref_data()
+%
 % CALLS    eeglab functions
 %
 % Version History:
