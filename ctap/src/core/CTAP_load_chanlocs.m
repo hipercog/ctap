@@ -63,6 +63,8 @@ function [EEG, Cfg] = CTAP_load_chanlocs(EEG, Cfg)
 Arg.file = ctap_eeg_find_chlocs(Cfg);
 Arg.field = {}; %user must set this based on his own knowledge!
 Arg.tidy = {};
+Arg.optimise_centre = true;
+Arg.convert_coords = true;
 
 % Override defaults with user parameters
 if isfield(Cfg.ctap, 'load_chanlocs')
@@ -70,10 +72,10 @@ if isfield(Cfg.ctap, 'load_chanlocs')
 end
 
 
-%% ASSIST
+%% ASSIST %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if isfield(Cfg.ctap.load_chanlocs, 'assist') && Cfg.ctap.load_chanlocs.assist
     % find the chanlocs filetype from the file name
-    if ~isfield( Arg, 'filetype' )
+    if ~isfield(Arg, 'filetype')
         types = {'loc', 'loc', 'sph', 'sfp', 'xyz', 'asc', 'elc', 'besa'...
               , 'polhemus', 'chanedit'};
         exts = {'locs', 'loc', 'sph', 'sfp', 'xyz', 'asc', 'elc', 'elp'...
@@ -90,7 +92,7 @@ if isfield(Cfg.ctap.load_chanlocs, 'assist') && Cfg.ctap.load_chanlocs.assist
 end
 
 
-%% CORE
+%% CORE %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %load chanlocs
 if isfield(Arg, 'filetype') && strcmp(Arg.filetype, 'custom') == 1
     try Arg.format;
@@ -106,7 +108,7 @@ end
 [EEG, params, ~] = ctapeeg_load_chanlocs(EEG, struct2varargin(Arg));
 
 
-%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% MISCELLANEOUS %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Set any chanlocs types according to user definition
 if ~isempty(Arg.field)
     for fdx = 1:numel(Arg.field)
@@ -119,9 +121,6 @@ if ~isempty(Arg.field)
             if any(idx)
                 EEG.chanlocs(idx).(Arg.field{fdx}{2}) = Arg.field{fdx}{3};
             end
-%DONT USE pop_chanedit() BECAUSE IT CALLS eeg_checkchanlocs()
-%             EEG = pop_chanedit(EEG, 'changefield'...
-%                 , {Arg.field{fdx}{1}(chidx) Arg.field{fdx}{2:3}});
         end
     end
     % Feedback about types
@@ -141,12 +140,25 @@ if ~isempty(Arg.tidy)
     end
 end
 
-EEG = eeg_checkchanlocs(EEG); % checkset
+% Auto-optimise the head centre and convert to spherical and polar coords
+if Arg.optimise_centre
+    [X, Y, Z] =...
+        chancenter([EEG.chanlocs.X]', [EEG.chanlocs.Y]', [EEG.chanlocs.Z]', []);
+    X = num2cell(X);    Y = num2cell(Y);    Z = num2cell(Z);
+    [EEG.chanlocs.X, EEG.chanlocs.Y, EEG.chanlocs.Z] = deal(X{:}, Y{:}, Z{:});
+end
+if Arg.convert_coords
+    myReport('Note: automatically convert XYZ coordinates to spherical and polar');
+    EEG.chanlocs = convertlocs(EEG.chanlocs, 'cart2all');
+end
+
+% checkset
+EEG = eeg_checkchanlocs(EEG);
 % update urchanlocs, e.g. retain only the desired channels
 EEG.urchanlocs = EEG.chanlocs;%make interpolation possible after channel removal
 
 
-%% ERROR/REPORT
+%% ERROR/REPORT %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 Arg = joinstruct(Arg, params);
 Cfg.ctap.load_chanlocs = Arg;
 
@@ -158,8 +170,3 @@ msg = myReport(sprintf('Loaded chanlocs from %s.\n%s', Arg.file, msg)...
     , Cfg.env.logFile);
 
 EEG.CTAP.history(end+1) = create_CTAP_history_entry(msg, mfilename, Arg);
-
-
-%% MISC
-% checkset
-EEG = eeg_checkchanlocs(EEG);

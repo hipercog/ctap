@@ -40,7 +40,7 @@ data_type = '*.bdf';
 % use sbj_filt to select all (or a subset) of available recordings
 sbj_filt = setdiff(1:12, [3 7]);
 % use ctapID to uniquely name the base folder of the output directory tree
-ctapID = 'sccn-branch-pipe';
+ctapID = 'sccn-branch-pipe_test';
 % set the electrode for which to calculate and plot ERPs after preprocessing
 erploc = 'C20';
 
@@ -64,8 +64,8 @@ pipeArr = {@sbf_pipe1,...
            @sbf_pipe2A,...
            @sbf_pipe2B,...
            @sbf_peekpipe};
-first = 2;
-last = 2;% length(pipeArr) - 1;
+first = 1;
+last = length(pipeArr) - 1;
 %You can also run only a subset of pipes, e.g. 2:length(pipeArr)
 
 
@@ -115,8 +115,8 @@ function [Cfg, out] = sbf_cfg(project_root_folder, ID)
     Cfg.eeg.reference = {'average'};
 
     % EOG channel specification for artifact detection purposes
-    Cfg.eeg.heogChannelNames = {'EXG1' 'EXG2'};
-    Cfg.eeg.veogChannelNames = {'EXG3' 'EXG4'};
+    Cfg.eeg.heogChannelNames = {'EXG1' 'EXG4'};
+    Cfg.eeg.veogChannelNames = {'H24' 'EXG2'};
 
     % dummy var
     out = struct([]);

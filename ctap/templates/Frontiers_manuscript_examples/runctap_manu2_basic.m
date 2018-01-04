@@ -34,15 +34,15 @@
 
 %% Setup MAIN parameters
 % set the input directory where your data is stored
-data_dir_in = '/home/ben/Benslab/CTAP/CTAPIIdata';
+data_dir_in = '/home/ben/Benslab/CTAP/CTAPIIdata/testing';
 % specify the file type of your data
 data_type = '*.bdf';
 % use sbj_filt to select all (or a subset) of available recordings
-sbj_filt = [];% setdiff(1:12, [3 7]);
+sbj_filt = setdiff(1:12, [3 7]);
 % use ctapID to uniquely name the base folder of the output directory tree
-ctapID = 'sccn-basic-pipe_v1';
+ctapID = 'sccn-basic-pipe_test';
 % use keyword 'all' to select all stepSets, or use some index
-set_select = 2;
+set_select = 'all';
 % set the electrode for which to calculate and plot ERPs after preprocessing
 erploc = 'C20';
 
@@ -54,8 +54,7 @@ OVERWRITE_OLD_RESULTS = true;
 
 %% Create the CONFIGURATION struct
 
-% First, define step sets & their parameters: sbf_cfg() is written by the USER,
-% and contains the 
+% First, define step sets & their parameters: sbf_cfg() is written by the USER
 [Cfg, ctap_args] = sbf_cfg(data_dir_in, ctapID);
 
 % Select step sets to process
@@ -115,8 +114,8 @@ Cfg.eeg.chanlocs = Cfg.env.paths.projectRoot;
 %% Define other important stuff
 Cfg.eeg.reference = {'average'};
 % EOG channel specification for artifact detection purposes
-Cfg.eeg.heogChannelNames = {'EXG1' 'EXG2'};
-Cfg.eeg.veogChannelNames = {'EXG3' 'EXG4'};
+Cfg.eeg.heogChannelNames = {'EXG1' 'EXG4'};
+Cfg.eeg.veogChannelNames = {'H24' 'EXG2'};
 
 
 %% Configure analysis pipe

@@ -34,13 +34,13 @@
 
 %% Setup MAIN parameters
 % set the input directory where your data is stored
-data_dir_in = '/home/ben/Benslab/CTAP/CTAPIIdata';
+data_dir_in = '/home/ben/Benslab/CTAP/CTAPIIdata/testing';
 % specify the file type of your data
 data_type = '*.bdf';
 % use sbj_filt to select all (or a subset) of available recordings
 sbj_filt = setdiff(1:12, [3 7]);
 % use ctapID to uniquely name the base folder of the output directory tree
-ctapID = 'sccn-hydra-pipe';
+ctapID = 'sccn-hydra-pipe_test';
 % set the electrode for which to calculate and plot ERPs after preprocessing
 erploc = 'C20';
 
@@ -63,7 +63,7 @@ OVERWRITE_OLD_RESULTS = true;
 pipeArr = {@sbf_pipe1,...
            @sbf_pipe2,...
            @sbf_peekpipe};
-first = 2;
+first = 1;
 last = length(pipeArr);
 
 
@@ -110,8 +110,8 @@ function [Cfg, out] = sbf_cfg(project_root_folder, ID)
     Cfg.eeg.reference = {'average'};
 
     % EOG channel specification for artifact detection purposes
-    Cfg.eeg.heogChannelNames = {'EXG1' 'EXG2'};
-    Cfg.eeg.veogChannelNames = {'EXG3' 'EXG4'};
+    Cfg.eeg.heogChannelNames = {'EXG1' 'EXG4'};
+    Cfg.eeg.veogChannelNames = {'H24' 'EXG2'};
 
     % dummy var
     out = struct([]);
@@ -183,6 +183,7 @@ function [Cfg, out] = sbf_pipe2(Cfg)
         'method', {'adjust' 'blink_template'},...
         'adjustarg', {'horiz' ''});
 
+    %TODO: TRY DENSER GRIDS, SMALLER LOWER LIMIT...
     out.sweep = struct(...
         'function', 'CTAP_detect_bad_channels',...
         'sweep_param', 'bounds',...

@@ -171,6 +171,8 @@ if isnumeric(Cfg.pipe.runSets)
         error('ctap_auto_config:bad_runSets', 'runSets (%s) is not valid'...
             , myReport({'SHSH' Cfg.pipe.runSets}))
     end
+elseif ischar(Cfg.pipe.runSets)
+    Cfg.pipe.runSets = {Cfg.pipe.runSets};
 end
 
 % 2nd, Discard the 'test' step set if present and not requested
