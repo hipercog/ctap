@@ -108,7 +108,7 @@ varargout{2} = filelocs;
         Arg.writeblank = false;
         Arg.partial_match = true;
         Arg.dist_match = true;
-        Arg.index_match = true;
+        Arg.index_match = false;
 
         % Arg fields are canonical, vargs data is canonical: intersect-join
         Arg = intersect_struct(Arg, vargs);

@@ -119,7 +119,7 @@ if ~isempty(Arg.field)
                 idx = ismember({EEG.chanlocs.labels}, Arg.field{fdx}{1}(chidx));
             end
             if any(idx)
-                EEG.chanlocs(idx).(Arg.field{fdx}{2}) = Arg.field{fdx}{3};
+                [EEG.chanlocs(idx).(Arg.field{fdx}{2})] = deal(Arg.field{fdx}{3});
             end
         end
     end
@@ -148,7 +148,8 @@ if Arg.optimise_centre
     [EEG.chanlocs.X, EEG.chanlocs.Y, EEG.chanlocs.Z] = deal(X{:}, Y{:}, Z{:});
 end
 if Arg.convert_coords
-    myReport('Note: automatically convert XYZ coordinates to spherical and polar');
+    myReport('Note: auto-converted XYZ coordinates to spherical & polar'...
+        , Cfg.env.logFile);
     EEG.chanlocs = convertlocs(EEG.chanlocs, 'cart2all');
 end
 

@@ -229,7 +229,7 @@ function sbf_plotNsave_bad_ICs(EEG0, savepath)
         close(figH);
         
     end %of comps
-end %of sbf_plotNsave_bad_ICs()
+end %sbf_plotNsave_bad_ICs()
 
 
 %% sbf_plot_channel_rejections
@@ -241,11 +241,12 @@ function sbf_plot_channel_rejections(EEG0, savepath)
                   'markChannels', badness)
 
     % PLOT SCALP OF BADNESS LOCATIONS
-    ctap_plot_bad_chan_scalp(EEG0, find(ismember({EEG0.chanlocs.labels}, badness))...
+    ctap_plot_bad_chan_scalp(EEG0...
+        , find(ismember({EEG0.chanlocs.labels}, badness))...
         , 'context', 'scalp'...
         , 'savepath', savepath)
 
-end %of sbf_plot_channel_rejections()
+end %sbf_plot_channel_rejections()
 
 
 %% sbf_plot_bad_segments
@@ -272,7 +273,8 @@ function sbf_plot_bad_segments(EEG0, Cfg, savepath)
         close(figH);
     end
     
-end
+end %sbf_plot_bad_segments()
+
 
 %% sbf_report_bad_data
 function sbf_report_bad_data
@@ -312,6 +314,6 @@ function sbf_report_bad_data
     end
 
     save(rejfile, 'rejtab');
-end %of sbf_report_bad_data()
+end %sbf_report_bad_data()
 
 end %CTAP_reject_data()

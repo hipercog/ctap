@@ -1,7 +1,8 @@
 function [EEG, Cfg] = CTAP_sweep(EEG, Cfg)
-%CTAP_sweep - A CTAP wrapper functions for HYDRA-parameter sweeping
+%CTAP_sweep - A CTAP wrapper function for HYDRA-parameter sweeping
 %
-% Description:
+% Description: sweeps the specified parameter range for the specified
+%              function against the specified data.
 %
 % Syntax:
 %   [EEG, Cfg] = CTAP_sweep(EEG, Cfg);
@@ -103,7 +104,7 @@ case 'CTAP_detect_bad_channels'
         if ~isempty(SWEEG{i}.CTAP.badchans.variance.chans)
             figh = ctap_plot_bad_chan_scalp(EEG...
                 , get_eeg_inds(EEG, SWEEG{i}.CTAP.badchans.variance.chans)...
-                , 'context', sprintf('sweep-%s', i)...
+                , 'context', sprintf('sweep-%d', i)...
                 , 'savepath', svpath); %#ok<*NASGU>
         end
     end
