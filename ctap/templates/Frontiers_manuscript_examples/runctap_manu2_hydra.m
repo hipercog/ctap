@@ -42,7 +42,7 @@ sbj_filt = setdiff(1:12, [3 7]);
 % use ctapID to uniquely name the base folder of the output directory tree
 ctapID = 'sccn-hydra-pipe_test';
 % set the electrode for which to calculate and plot ERPs after preprocessing
-erploc = 'C20';
+erploc = 'D20';
 
 % Runtime options for CTAP:
 PREPRO = true;
