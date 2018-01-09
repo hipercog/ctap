@@ -14,7 +14,7 @@ function [ERPS, ERP] = ctap_manu2_oddball_erps(Cfg, varargin)
     fnames = {fnames.name};
     fnames = fnames(ismember(fnames, strcat(Cfg.pipe.runMeasurements, '.set')));
     if isempty(fnames)
-        error('oddball_erps:no_data'...
+        error('ctap_manu2_oddball_erps:no_data'...
             , 'None of the selected recordings exist at the end of the pipe')
     end
     

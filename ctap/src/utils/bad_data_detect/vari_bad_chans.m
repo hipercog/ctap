@@ -46,6 +46,7 @@ p.addRequired('EEG', @isstruct);
 p.addRequired('EEGchan', @ismatrix);
 p.addRequired('bounds', @ismatrix);
 p.addParameter('take_worst_n', 0, @isscalar);
+p.addParameter('plot', true, @islogical);
 p.parse(EEG, EEGchan, bounds, varargin{:});
 Arg = p.Results;
 
@@ -70,7 +71,7 @@ else
     nmad = NaN;
 end
 
-Res = threshold(chanVarNorm, th, nmad);
+Res = thresholdNplot(chanVarNorm, th, nmad, Arg.plot);
 
 %if user wants to kill worst n channels, or set n as limit of bad channels
 if Arg.take_worst_n > 0
