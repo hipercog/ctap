@@ -44,6 +44,7 @@ function [EEG, Cfg] = CTAP_detect_bad_channels(EEG, Cfg)
 
 %% Set optional arguments
 Arg.channelType = 'EEG';
+Arg.plot_detections = Cfg.grfx.on;
 if isfield(Cfg.eeg, 'reference')
     Arg.orig_ref = Cfg.eeg.reference;
 end

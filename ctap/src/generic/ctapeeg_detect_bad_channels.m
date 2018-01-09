@@ -147,7 +147,9 @@ switch Arg.method
 
 
     case 'variance'
-        res = vari_bad_chans(EEG, Arg.channels, Arg.bounds);
+        res = vari_bad_chans(EEG, Arg.channels, Arg.bounds...
+                            , 'take_worst_n', Arg.take_worst_n...
+                            , 'plot', Arg.plot_detections);
         bad_chan_match = res.dead | res.loose;
         result.scores = table(res.variance ...
             , 'RowNames', {EEG.chanlocs(Arg.channels).labels}'...
@@ -204,6 +206,10 @@ EEG = EEGtmp;
         else
             vargs = varargin{1}; %(assume a struct wrapped in a cell)
         end
+        
+        %general channel-related parameters
+        Arg.plot_detections = true;
+        Arg.take_worst_n = 0;
 
         try Arg.method = vargs.method;
         catch

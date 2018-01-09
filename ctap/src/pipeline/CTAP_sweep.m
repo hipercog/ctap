@@ -34,6 +34,8 @@ Arg = struct;
 Arg.overwrite = true;
 Arg.figVisible = 'off';
 Arg.choose_result = 'inflection';
+Arg.turn_off_QC = true;
+
 % check and assign the defined parameters to structure Arg, for brevity
 if isfield(Cfg.ctap, 'sweep')
     Arg = joinstruct(Arg, Cfg.ctap.sweep);%override with user params
@@ -82,9 +84,11 @@ SweepParams.values = num2cell(Arg.(Arg.sweep_param));
 
 
 %% CORE - SWEEP THE LEG!
+tmp = Cfg.grfx.on;
+Cfg.grfx.on = Arg.turn_off_QC;
 [SWEEG, PARAMS] =...
 CTAP_pipeline_sweeper(EEG, SWPipe, SWPipeParams, Cfg, SweepParams); %#ok<*ASGLU>
-
+Cfg.grfx.on = tmp;
 
 %% ANALYZE THE SWEEP OUTCOMES...
 n_sweeps = numel(SWEEG);
