@@ -44,7 +44,7 @@ ctapID = 'sccn-basic-pipe';
 % use keyword 'all' to select all stepSets, or use some index
 set_select = 2;%'all';
 % set the electrode for which to calculate and plot ERPs after preprocessing
-erploc = 'D20';
+erploc = 'A31';
 
 % Runtime options for CTAP:
 PREPRO = true;

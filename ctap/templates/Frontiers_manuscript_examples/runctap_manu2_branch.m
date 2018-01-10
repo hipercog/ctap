@@ -42,7 +42,7 @@ sbj_filt = setdiff(1:12, [3 7]);
 % use ctapID to uniquely name the base folder of the output directory tree
 ctapID = 'sccn-branch-pipe_test';
 % set the electrode for which to calculate and plot ERPs after preprocessing
-erploc = 'D20';
+erploc = 'A31';
 
 % Runtime options for CTAP:
 PREPRO = true;
@@ -64,7 +64,7 @@ pipeArr = {@sbf_pipe1,...
            @sbf_pipe2A,...
            @sbf_pipe2B,...
            @sbf_peekpipe};
-first = 3;
+first = 1;
 last = length(pipeArr);
 %You can also run only a subset of pipes, e.g. 2:length(pipeArr)
 
@@ -83,10 +83,6 @@ end
 % to the export directories
 CTAP_postproc_brancher(Cfg, @ctap_manu2_oddball_erps, {'loc_label', erploc}...
                 , pipeArr, 'first', first, 'last', last, 'dbg', STOP_ON_ERROR)
-
-%TODO: ADD FEATURE EXPORT??
-% CTAP_postproc_brancher(Cfg, @export_features_CTAP, {'loc_label', erploc}...
-%                 , pipeArr, 'first', first, 'last', last, 'dbg', STOP_ON_ERROR)
 
 %cleanup the global workspace
 clear PREPRO STOP_ON_ERROR OVERWRITE_OLD_RESULTS sbj_filt pipeArr first last

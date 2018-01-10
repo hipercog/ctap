@@ -174,8 +174,8 @@ else
         %num peeks = as many as will fit with space at the end, < Arg.numpeeks
         npk = min(Arg.numpeeks, round((EEG.xmax * EEG.trials - dur) / dur));
         % start latency of peeks is linear spread, randomly jittered
-        starts = linspace(1, EEG.xmax * EEG.trials - dur, npk) +...
-            [rand(1, npk - 1) .* dur 0];
+        starts = (linspace(1, EEG.xmax * EEG.trials - dur, npk) +...
+            [rand(1, npk - 1) .* dur 0]) * EEG.srate;
     end
     
     % add peek positions as events

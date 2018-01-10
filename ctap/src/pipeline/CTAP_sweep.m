@@ -157,5 +157,6 @@ Cfg.ctap.sweep = Arg;
 %log outcome to console and to log file
 msg = myReport(sprintf('HYDRA swept function ''%s'', parameter ''%s'', to %d',...
     Arg.function, Arg.sweep_param, result), Cfg.env.logFile);
+myReport(msg, fullfile(svpath, 'sweeplog.txt'));
 %create a history element
 EEG.CTAP.history(end+1) = create_CTAP_history_entry(msg, mfilename, Arg);
