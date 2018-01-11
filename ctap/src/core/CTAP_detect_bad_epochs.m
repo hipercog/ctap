@@ -69,7 +69,7 @@ end
 %% CORE
 % Find bad epochs, from regular epoched data, for defined non-bad channels
 % If not yet epoched, fail
-if isempty(EEG.epoch)
+if ~isfield(EEG, 'epoch') || isempty(EEG.epoch)
     % Note: Cannot detect epoched data from EEG.data since epoched data
     % with just one epoch looks like continuous data.
     % EEG.epoch is not much better since EEGLAB seems to drop EEG.epoch if

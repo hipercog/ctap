@@ -164,8 +164,15 @@ switch Arg.method
 
 
     case 'adjust'
+        % ADJUST expects epoched data: although it can function with continuous
+        % data, it does not compute features exactly the same way
+        if (~isfield(EEG, 'epoch') || isempty(EEG.epoch)) && Arg.epoch
+            EEGep = ctapeeg_epoch_data(EEG);
+        else
+            EEGep = EEG;
+        end
         if ~iscell(Arg.adjustarg), Arg.adjustarg = {Arg.adjustarg}; end
-        [bad_comp_match, horiz, verti, blink, disco] = ctapeeg_ADJUST(EEG...
+        [bad_comp_match, horiz, verti, blink, disco] = ctapeeg_ADJUST(EEGep...
             , 'detect', Arg.adjustarg...
             , 'icomps', icacomps);
         tmp = table(horiz', verti', blink', disco'...
@@ -241,6 +248,7 @@ function sbf_check_input() % parse the varargin, set defaults
             Arg.match_measures = faster_vars;
 
         case 'adjust'
+            Arg.epoch = false;
             Arg.adjustarg = {'horiz' 'verti' 'blink' 'disco'};
 
         case 'extreme_values'
