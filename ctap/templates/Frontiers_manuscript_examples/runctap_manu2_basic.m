@@ -42,7 +42,7 @@ sbj_filt = setdiff(1:12, [3 7]);
 % use ctapID to uniquely name the base folder of the output directory tree
 ctapID = 'sccn-basic-pipe';
 % use keyword 'all' to select all stepSets, or use some index
-set_select = 2;%'all';
+set_select = 'all';
 % set the electrode for which to calculate and plot ERPs after preprocessing
 erploc = 'A31';
 

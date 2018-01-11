@@ -62,7 +62,7 @@ Arg.logStats = true;
 Arg.peekStats = false;
 Arg.numpeeks = 10;
 Arg.secs = [0 16];
-Arg.hists = 16; %number of histograms per figure, should be square
+Arg.hists = 16; %number of histograms per figure, should be a square number
 Arg.channels = 'EEG';
 Arg.overwrite = true;
 
@@ -72,9 +72,9 @@ if isfield(Cfg.ctap, 'peek_data')
 end
 %...but ICs must be present
 Arg.plotICA = Arg.plotICA & ~isempty(EEG.icaweights);
-%...and seconds must be a relative [min max] pair
+%...and seconds must be a relative [min max] pair of positive integers
 if isscalar(Arg.secs), Arg.secs = [0 Arg.secs]; end
-Arg.secs = sort(Arg.secs);
+Arg.secs = int32(sort(abs(Arg.secs)));
 dur = diff(Arg.secs);
 if ~isscalar(dur) || (dur < 1)
     error('CTAP_peek_data:inputError', 'Arg.secs must be [min max], max-min>1.'); 
@@ -172,10 +172,10 @@ else
     %create new peeks at uniformly-distributed random times
     else
         %num peeks = as many as will fit with space at the end, < Arg.numpeeks
-        npk = min(Arg.numpeeks, round((EEG.xmax * EEG.trials - dur) / dur));
+        npk = min(Arg.numpeeks, round((EEG.xmax * EEG.trials - Arg.secs(2)) / dur));
         % start latency of peeks is linear spread, randomly jittered
-        starts = (linspace(1, EEG.xmax * EEG.trials - dur, npk) +...
-            [rand(1, npk - 1) .* dur 0]) * EEG.srate;
+        starts = (linspace(1, EEG.xmax * EEG.trials - Arg.secs(2), npk) +...
+                                       [rand(1, npk - 1) .* dur 0]) * EEG.srate;
     end
     
     % add peek positions as events
@@ -241,6 +241,7 @@ end
 
 
 %% Plot raw data from channels
+% for either all peeks, or just one (if plotting all would be a mountain)
 if ~Arg.plotAllPeeks
     pkidx = 1;
     starts = starts(pkidx);

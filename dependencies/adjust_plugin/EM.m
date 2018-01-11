@@ -102,7 +102,9 @@ dif_prior_1=1; % difference between current and previous prior
 dif_prior_2=1;
 stop=0.0001;
 
-while((dif_med_1>stop)&&(dif_med_2>stop)&&(dif_var_1>stop)&&(dif_var_2>stop)&&(dif_prior_1>stop)&&(dif_prior_2>stop))
+while((dif_med_1 > stop) && (dif_med_2 > stop) &&...
+      (dif_var_1 > stop) && (dif_var_2 > stop) &&...
+      (dif_prior_1 > stop) && (dif_prior_2 > stop))
 
     count=count+1;
 
@@ -118,10 +120,14 @@ while((dif_med_1>stop)&&(dif_med_2>stop)&&(dif_var_1>stop)&&(dif_var_2>stop)&&(d
     % FOLLOWING FORMULATION IS ACCORDING TO REFERENCE PAPER:
     
     for i=1:len
-		prior1_i=[prior1_i prior1_old*Bayes(med1_old,var1_old,vec(i))/...
-		   (prior1_old*Bayes(med1_old,var1_old,vec(i))+prior2_old*Bayes(med2_old,var2_old,vec(i)))];
-		prior2_i=[prior2_i prior2_old*Bayes(med2_old,var2_old,vec(i))/...
-		   (prior1_old*Bayes(med1_old,var1_old,vec(i))+prior2_old*Bayes(med2_old,var2_old,vec(i)))];
+		prior1_i = [prior1_i...
+                    prior1_old * Bayes(med1_old, var1_old, vec(i)) /...
+                   (prior1_old * Bayes(med1_old, var1_old, vec(i)) +...
+                    prior2_old * Bayes(med2_old, var2_old, vec(i)))];
+		prior2_i = [prior2_i...
+                    prior2_old * Bayes(med2_old, var2_old, vec(i)) /...
+                   (prior1_old * Bayes(med1_old, var1_old, vec(i)) +...
+                    prior2_old * Bayes(med2_old, var2_old, vec(i)))];
     end
 	
 	
@@ -174,10 +180,10 @@ return
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function prob=Bayes(med,var,point)
-if var==0
-    prob=1;
-else
-    prob=((1/(sqrt(2*pi*var)))*exp((-1)*((point-med)^2)/(2*var)));
-end
+function prob=Bayes(med, var, point)
+    if var == 0
+        prob=1;
+    else
+        prob=((1/(sqrt(2*pi*var)))*exp((-1)*((point-med)^2)/(2*var)));
+    end
 
