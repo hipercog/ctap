@@ -74,7 +74,7 @@ end
 Arg.plotICA = Arg.plotICA & ~isempty(EEG.icaweights);
 %...and seconds must be a relative [min max] pair of positive integers
 if isscalar(Arg.secs), Arg.secs = [0 Arg.secs]; end
-Arg.secs = int32(sort(abs(Arg.secs)));
+Arg.secs = round(sort(abs(Arg.secs)));
 dur = diff(Arg.secs);
 if ~isscalar(dur) || (dur < 1)
     error('CTAP_peek_data:inputError', 'Arg.secs must be [min max], max-min>1.'); 
