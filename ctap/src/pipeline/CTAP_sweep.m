@@ -33,7 +33,7 @@ function [EEG, Cfg] = CTAP_sweep(EEG, Cfg)
 Arg = struct;
 Arg.overwrite = true;
 Arg.figVisible = 'off';
-Arg.choose_result = 'inflection';
+Arg.choose_result = '10pc';%'inflection';
 Arg.turn_off_QC = true;
 
 % check and assign the defined parameters to structure Arg, for brevity
