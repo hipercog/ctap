@@ -1,4 +1,5 @@
-#Computational Testing for Automated Preprocessing (CTAP)#
+# Computational Testing for Automated Preprocessing (CTAP)
+CTAP is a set of tools running in [Matlab](https://se.mathworks.com/products/matlab.html) that facilitate workflow creation, automated quality control and feature export for the [EEGLAB](https://sccn.ucsd.edu/eeglab/index.php)  EEG processing framework.
 
 ## What is CTAP? ##
 The main aim of the *Computational Testing for Automated Preprocessing (CTAP)* toolbox is to provide:
@@ -16,33 +17,39 @@ _If you use CTAP for your research, __please use the following citation___:
 
 
 ## Installation ##
+
+### System requirements
+The following are required:
+* Matlab R2016b or later
+* EEGLAB 14.1.1 or later
+
+The system has been developed and tested under Matlab R2016b and EEGLAB 14 mainly under Debian/Ubuntu Linux.
+
+### Installation procedure
+
+#### 1. clone the repo
 Clone the GitHub repository to your machine using
 
     git clone https://github.com/bwrc/ctap.git <destination dir>
 
-Add directory trees `<dst_dir>/ctap/` and `<dst_dir>/dependencies/` to your Matlab path. You also need to have EEGLAB added to your Matlab path.
+#### 2. set up Matlab path
+Add directory trees `<dst_dir>/ctap/` and `<dst_dir>/dependencies/` to your Matlab path, __including subdirectories__. You also need to have EEGLAB added to your Matlab path.
 
 One option to accomplish both of these to make a local copy of `ctap_set_path.m`, edit the file to match the setup on your machine and run to configure Matlab path.
 
-## Getting started ##
-A minimalistic working example can be found in `~/ctap/templates/minimalistic_example/`.
+## Getting started using CTAP ##
+A minimalistic working example can be found in `~/ctap/templates/minimalistic_example/`. Try running script
 
-Copy the `cfg_minimal.m` and `runctap_minimal.m` files and use them as a starting point for your own pipe. Note: `runctap_minimal.m` takes as input a small dataset included under `~/ctap/data/`, which it uses to generate synthetic data and illustrate several preprocessing steps. To have it find the data, set the Matlab current directory to the root of the CTAP repo you have just cloned, i.e. `<destination dir>`. You can also set the output directory in `runctap_minimal.m`
+```
+runctap_minimal
+```
+
+This script should read seed data, create synthetic data and run an example CTAP pipe on the synthetic data. Results are stored under `fullfile(cd(), 'example-project')`.
+
+To start your own pipe, copy the `cfg_minimal.m` and `runctap_minimal.m` files and use them as a starting point. Note: `runctap_minimal.m` takes as input a small dataset included under `~/ctap/data/`, which it uses to generate synthetic data and illustrate several preprocessing steps. To have it find the data, set the Matlab current directory to the root of the CTAP repo you have just cloned, i.e. `<destination dir>`. You can also set the output directory in `runctap_minimal.m`
 
 More examples are available under `~/ctap/templates/`.
 
-### How to run the analysis on FIOH BWRC (Linux) machines###
-
-1. Clone the github repo:
-	git clone https://github.com/bwrc/ctap.git <destination dir>
-
-2. Start matlab with the root of the ctap repo as working dir.
-
-3. Run
-	update_matlab_path_anyone()
-4. Try running one of the "proof-of-concept" scripts:
-	pipebatch_minimal()
-	pipebatch_WCST_baseprepro()
 
 ## License information
 
