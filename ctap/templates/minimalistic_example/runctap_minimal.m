@@ -85,19 +85,15 @@ Cfg = ctap_auto_config(Cfg, ctap_args);
 
 
 %% Run the pipe
-%%{
 tic;
 CTAP_pipeline_looper(Cfg, 'debug', DEBUG, 'overwrite', true)
 toc;
-%}
 
 
 %% Export features
-%%{
 tic;
 export_features_CTAP([Cfg.id '_db'], {'bandpowers','PSDindices'}, Cfg.MC, Cfg);
 toc;
-%}
 
 %% Cleanup
 clear i stepSet Filt ctap_args

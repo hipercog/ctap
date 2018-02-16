@@ -12,7 +12,7 @@ Cfg.env.paths.projectRoot = project_root_folder;
 
 
 %% Define important directories and files
-Cfg.env.paths.analysisRoot = fullfile(...
+Cfg.env.paths.ctapRoot = fullfile(...
     Cfg.env.paths.projectRoot, 'ctap_results', Cfg.id);
 
 % Note: other canonical locations are added in ctap_auto_config.m
