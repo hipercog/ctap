@@ -16,6 +16,12 @@ EMG_N = 4 * EEG_LEN_MIN;
 WRECK_N = 2;
 
 files = dir(fullfile(SRCDIR, 'BCICIV*.mat'));
+if isempty(files)
+    error('generate_synthetic_data_demo:no_seed'...
+        , 'Seed data %s was NOT found - check your Matlab working directory'...
+        , fullfile(SRCDIR, 'BCICIV*.mat'))
+end
+
 for k = 1:length(files)
 
 	fprintf(1, 'Processing file %s..\n', files(k).name);
