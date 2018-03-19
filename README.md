@@ -31,6 +31,12 @@ The system has been developed and tested under Matlab R2016b and EEGLAB 14 mainl
 Clone the GitHub repository to your machine using
 
     git clone https://github.com/bwrc/ctap.git <destination dir>
+    
+NOTE: we have used git LFS to track/manage large data files (in \*.mat and  \*.set format). This implies that you need to set up LFS by
+
+    git lfs install
+
+Unless you want to ignore the data files (which will prevent some example scripts from running); then it is sufficient to clone without LFS installed (for more LFS options [see here](https://sabicalija.github.io/git-lfs-intro/)).
 
 #### 2. set up Matlab path
 Add directory trees `<dst_dir>/ctap/` and `<dst_dir>/dependencies/` to your Matlab path, __including subdirectories__. 
