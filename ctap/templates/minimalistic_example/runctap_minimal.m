@@ -3,7 +3,11 @@ DEBUG = false;
 OVERWRITE_SYNDATA = true; %can be used to re-create synthetic data
 
 %% Setup
-project_dir = fullfile(cd(), 'example-project');
+reporoot = mfilename('fullpath');
+reporoot = reporoot(1:strfind(reporoot, fullfile(...
+    'ctap', 'templates', 'minimalistic_example', 'runctap_minimal')) - 1);
+
+project_dir = fullfile(reporoot, 'example-project');
 if ~isdir(project_dir), mkdir(project_dir); end;
 
 [Cfg, ctap_args] = cfg_minimal(project_dir);
@@ -11,8 +15,8 @@ if ~isdir(project_dir), mkdir(project_dir); end;
 
 %% Create synthetic data (only if needed)
 % Note: Cfg needed to set data_dir_out
-data_dir_seed = fullfile(cd(),'ctap','data');
-data_dir_out = fullfile(Cfg.env.paths.projectRoot,'data','demo');
+data_dir_seed = fullfile(reporoot, 'ctap', 'data');
+data_dir_out = fullfile(Cfg.env.paths.projectRoot, 'data', 'demo');
 if ( isempty(dir(fullfile(data_dir_out,'*.set'))) || OVERWRITE_SYNDATA)
     % Normally this is run only once
     generate_synthetic_data_demo(data_dir_seed, data_dir_out);
