@@ -4,10 +4,10 @@
 % _end_ of Matlab path to avoid unnecessary function name collissions.
 
 % Add EEGLAB
-eeglab_path = '/home/jussi/work_local/code/external/matlab/EEGLAB/eeglab14_1_1b';
-addpath(genpath(eeglab_path), '-end');
+% eeglab_path = '/home/your/path/to/EEGLAB/eeglab14_1_1b';
+% addpath(genpath(eeglab_path), '-end');
 
 % Add CTAP
-ctap_path = '/home/jussi/work_local/projects/ctap/ctap_public';
-addpath(genpath(fullfile(ctap_path,'ctap')), '-end');
-addpath(genpath(fullfile(ctap_path,'dependencies')), '-end');
+[ctap_path, ~, ~] = fileparts(mfilename('fullpath'));
+addpath(genpath(fullfile(ctap_path, 'ctap')), '-end');
+addpath(genpath(fullfile(ctap_path, 'dependencies')), '-end');
