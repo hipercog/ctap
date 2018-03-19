@@ -33,9 +33,11 @@ Clone the GitHub repository to your machine using
     git clone https://github.com/bwrc/ctap.git <destination dir>
 
 #### 2. set up Matlab path
-Add directory trees `<dst_dir>/ctap/` and `<dst_dir>/dependencies/` to your Matlab path, __including subdirectories__. You also need to have EEGLAB added to your Matlab path.
+Add directory trees `<dst_dir>/ctap/` and `<dst_dir>/dependencies/` to your Matlab path, __including subdirectories__. 
+One option to accomplish this is to set the Matlab working directory to the CTAP root directory `<destination dir>`, and then run `ctap_set_path.m` to configure Matlab path.
 
-One option to accomplish both of these to make a local copy of `ctap_set_path.m`, edit the file to match the setup on your machine and run to configure Matlab path.
+You need to have EEGLAB added to your Matlab path ([instructions here](https://sccn.ucsd.edu/eeglab/downloadtoolbox.php)). `ctap_set_path.m` can also accomplish this, if you edit to match the setup on your machine and run.
+
 
 ## Getting started using CTAP ##
 A minimalistic working example can be found in `~/ctap/templates/minimalistic_example/`. Try running script
