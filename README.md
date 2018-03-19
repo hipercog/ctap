@@ -38,13 +38,13 @@ Add directory trees `<dst_dir>/ctap/` and `<dst_dir>/dependencies/` to your Matl
 One option to accomplish both of these to make a local copy of `ctap_set_path.m`, edit the file to match the setup on your machine and run to configure Matlab path.
 
 ## Getting started using CTAP ##
-A minimalistic working example can be found in `~/ctap/templates/minimalistic_example/`. Set your Matlab working directory to be `<dst_dir>/`, and then try running script
+A minimalistic working example can be found in `~/ctap/templates/minimalistic_example/`. Try running script
 
 ```
 runctap_minimal
 ```
 
-If the seed data packaged with CTAP was found (i.e. the script was started from the right working directory), then `runctap_minimal` should read seed data, create synthetic data and run an example CTAP pipe on the synthetic data. Results are stored under `fullfile(cd(), 'example-project')`.
+If the seed data packaged with CTAP was found (i.e. the Matlab path was correctly configured), then `runctap_minimal` should read seed data, create synthetic data and run an example CTAP pipe on the synthetic data. Results are stored under `fullfile(cd(), 'example-project')`.
 
 To start your own pipe, copy the `cfg_minimal.m` and `runctap_minimal.m` files and use them as a starting point. Note: `runctap_minimal.m` takes as input a small dataset included under `~/ctap/data/`, which it uses to generate synthetic data and illustrate several preprocessing steps. To have it find the data, set the Matlab current directory to the root of the CTAP repo you have just cloned, i.e. `<destination dir>`. You can also set the output directory in `runctap_minimal.m`
 
