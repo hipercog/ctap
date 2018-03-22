@@ -11,8 +11,8 @@ function Res = thresholdNplot(dvec, th, nmad, plot)
 %nmad = 3;
 
 % Define th
-dmad = double(mad(dvec));%dmad, dmedian must be type double or text() will crash
-dmedian = double(nanmedian(dvec)); % note: does not ignore NaNs!
+dmad = double(olof_mad(dvec)); %dmad, dmedian must be type double or text() crash
+dmedian = double(nansumedian(dvec)); % note: does not ignore NaNs!
 
 if all(isnan(th)) && any(~isnan(nmad))
     %expand nmad if it is a single value

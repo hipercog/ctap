@@ -1,4 +1,4 @@
-function out = mad(x)
+function out = olof_mad(x)
 
 % MAD	Median Absolute Distances from the sample median.
 %			Y = MAD(X) computes the robust estimator of scale MAD (Median

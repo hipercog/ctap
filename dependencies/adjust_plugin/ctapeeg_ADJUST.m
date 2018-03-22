@@ -16,7 +16,7 @@ function [artICs, horiz, verti, blink, disco] = ctapeeg_ADJUST(EEG, varargin)
 %               'disco' - Discontinuities
 %   'logidx'    boolean, 1=output as logical, 0=output as index values,
 %               default = 1
-%   'icomps'    vector, indices of ICs, default = 1:size(EEG.icawinv,1)
+%   'icomps'    vector, indices of ICs, default = 1:ICArows
 %
 % Outputs:
 %   artICs - List of artifacted ICs
@@ -59,6 +59,8 @@ function [artICs, horiz, verti, blink, disco] = ctapeeg_ADJUST(EEG, varargin)
 % 
 % 
 %   THIS VERSION ADAPTED BY BENJAMIN COWLEY, MAY 2013
+%   INTEGRATED TO CTAP TOOLBOX BY B. COWLEY, AUG 2015
+%   benjamin.cowley@ttl.fi
 %
 % 
 % V2 (07 OCTOBER 2010) - by Andrea Mognon
@@ -68,40 +70,47 @@ function [artICs, horiz, verti, blink, disco] = ctapeeg_ADJUST(EEG, varargin)
 % bug reported by Guido Hesselman on October, 1 2010.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%    
 
-%% Check the paramters
+
+%% Initialise & Check the paramters
+% ----------------------------------------------------
+% |  Collect useful data from EEG structure          |
+% ----------------------------------------------------
+ICArows = size(EEG.icawinv, 1);
+ICAcols = size(EEG.icawinv, 2);
+%number of time points = size(EEG.data,2);
+if isfield(EEG, 'trials')
+    num_epoch = EEG.trials;
+else
+    num_epoch = size(EEG.data, 3);
+end
+
+% ----------------------------------------------------
+% |  Run the input parser                            |
+% ----------------------------------------------------
 p = inputParser;
 p.addRequired('EEG', @isstruct);
 p.addParameter('detect', {'horiz' 'verti' 'blink' 'disco'}, @iscell);
 p.addParameter('logidx', 1, @islogical);
-p.addParameter('icomps', 1:size(EEG.icawinv,1), @isnumeric);
+p.addParameter('icomps', 1:ICArows, @isnumeric);
 % additional parameters can be defined here
 p.parse(EEG, varargin{:});
 Arg = p.Results;
 
+% ----------------------------------------------------
+% |  Define which ADJUST features to extract         |
+% ----------------------------------------------------
+detect = ismember({'horiz' 'verti' 'blink' 'disco'}, Arg.detect);
+horiz = false(1, ICArows);
+verti = false(1, ICArows);
+blink = false(1, ICArows);
+disco = false(1, ICArows);
+artICs = false(1, ICArows);
 
-%% Initialise
 % ----------------------------------------------------
 % |  Initial message to user:                        |
 % ----------------------------------------------------
 fprintf('ADJUST detecting bad ICA components in dataset: %s\n', EEG.filename)
 fprintf('Extracting features for: %s\n', strjoin(Arg.detect, '    '))
-% ----------------------------------------------------
-% |  Collect useful data from EEG structure          |
-% ----------------------------------------------------
-%number of time points = size(EEG.data,2);
-numICs = numel(Arg.icomps);
-if length(size(EEG.data)) == 3
-    num_epoch = size(EEG.data,3);
-else
-    num_epoch = 1;
-end
-
-detect = ismember({'horiz' 'verti' 'blink' 'disco'}, Arg.detect);
-horiz = false(1, numICs);
-verti = false(1, numICs);
-blink = false(1, numICs);
-disco = false(1, numICs);
-artICs = false(1, numICs);
 
 
 %% Check the presence of ICA activations
@@ -116,7 +125,7 @@ topografie = EEG.icawinv'; %computes IC topographies
 %% Topographies and time courses normalization
 disp('Normalizing topographies...Scaling time courses...')
 
-for i = 1:size(EEG.icawinv, 2) % number of ICs
+for i = 1:ICAcols % number of ICs
     ScalingFactor = norm(topografie(i,:));
     topografie(i,:) = topografie(i,:) / ScalingFactor;
     if length(size(EEG.data)) == 3
@@ -134,22 +143,22 @@ disp('SED - Spatial Eye Difference...');
 [SED, med_L, med_R] = computeSED_NOnorm(...
     topografie,...
     EEG.chanlocs(ismember({EEG.chanlocs.type}, {'EEG' 'EOG'})),...
-    size(EEG.icawinv,2)); 
+    ICAcols); 
 
 %SAD - Spatial Average Difference
 disp('SAD - Spatial Average Difference...');
 [SAD, var_front, var_back, ~, ~] = computeSAD(...
     topografie,...
     EEG.chanlocs(ismember({EEG.chanlocs.type}, {'EEG' 'EOG'})),...
-    size(EEG.icawinv,2), size(EEG.icawinv,1));
+    ICAcols, ICArows);
 
 %SVD - Spatial Variance Difference between front zone and back zone
 diff_var = var_front - var_back;
 
 %epoch dynamic range, variance and kurtosis
+disp('Computing variance and kurtosis of all epochs...')
 K = zeros(num_epoch, size(EEG.icawinv, 2)); %kurtosis
 Vmax = zeros(num_epoch, size(EEG.icawinv, 2)); %variance
-disp('Computing variance and kurtosis of all epochs...')
 
 for i = 1:size(EEG.icawinv, 2) % number of ICs
     for j = 1:num_epoch
@@ -161,21 +170,25 @@ end
 
 %MEV - Maximum Epoch Variance
 disp('Maximum epoch variance...')
-maxvar = zeros(1, size(EEG.icawinv,2));
-meanvar = zeros(1, size(EEG.icawinv,2));
+if num_epoch > 1
+    maxvar = zeros(1, ICAcols);
+    meanvar = zeros(1, ICAcols);
 
-for i = 1:size(EEG.icawinv,2)
-    if num_epoch>100
-        maxvar(1,i) = trim_and_max(Vmax(:,i)');
-        meanvar(1,i) = trim_and_mean(Vmax(:,i)');
-    else 
-        maxvar(1,i) = max(Vmax(:,i));
-        meanvar(1,i) = mean(Vmax(:,i));
+    for i = 1:ICAcols
+        if num_epoch>100
+            maxvar(1,i) = trim_and_max(Vmax(:,i)');
+            meanvar(1,i) = trim_and_mean(Vmax(:,i)');
+        else 
+            maxvar(1,i) = max(Vmax(:,i));
+            meanvar(1,i) = mean(Vmax(:,i));
+        end
     end
-end
 
-% MEV in reviewed formulation:
-nuovaV = maxvar ./ meanvar;
+    % MEV in reviewed formulation:
+    nuovaV = maxvar ./ meanvar;
+else
+    nuovaV = ones(1, ICAcols);
+end
 
 
 %% Thresholds computation
@@ -184,15 +197,19 @@ if detect(1)
     thr_SED = EM(SED);
 end
 if any(detect([1 2 4]))
-    thr_V = EM(nuovaV);
+    if num_epoch > 1
+        thr_V = EM(nuovaV);
+    else
+        thr_V = 0;
+    end
 end
 if any(detect([2 3]))
     thr_SAD = EM(SAD);
 end
 if detect(3)
     disp('Temporal Kurtosis...')
-    meanK = zeros(1, size(EEG.icawinv, 2));
-    for i = 1:size(EEG.icawinv,2)
+    meanK = zeros(1, ICAcols);
+    for i = 1:ICAcols
         if num_epoch > 100
             meanK(1,i) = trim_and_mean(K(:,i)); 
         else
@@ -208,8 +225,7 @@ if detect(4)
     GDSF = compute_GD_feat(...
         topografie,...
         EEG.chanlocs(ismember({EEG.chanlocs.type}, {'EEG' 'EOG'})),...
-        size(EEG.icawinv,2)...
-        );
+        ICAcols);
     thr_GDSF = EM(GDSF);
 end
 
@@ -225,8 +241,8 @@ end
 %% Vertical eye movements (VEM)
 if detect(2)
     disp('Evaluating Vertical movements...')
-    verti = (SAD >= thr_SAD) & (med_L.*med_R > 0) & (diff_var > 0) &...
-        (nuovaV >= thr_V);
+    verti = (SAD >= thr_SAD) & (med_L .* med_R > 0) &...
+            (diff_var > 0) & (nuovaV >= thr_V);
     artICs = artICs | verti;
 end
 

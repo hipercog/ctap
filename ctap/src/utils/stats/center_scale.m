@@ -1,4 +1,4 @@
-function inmat = scale(inmat, varargin)
+function inmat = center_scale(inmat, varargin)
 
 %% Parse input arguments and set varargin defaults
 p = inputParser;

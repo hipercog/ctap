@@ -55,13 +55,13 @@ Arg = p.Results;
 disp('Computing channel properties (using FASTER) ...')
 refChanInd = find(ismember({EEG.chanlocs.labels},Arg.refChannel));
 if isempty(refChanInd)
-   error(); 
+   error('eeg_detect_bad_channels:no_reference', 'No reference data'); 
 end
 cp = channel_properties(EEG, Arg.channels, refChanInd);
 cp_header = {'corr','var','Hexp'}; %#ok<NASGU>
 
 %% z-normalize
-cp = nanzscore(cp,0,1); %normalization N-1
+cp = nansuzscore(cp,0,1); %normalization N-1
 
 %% Define mvoutliers
 disp('Detecting bad channels ...')

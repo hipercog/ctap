@@ -2,9 +2,9 @@ function [SEGMENT, Var] = avedata(SEGMENT, classifier, Var, varargin)
 % AVEDATA - Average data in an ATTK data structure variable
 %
 % TODO: Muuta funktiota s.e. sellaiset SEGMENT struktuurin metadata sarakkeet,
-%       jotka eivät ole uniikkeja valitun luokittelijan osajoukoissa, poistetaan
-%       automaattisesti. Näin vältetään virheiltä huolimattoman käyttäjän
-%       käyttäessä funktiota.
+%       jotka eivï¿½t ole uniikkeja valitun luokittelijan osajoukoissa, poistetaan
+%       automaattisesti. Nï¿½in vï¿½ltetï¿½ï¿½n virheiltï¿½ huolimattoman kï¿½yttï¿½jï¿½n
+%       kï¿½yttï¿½essï¿½ funktiota.
 %
 % Description:
 %   Averages ATTK data struct data over one classifier variable. Returns
@@ -25,8 +25,8 @@ function [SEGMENT, Var] = avedata(SEGMENT, classifier, Var, varargin)
 %   Keyword     Type, description, value
 %   'avefun'    function handle, Function to use in averaging, Function 
 %               'avefun' should operate on a numeric vector and return 
-%               scalar, defaults to @nanmean but can also be e.g. @nanvar,
-%               @nanmedian, @mean, @var, @median
+%               scalar, defaults to @nansumean but can also be e.g. @nansuvar,
+%               @nansumedian, @mean, @var, @median
 %   'classifiersToDrop' [1,k] cell of strings, column names from SEGMENT to
 %                       exclude from the modified SEGMENT struct (see Outputs).
 %                       Define here all the classifiers that lose their
@@ -47,7 +47,7 @@ function [SEGMENT, Var] = avedata(SEGMENT, classifier, Var, varargin)
 % Example:
 %  [NEWSEGMENT, Avgvar] = avedata(SEGMENT, 'block', S,...
 %                         'classifiersToDrop',{'cs_n','cs_start','cs_end'},...
-%                         'avefun', @nanvar);
+%                         'avefun', @nansuvar);
 %
 % Notes:
 %
@@ -64,7 +64,7 @@ function [SEGMENT, Var] = avedata(SEGMENT, classifier, Var, varargin)
 
 % Function 'Arg.avefun' will operate on a 2D matrix, It should operate on 
 % a numeric vector and return scalar.
-Arg.avefun = @nanmean; %e.g. @nanmean, @nanvar, @nanmedian, @mean, @var, @median
+Arg.avefun = @nansumean; %e.g. @nansumean, @nansuvar, @nansumedian, @mean, @var, @median
 
 Arg.classifiersToDrop = {''};
 

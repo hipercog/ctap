@@ -7,7 +7,16 @@
 % Returns:
 % 	eeg: EEG struct
 function eeg = ctaptest_convert_bci(filename)
-	load(filename)
+    try
+    	load(filename)
+    catch ME
+        error('ctaptest_convert_bci:bad_file',...
+            ['load(%s) throws error %s\n'...
+             'NOTE: CTAP git repo uses LFS to track/manage large data files.'...
+             ' If you do not install git lfs, your git clone will only'...
+             ' download pointers to required data files.']...
+            , filename, ME.message)
+    end
 
 	eeg = eeg_emptyset();
 

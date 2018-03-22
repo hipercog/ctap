@@ -78,7 +78,7 @@ if Arg.take_worst_n > 0
     [~, ix] = sort(abs(chanVarNorm), 'descend');
     if all(Res.isInRange)
         Res.isInRange(ix(1:Arg.take_worst_n)) = false;
-        tmp = chanVarNorm > nanmedian(chanVarNorm);
+        tmp = chanVarNorm > nansumedian(chanVarNorm);
         Res.isAbove(ix(1:Arg.take_worst_n)) = tmp(ix(1:Arg.take_worst_n));
         Res.isBelow(ix(1:Arg.take_worst_n)) = ~tmp(ix(1:Arg.take_worst_n));
     else

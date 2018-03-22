@@ -71,7 +71,7 @@ end
 switch Arg.thMethod
     case 'hampel'
         min_th = 0;
-        max_th = median(scores)+Arg.factorVal*mad(scores);
+        max_th = median(scores) + Arg.factorVal * olof_mad(scores);
         th = [min_th, max_th];
         
     otherwise
