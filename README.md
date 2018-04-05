@@ -12,9 +12,9 @@ The CTAP toolbox provides two main functionalities to achieve these aims:
 1. the **core** supports scripted specification of an EEGLAB analysis pipeline and tools for running the pipe, making the workflow transparent and easy to control. Automated output of ‘quality control’ logs and imagery helps to keep track of what's going on.
 2. the **testing module** uses synthetic data to generate ground truth controlled tests of preprocessing methods, with capability to generate new synthetic data matching the parameters of the lab’s own data. This allows experimenters to select the best methods for their purpose, or developers to flexibly test and benchmark their novel methods.
 
-_If you use CTAP for your research, __please use the following citation___:
+_If you use CTAP for your research, __please use the following citations___:
  * Cowley, B., Korpela, J., & Torniainen, J. E. (2017). Computational Testing for Automated Preprocessing: a Matlab toolbox to enable large scale electroencephalography data processing. PeerJ Computer Science, 3:e108. http://doi.org/10.7717/peerj-cs.108
-
+* Cowley, B. U., & Korpela, J. (2018). Computational Testing for Automated Preprocessing 2: practical demonstration of a system for scientific data-processing workflow management for high-volume EEG. Frontiers in Neuroscience, 12(236). http://doi.org/10.3389/fnins.2018.00236
 
 ## Installation ##
 
