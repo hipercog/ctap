@@ -68,6 +68,12 @@ function [EEG, Cfg] = CTAP_event_modify(EEG, Cfg)
 % Please see the file LICENSE for details.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+% Test if the function can be run?
+if verLessThan('matlab', '9.1')
+   error('matlabVersionError',...
+        'Matlab versions older than 9.1 (R2016b) break CTAP_event_modify(): all events get the same (wrong) class.'); 
+end
+
 
 %% create Arg and assign any defaults to be chosen at the CTAP_ level
 Arg = struct;

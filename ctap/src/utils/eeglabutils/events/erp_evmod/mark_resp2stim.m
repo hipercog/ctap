@@ -127,6 +127,7 @@ disp(msg);
 %keyboard;
 EEG = eeg_checkevent(EEG);
 EventMod = structconv(EEG.event); %to plane organization
+EventMod.latency = cell2mat(EventMod.latency);
 % two copies of event sequence
 evsq = EventMod.type;
 evsq2 = EventMod.type;
