@@ -44,33 +44,13 @@ pipeArr = {@cfg_pipe1,...
            @cfg_pipe2,...
            @cfg_pipe3a,...
            @cfg_pipe3b};
+first = 1;
+last = length(pipeArr);
+%You can also run only a subset of pipes, e.g. 2:length(pipeArr)
 
 
 %% Run
-for i = 1:length(pipeArr)
-%for i = 3:length(pipeArr) %run only a subset of pipes
-    
-    % Set Cfg
-    [i_Cfg, i_ctap_args] = pipeArr{i}(Cfg);
-    
-    for k = 1:length(i_Cfg.srcid)
-        
-        %i_Cfg.env.paths = cfg_get_directories(i_Cfg, Cfg, i_Cfg.srcid{k});
-        i_Cfg.env.paths = cfg_create_paths(Cfg.env.paths.ctapRoot,...
-                                               i_Cfg.id, i_Cfg.srcid{k});
-        i_Cfg = ctap_auto_config(i_Cfg, i_ctap_args);
-        i_Cfg.MC = Cfg.MC;
-        
-        % Run the pipe
-        i_Cfg.pipe.runMeasurements = get_measurement_id(MC, Filt);
-        CTAP_pipeline_looper(i_Cfg,...
-                            'debug', STOP_ON_ERROR,...
-                            'overwrite', OVERWRITE_OLD_RESULTS);
-        
-        export_features_CTAP([i_Cfg.id '_db']...
-                            , {'bandpowers','PSDindices'}, Cfg.MC, i_Cfg);
-    end
-    
-    % Cleanup
-    clear('i_*');
-end
+tic %#ok<*UNRCH>
+CTAP_pipeline_brancher(Cfg, pipeArr, first, last...
+                    , STOP_ON_ERROR, OVERWRITE_OLD_RESULTS)
+toc
