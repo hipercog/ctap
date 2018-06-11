@@ -99,10 +99,11 @@ if isfield(Cfg.env.paths, 'ctapRoot')
     end
     
     % Log Files
-    if ~isfield(Cfg.env,'logFile')
-        Cfg.env.logFile = fullfile(Cfg.env.paths.logRoot,...
+    if isfield(Cfg.env,'logFile')
+        Cfg.env.userLogFile = Cfg.env.logFile;
+    end
+    Cfg.env.logFile = fullfile(Cfg.env.paths.logRoot,...
                                sprintf('runlog_%s.txt',datestr(now, 30)) );
-    end                           
 
     % SQLite database file for storing function data
     %(such as numbers of trials etc.)
