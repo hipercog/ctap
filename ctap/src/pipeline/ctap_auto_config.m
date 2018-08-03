@@ -73,22 +73,22 @@ if isfield(Cfg.env.paths, 'ctapRoot')
     end
     [~,~,~] = mkdir(Cfg.env.paths.analysisRoot);
     
-    if ~isfield(Cfg.env.paths,'featuresRoot')
+    if ~isfield(Cfg.env.paths, 'featuresRoot')
         Cfg.env.paths.featuresRoot = fullfile(...
             Cfg.env.paths.analysisRoot,'features');
     end
 
-    if ~isfield(Cfg.env.paths,'export')
+    if ~isfield(Cfg.env.paths, 'export')
         Cfg.env.paths.exportRoot = fullfile(...
             Cfg.env.paths.analysisRoot,'export');
     end
 
-    if ~isfield(Cfg.env.paths,'quality_control')
+    if ~isfield(Cfg.env.paths, 'quality_control')
         Cfg.env.paths.qualityControlRoot = fullfile(...
             Cfg.env.paths.analysisRoot,'quality_control');
     end
     
-    if ~isfield(Cfg.env.paths,'logRoot')
+    if ~isfield(Cfg.env.paths, 'logRoot')
         Cfg.env.paths.logRoot = fullfile(...
             Cfg.env.paths.analysisRoot,'logs');
     end        
@@ -99,7 +99,7 @@ if isfield(Cfg.env.paths, 'ctapRoot')
     end
     
     % Log Files
-    if isfield(Cfg.env,'logFile')
+    if isfield(Cfg.env, 'logFile')
         Cfg.env.userLogFile = Cfg.env.logFile;
     end
     Cfg.env.logFile = fullfile(Cfg.env.paths.logRoot,...

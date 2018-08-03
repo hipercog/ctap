@@ -298,8 +298,10 @@ end
 % Report the detected badness per file
 myReport(sprintf('\n================\nBADNESS SUMMARY:\n'), Cfg.env.logFile);
 myReport(scrape_file_for_str(Cfg.env.logFile, 'Bad '), Cfg.env.logFile);
-fid = fopen(Cfg.env.logFile);
-myReport(textscan(fid, '%s'), Cfg,env.userLogFile);
+if isfield(Cfg.env, 'userLogFile')
+    fid = fopen(Cfg.env.logFile);
+    myReport(textscan(fid, '%s'), Cfg.env.userLogFile);
+end
 
 % Concatenate all the bad data tables and write as a single text file
 if ismember('CTAP_reject_data', cellfun(@func2str...

@@ -1,6 +1,6 @@
 %% Minimal CTAP batchfile
 DEBUG = false;
-OVERWRITE_SYNDATA = true; %can be used to re-create synthetic data
+OVERWRITE_SYNDATA = false; %can be used to re-create synthetic data
 
 %% Setup
 reporoot = mfilename('fullpath');
@@ -35,13 +35,13 @@ sbj_filt = 1;
 %% Define pipeline
 clear('stepSet');
 i = 1; %stepSet 1
-stepSet(i).funH = { @CTAP_load_data,...
-                    @CTAP_load_chanlocs,...
-                    @CTAP_reref_data,... 
-                    @CTAP_blink2event,...
-                    @CTAP_peek_data };
+stepSet(i).funH = { @CTAP_load_data };
 stepSet(i).id = [num2str(i) '_load'];
-
+% ,...
+%                     @CTAP_load_chanlocs,...
+%                     @CTAP_reref_data,... 
+%                     @CTAP_blink2event,...
+%                     @CTAP_peek_data
 i = i+1;  %stepSet 2
 stepSet(i).funH = { @CTAP_fir_filter };
 stepSet(i).id = [num2str(i) '_filter'];
@@ -79,9 +79,9 @@ Cfg.pipe.stepSets = stepSet;
 
 %% Select sets to process
 %here any stepSet subset can be indexed numerically or logically
-%Cfg.pipe.runSets = {stepSet([1:6]).id}; %by position index
+Cfg.pipe.runSets = {stepSet(1).id}; %by position index
 %Cfg.pipe.runSets = {'test'}; %by name
-Cfg.pipe.runSets = {'all'}; %whole thing
+% Cfg.pipe.runSets = {'all'}; %whole thing
 
 
 %% Assign arguments to the selected functions, perform various checks
