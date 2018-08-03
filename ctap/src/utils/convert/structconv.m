@@ -26,7 +26,6 @@ function T = structconv(S)
 % Outputs:
 %   T   struct, Struct of opposite organization as 'S'
 %
-% Example: These lines will be shown as the example
 %
 % Notes:
 %   Supports three dimensions but tested with only 2 dimensional structs.
@@ -58,10 +57,10 @@ if sum(size(S) == [1 1]) == 2
     fields = fieldnames(S);
     % Data sizes for each field
     dsizes = NaN(length(fields),3);
-    for i = 1:length(fields)
-        dsizes(i,1) = size(S.(fields{i}),1);
-        dsizes(i,2) = size(S.(fields{i}),2);
-        dsizes(i,3) = size(S.(fields{i}),3);
+    for idx = 1:length(fields)
+        dsizes(idx,1) = size(S.(fields{idx}),1);
+        dsizes(idx,2) = size(S.(fields{idx}),2);
+        dsizes(idx,3) = size(S.(fields{idx}),3);
     end
     
     % Unique data sizes in each field
@@ -108,8 +107,7 @@ end
         
         fields = fieldnames(S);
         [imax, jmax, kmax] = size(S.(fields{1}));
-        %Assumes that S.(fields{1}) is cell or numeric array, NOT char
-        %array
+        %Assumes that S.(fields{1}) is cell or numeric array, NOT char array
         
         
         for n = 1:length(fields) 
@@ -160,7 +158,7 @@ end
                             
                         else
                             if isnumeric( S(i,j,k).(fields{n}) )
-                                R.(fields{n}){i,j,k} = S(i,j,k).(fields{n});
+                                R.(fields{n})(i,j,k) = S(i,j,k).(fields{n});
                             elseif ischar( S(i,j,k).(fields{n}) )
                                 R.(fields{n})(i,j,k) = {S(i,j,k).(fields{n})};
                             elseif iscell( S(i,j,k).(fields{n}) )

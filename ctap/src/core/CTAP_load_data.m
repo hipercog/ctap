@@ -48,11 +48,7 @@ end
 
 
 %% CORE
-% if isfield(Arg, 'type')
-%     [EEG, params, result] = ctapeeg_load_data(Arg.physiodata,'type', Arg.type);
-% else
 [EEG, params, result] = ctapeeg_load_data(Arg.physiodata, Arg);
-% end
 
 
 %% MISC
@@ -90,15 +86,14 @@ if isfield(Cfg, 'MC')
         %               measurement start time string,
         %               measurement start offset from file start in samples}
         time_specs = { datestr(result.time{1},30),...
-                       datestr(...
-                            datenum(result.time{1})+...
-                            (regions(1,2)/EEG.srate)/(24*60*60), 30),...
+                       datestr(datenum(result.time{1}) + ...
+                                (regions(1,2)/EEG.srate)/(24*60*60), 30),...
                        regions(1,2)};
     else
         disp 'No blocks defined.';
         time_specs = { datestr(result.time{1},30),...
-                   datestr(result.time{1},30),...
-                   0};
+                       datestr(result.time{1},30),...
+                       0};
     end
 else
     disp 'MC not specified in Cfg. No blocks loaded.';
@@ -107,11 +102,13 @@ else
                    0};
 end
 
-% Add dummy event to avoid problems with functions that assume events exist
+
+%% HANDLE EVENTS
 if (isempty(EEG.event))
-   EEG.event(1).type = 'dummy_event';
-   EEG.event(1).latency = 1;
-   EEG.event(1).duration = 0;
+    % Add dummy event to avoid problems with functions that assume events exist
+    EEG.event(1).type = 'dummy_event';
+    EEG.event(1).latency = 1;
+    EEG.event(1).duration = 0;
 else
     %set EEG event type field to be char, to avoid mixing data format and
     %crashing, e.g. pop_epoch()

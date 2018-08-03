@@ -82,6 +82,19 @@ function [newevent, rejevent] = eeglab_merge_event_tables(event1, event2, timeSy
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
+%% Check and ensure type field datatype is uniform
+for idx = 1:numel(event1) 
+    if isnumeric(event1(idx).type) 
+        event1(idx).type = num2str(event1(idx).type);
+    end
+end
+for idx = 1:numel(event2) 
+    if isnumeric(event2(idx).type) 
+        event2(idx).type = num2str(event2(idx).type);
+    end
+end
+
+
 %% Detect discontinuous data (boundary events)
 boundmatch1 = strcmp({event1.type},'boundary');
 if sum(boundmatch1) == 0
