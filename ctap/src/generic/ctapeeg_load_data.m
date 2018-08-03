@@ -34,6 +34,7 @@ function [EEG, varargout] = ctapeeg_load_data( filename, varargin )
 %               'neurone': load a neurOne recording from .xml & .bin files
 %               'txt': load ascii file, meta-data specified via free arguments
 %               'mat': load matlab file, meta-data specified via free arguments
+%               'raw': load EGI format file using pop_readegi()
 % 
 %               WIP - importers for Enobio native txt format, BESA, etc.
 % 
@@ -130,6 +131,9 @@ switch file.ext
         df = {'matlab' 'ascii'; 'mat' 'txt'};
         EEG = pop_importdata('data', fullfile(file.path, file.name)...
             , 'dataformat', df(1, strcmp(df(2, :), file.ext)), tmp{:});
+        
+    case 'raw'
+        EEG = pop_readegi(fullfile(file.path, file.name), [], [], 'auto');
         
 end
 

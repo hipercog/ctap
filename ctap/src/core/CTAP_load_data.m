@@ -54,53 +54,12 @@ end
 %% MISC
 try result.meta; catch, result.meta = 'No meta data'; end
 try result.time; catch, result.time = {now()}; end
-
-% Add block definitions if any
-% TODO: this step is rather non-general. A basic implementation could be
-% here, users should implement their own custom selections if needed.
-if isfield(Cfg, 'MC')
-    if isfield(Cfg.MC, 'blocks')
-        % todo: This loads data again from source file. Could be based on
-        % MC and EEG alone. Different block sources give markers in
-        % different formats (string vs numeric, string correct).
-        blocks = parse_blocks(Cfg.MC, Arg.casename);
-        %Throws error if measurement start event is not found.
-        
-        % Regions of unnecessary data
-        if size(blocks.limits_sample, 1) == 1
-            %Data before start
-            regions(1,1) = 1;
-            regions(1,2) = max(2, blocks.limits_sample(1)-1);
-            %Data after end
-            regions(2,1) = min(EEG.pnts-1, blocks.limits_sample(2)+1);
-            regions(2,2) = EEG.pnts;
-        else
-           %todo: Assumes one block per measurement. Quite a restriction.
-           error('CTAP_load_data:block_fail', 'dimension err: check Cfg.MC.blocks');
-        end
-        
-        %Remove unnecessary parts of data
-        EEG = eeg_eegrej(EEG, regions);
-
-        % time_specs: { file start time string,
-        %               measurement start time string,
-        %               measurement start offset from file start in samples}
-        time_specs = { datestr(result.time{1},30),...
-                       datestr(datenum(result.time{1}) + ...
-                                (regions(1,2)/EEG.srate)/(24*60*60), 30),...
-                       regions(1,2)};
-    else
-        disp 'No blocks defined.';
-        time_specs = { datestr(result.time{1},30),...
-                       datestr(result.time{1},30),...
-                       0};
-    end
-else
-    disp 'MC not specified in Cfg. No blocks loaded.';
-    time_specs = { datestr(result.time{1},30),...
-                   datestr(result.time{1},30),...
-                   0};
-end
+%time_specs: { file start time string,
+%              measurement start time string,
+%              measurement start offset from file start in samples, default = 0}
+time_specs = { datestr(result.time{1}, 30),...
+               datestr(result.time{1}, 30),...
+               0};
 
 
 %% HANDLE EVENTS
