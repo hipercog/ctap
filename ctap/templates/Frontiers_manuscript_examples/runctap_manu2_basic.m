@@ -1,9 +1,10 @@
 %% Linear CTAP script to clean SCCN data
 % As referenced in the second CTAP article:
-% Cowley BU, Korpela J, (2018) Computational Testing for Automated Preprocessing 
-% 2: practical demonstration of a system for scientific data-processing workflow 
-% management for high-volume EEG. Frontiers in Neuroscience [IN PROGRESS]
-
+% Cowley BU and Korpela J (2018) Computational Testing for Automated 
+% Preprocessing 2: Practical Demonstration of a System for Scientific 
+% Data-Processing Workflow Management for High-Volume EEG. 
+% Front. Neurosci. 12:236. doi: 10.3389/fnins.2018.00236
+% 
 % OPERATION STEPS
 % # 1
 % Install / download:

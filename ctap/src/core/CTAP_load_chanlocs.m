@@ -112,6 +112,9 @@ end
 % Set any chanlocs types according to user definition
 if ~isempty(Arg.field)
     for fdx = 1:numel(Arg.field)
+        if strcmpi(Arg.field{fdx}{1}, 'all')
+            Arg.field{fdx}{1} = {EEG.chanlocs.labels};
+        end
         for chidx = 1:numel(Arg.field{fdx}{1})
             if isnumeric(Arg.field{fdx}{1}(chidx))
                 idx = 1:numel(EEG.chanlocs) == Arg.field{fdx}{1}(chidx);

@@ -36,6 +36,7 @@ function [EEG, Cfg] = CTAP_reref_data(EEG, Cfg)
 
 %% Set optional arguments
 Arg.reference = Cfg.eeg.reference;
+Arg.keepref = 'on';
 
 % Override defaults with user parameters
 if isfield(Cfg.ctap, 'reref_data')
@@ -63,7 +64,7 @@ end
 % EEG = pop_chanedit(EEG, 'changefield', {get_eeg_inds(EEG, {'REF'}) 'type' 'EEG'});
 
 % Re-reference
-EEG = pop_reref(EEG, chaninds, 'keepref', 'on');
+EEG = pop_reref(EEG, chaninds, 'keepref', Arg.keepref);
 
 % Set kept reference channels to correct type
 % EEG = pop_chanedit(EEG, 'changefield', {chaninds 'type' 'REF'});

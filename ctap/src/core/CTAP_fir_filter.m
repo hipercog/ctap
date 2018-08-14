@@ -4,8 +4,8 @@ function [EEG, Cfg] = CTAP_fir_filter(EEG, Cfg)
 % Description:
 %   A wrapper to use pop_eegfiltnew.m in CTAP.
 %   Note at least one cut-off frequency needs to be set.
-%   If only ''locutoff'' set -> high-pass filter
-%   if only ''hicutoff'' set -> low-pass filter
+%   If only ''locutoff'' set, you get a high-pass filter
+%   if only ''hicutoff'' set, you get a low-pass filter
 %   If both set -> band pass filter
 %
 % Syntax:

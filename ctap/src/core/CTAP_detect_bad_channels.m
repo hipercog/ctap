@@ -89,7 +89,7 @@ else
 end
 
 % save the index of the badness for the CTAP_reject_data() function
-if isfield(EEG.CTAP.badchans,'detect')
+if isfield(EEG.CTAP.badchans, 'detect')
     EEG.CTAP.badchans.detect.src = [EEG.CTAP.badchans.detect.src;...
         {Arg.method, length(EEG.CTAP.badchans.(Arg.method))}];
     [numbad, ~] = ctap_read_detections(EEG, 'badchans');
@@ -100,30 +100,27 @@ else
     numbad = numel(result.chans);
 end
 
-% parse and describe results
-repstr1 =...
-    sprintf('Bad channels by ''%s'' for ''%s'': ', Arg.method, EEG.setname);
-repstr2 = {result.chans}; %just found bad chans
-% repstr2 = {EEG.CTAP.badchans.(Arg.method).chans}; %all bad chans by Arg.method
-
+% Describe results
+rept1 = sprintf('Bad channels by ''%s'' for ''%s'': ', Arg.method, EEG.setname);
+rept2 = {'JUST FOUND : ' result.chans}; %just found bad chans
+rept3 = {'TOTAL : ' EEG.CTAP.badchans.(Arg.method).chans}; %all by Arg.method
+if numel(rept3) == numel(rept2)
+    rept3 = '';
+end
 prcbad = 100 * numbad / EEG.nbchan;
 if prcbad > 10
-    repstr1 = ['WARN ' repstr1];
+    rept1 = ['WARN ' rept1];
 end
-repstr3 = sprintf('\nTOTAL %d/%d = %3.1f prc of channels marked to reject\n'...
+rept4 = sprintf('\nTOTAL %d/%d = %3.1f prc of channels marked to reject\n'...
     , numbad, EEG.nbchan, prcbad);
 
 EEG.CTAP.badchans.detect.prc = prcbad;
 
 
-%% Plot threshold
-if isfield(result.method_data, 'th') 
-    savepath = get_savepath(Cfg, mfilename, 'qc',...
-                            'suffix', Arg.method);                  
-    savename = [EEG.CTAP.measurement.casename, '_',...
-                        Arg.method, '_threshold.png'];
-    savefile = fullfile(savepath, savename);
-    
+%% PLOT BADNESS
+savepath = get_savepath(Cfg, mfilename, 'qc', 'suffix', Arg.method);  
+% Plot threshold
+if isfield(result.method_data, 'th')    
     if isfield(result.method_data.th, 'figtitle')
         titlestr = result.method_data.th.figtitle;
     else
@@ -131,15 +128,24 @@ if isfield(result.method_data, 'th')
     end
     title(get(result.method_data.th.figh, 'CurrentAxes'), titlestr);
     
-    print(result.method_data.th.figh, '-dpng', savefile);
+    print(result.method_data.th.figh, '-dpng', fullfile(savepath...
+        , [EEG.CTAP.measurement.casename, '_', Arg.method, '_threshold.png']));
     close(result.method_data.th.figh);
-    
 end
+
+% Plot scalpmap of bad channels just discovered
+if Arg.plot_detections
+    figh = ctap_plot_bad_chan_scalp(EEG...
+        , get_eeg_inds(EEG, {results.chans})...
+        , 'context', Arg.method...
+        , 'savepath', savepath); %#ok<*NASGU>
+end
+
 
 %% ERROR/REPORT
 Cfg.ctap.detect_bad_channels = params;
 
-msg = myReport({repstr1 repstr2 repstr3}, Cfg.env.logFile);
+msg = myReport({rept1 rept2 rept3 rept4}, Cfg.env.logFile);
 
 EEG.CTAP.history(end+1) = create_CTAP_history_entry(msg, mfilename, params);
 
