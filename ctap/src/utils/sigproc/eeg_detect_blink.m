@@ -46,6 +46,7 @@ function [peakLatArr, BlinkData] = eeg_detect_blink(veog, fs, varargin)
 
 %% Parse input arguments and set varargin defaults
 p = inputParser;
+p.KeepUnmatched = true;
 p.addRequired('veog', @isnumeric);
 
 %p.addParameter('classMethod', 'emgauss_asymmetric', @ischar);
@@ -151,8 +152,7 @@ blink_match_kmeans = sbf_1Dclass_kmeans(Dv_sub);
 %   fluctuations end up being labelled as blinks
 
 % Fit two Gaussians
-%[Dv_min, min_ind] = min(Dv); %non-blink cluster seed, sensitive to
-%outliers!
+%[Dv_min, min_ind] = min(Dv); %non-blink cluster seed, sensitive to outliers!
 [Dv_min, min_ind] = min(abs(Dv_sub)); %non-blink cluster seed around zero
 [Dv_max, max_ind] = max(Dv_sub); %blink cluster seed
 [mu, sd, P] = EMgauss1D(Dv_sub, [min_ind max_ind], 0);
@@ -195,7 +195,7 @@ blink_match(blink_inds) = true;
 max_ind_blinks = max_inds(blink_inds);
 min_ind_blinks = min_inds(blink_inds);
 peakLatArr = NaN(1,length(max_ind_blinks));
-for i=1:length(max_ind_blinks)
+for i = 1:length(max_ind_blinks)
     [~, tmpind] = max(veog(max_ind_blinks(i):min_ind_blinks(i)));
      peakLatArr(i) = max_ind_blinks(i) + tmpind -1;
 end
@@ -275,104 +275,104 @@ ylabel('non-blinks');
 
 %% Helper functions
 
-    % 1D classification using k-means
-    function [blink_match] = sbf_1Dclass_kmeans(Dv)
+% 1D classification using k-means
+function [blink_match] = sbf_1Dclass_kmeans(Dv)
 
-        fprintf('Running k-means ...');
+    fprintf('Running k-means ...');
 
-        % Special initalization for classes
-        % Often there are very few blinks and a random initialization of classes
-        % does not work as desired. We use the a priori information that non-blinky
-        % values of Dv are small whereas blinky values are large to create a better
-        % initial clustering to start from.
-        
-        % Initialize classes
-        [nonBlinkySeed, nonBlinkySeedInd] = min(Dv);
-        [blinkySeed, blinkySeedInd] = max(Dv);
-        %seedPointInds = [nonBlinkySeedInd, blinkySeedInd];
+    % Special initalization for classes
+    % Often there are very few blinks and a random initialization of classes
+    % does not work as desired. We use the a priori information that non-blinky
+    % values of Dv are small whereas blinky values are large to create a better
+    % initial clustering to start from.
 
-        label = ones(1,length(Dv)); % label 1 == non blink
-        for i = 1:length(Dv)
-            if((Dv(i)- nonBlinkySeed)^2 > (Dv(i) - blinkySeed)^2)
-               label(i) = 2; %blinkySeed closer -> switch label
-            end
+    % Initialize classes
+    [nonBlinkySeed, nonBlinkySeedInd] = min(Dv);
+    [blinkySeed, blinkySeedInd] = max(Dv);
+    %seedPointInds = [nonBlinkySeedInd, blinkySeedInd];
+
+    label = ones(1,length(Dv)); % label 1 == non blink
+    for dix = 1:length(Dv)
+        if((Dv(dix)- nonBlinkySeed)^2 > (Dv(dix) - blinkySeed)^2)
+           label(dix) = 2; %blinkySeed closer -> switch label
         end
-        
-        % Refine classes
-        cluster = litekmeans(Dv, 2, label);
-        
-
-        clusterMeans = [mean(Dv(cluster==1)), mean(Dv(cluster==2))] ;
-        [~, max_ind] = max(clusterMeans); 
-
-        blink_match = cluster==max_ind;
-        fprintf(' done. \n');
     end
 
+    % Refine classes
+    cluster = litekmeans(Dv, 2, label);
 
-    function [blink_match] = sbf_emgauss_interpret(Dv, mu, sd, P, Arg, method)
 
-        % Find a suitable threshold for Dv
-        switch method
-            
-            case 'heuristic'
-                % Heuristic version by Korpela
-                % Make cut between mu(1) and mu(2),
-                % mu(1) < mu(2) based on mu(2) alone. 
-                x = Dv_min:Arg.cdfGrid:Dv_max;
-                cdf_non_blink = norm_cdf(x, mu(1), sd(1));
-                th_ind = find(Arg.cdfTailProb < cdf_non_blink, 1 );
-                if isempty(th_ind)
-                    th_ind = numel(cdf_non_blink);
-                end
-                Dv_th = x(th_ind);
+    clusterMeans = [mean(Dv(cluster==1)), mean(Dv(cluster==2))] ;
+    [~, max_ind] = max(clusterMeans); 
 
-                blink_match = Dv > Dv_th; % Get the needed blink match!!
+    blink_match = cluster==max_ind;
+    fprintf(' done. \n');
+end
 
-            case 'asymmetric'
 
-                % Probabilistic version by Miika
-                %{
-                % Miika version 1 fails since sigma(2) is large and hence values below
-                % mu(1) end up being more probable under N(mu(2), sigma(2)).
-                P_non_blink = norm_pdf(Dv, mu(1), sigma(1));
-                P_blink = norm_pdf(Dv, mu(2), sigma(2));
-                %plot(1:length(Dv), [P_blink; P_non_blink],'o-')
-                blink_match = P_blink > P_non_blink;
-                blink_inds = find(blink_match);
-                cluster = repmat(1,1,length(Dv)); % label 1 == non blink
-                cluster(blink_match) = 2;
-                blinkCluster = 2;
-                %blink_inds = find(Dv > 4.5);
-                %}
+function [blink_match] = sbf_emgauss_interpret(Dv, mu, sd, P, Arg, method)
 
-                % Miika version 2 works, but by (quick) tests are no better than Korpela
-                mu_nonblink = mu(1); % mean of non-blink
-                mu_blink = mu(2);    % mean of blink
-                sd_nonblink = sd(1);  % std of non-blink
-                sd_blink = sd(2) * 0.1;     % std of blink
-                prior_nonblink = P(1);     % prior prob. of non-blink
-                prior_blink = P(2);      % prior prob. of blink
-                % Compute blink & nonblink likelihoods (using asymmetric Gaussian dists)
-                Lnb(Dv > mu_nonblink) = norm_pdf(Dv(Dv > mu_nonblink)...
-                    , mu_nonblink, sd_nonblink);
-                Lnb(Dv <= mu_nonblink) = norm_pdf(mu_nonblink, mu_nonblink, sd_nonblink);
-                Lb(Dv < mu_blink) = norm_pdf(Dv(Dv < mu_blink), mu_blink, sd_blink);
-                Lb(Dv >= mu_blink) = norm_pdf(mu_blink, mu_blink, sd_blink);
-                % Compute the posterior probabilities
-                evi_norm = Lnb*prior_nonblink + Lb*prior_blink; % evidence of norm data=
-                                                                % normalization constant
-                pbn = Lb * prior_blink ./ evi_norm; % normalized probability: sample=blink
-                pnbn = 1 - pbn; % normalized probability for the sample to be a non-blink
+    % Find a suitable threshold for Dv
+    switch method
 
-                blink_match = pbn > 0.5; % Get the needed blink match!!
-    
-            otherwise
-                error('eeg_detect_blink:parameterError',...
-                    'Unknown EMGauss decision method.');
-        end
-        
-    end %end of sbf_1Dclass_emgauss
+        case 'heuristic'
+            % Heuristic version by Korpela
+            % Make cut between mu(1) and mu(2),
+            % mu(1) < mu(2) based on mu(2) alone. 
+            x = Dv_min:Arg.cdfGrid:Dv_max;
+            cdf_non_blink = norm_cdf(x, mu(1), sd(1));
+            th_ind = find(Arg.cdfTailProb < cdf_non_blink, 1 );
+            if isempty(th_ind)
+                th_ind = numel(cdf_non_blink);
+            end
+            Dv_th = x(th_ind);
+
+            blink_match = Dv > Dv_th; % Get the needed blink match!!
+
+        case 'asymmetric'
+
+            % Probabilistic version by Miika
+            %{
+            % Miika version 1 fails since sigma(2) is large and hence values below
+            % mu(1) end up being more probable under N(mu(2), sigma(2)).
+            P_non_blink = norm_pdf(Dv, mu(1), sigma(1));
+            P_blink = norm_pdf(Dv, mu(2), sigma(2));
+            %plot(1:length(Dv), [P_blink; P_non_blink],'o-')
+            blink_match = P_blink > P_non_blink;
+            blink_inds = find(blink_match);
+            cluster = repmat(1,1,length(Dv)); % label 1 == non blink
+            cluster(blink_match) = 2;
+            blinkCluster = 2;
+            %blink_inds = find(Dv > 4.5);
+            %}
+
+            % Miika version 2 works, but by (quick) tests are no better than Korpela
+            mu_nonblink = mu(1); % mean of non-blink
+            mu_blink = mu(2);    % mean of blink
+            sd_nonblink = sd(1);  % std of non-blink
+            sd_blink = sd(2) * 0.1;     % std of blink
+            prior_nonblink = P(1);     % prior prob. of non-blink
+            prior_blink = P(2);      % prior prob. of blink
+            % Compute blink & nonblink likelihoods (using asymmetric Gaussian dists)
+            Lnb(Dv > mu_nonblink) = norm_pdf(Dv(Dv > mu_nonblink)...
+                , mu_nonblink, sd_nonblink);
+            Lnb(Dv <= mu_nonblink) = norm_pdf(mu_nonblink, mu_nonblink, sd_nonblink);
+            Lb(Dv < mu_blink) = norm_pdf(Dv(Dv < mu_blink), mu_blink, sd_blink);
+            Lb(Dv >= mu_blink) = norm_pdf(mu_blink, mu_blink, sd_blink);
+            % Compute the posterior probabilities
+            evi_norm = Lnb*prior_nonblink + Lb*prior_blink; % evidence of norm data=
+                                                            % normalization constant
+            pbn = Lb * prior_blink ./ evi_norm; % normalized probability: sample=blink
+            pnbn = 1 - pbn; % normalized probability for the sample to be a non-blink
+
+            blink_match = pbn > 0.5; % Get the needed blink match!!
+
+        otherwise
+            error('eeg_detect_blink:parameterError',...
+                'Unknown EMGauss decision method.');
+    end
+
+end %end of sbf_1Dclass_emgauss
 
 
 end

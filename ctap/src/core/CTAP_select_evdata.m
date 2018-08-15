@@ -14,7 +14,15 @@ function [EEG, Cfg] = CTAP_select_evdata(EEG, Cfg)
 %   EEG         struct, EEGLAB structure
 %   Cfg         struct, CTAP configuration structure
 %   Cfg.ctap.select_evdata:
-%   .evtype     string, event type to select
+%   .evtype     string, event type to select, default = 'all'
+%   .covertype  string, coverage of points around events, default = ''
+%               'total' - select (1st evt + duration1) to (last evt + duration2)
+%               'longest' - find x=longest gap between events, select 1st-x to last+x
+%               'own' - use each event's own duration field, if exists
+%               'next' - set duration of events = offset from next event; select by durations
+%               'fixed' - use a fixed duration given by Arg.duration = [min max]
+%   .duration   [1,1] numeric, Fixed duration around selected events, default = 
+%                         min, max = minus/plus one second, i.e. -+1 * EEG.srate
 %
 % Outputs:
 %   EEG         struct, EEGLAB structure modified by this function
@@ -33,7 +41,11 @@ function [EEG, Cfg] = CTAP_select_evdata(EEG, Cfg)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% Set optional arguments
-Arg = struct();
+Arg.evtype = 'all';     %Default event type to select: all
+
+Arg.covertype = 'total';  %Default coverage of points around events
+
+Arg.duration = [-EEG.srate EEG.srate]; %Fixed duration around selected events
 
 % Override defaults with user parameters
 if isfield(Cfg.ctap, 'select_evdata')
@@ -49,16 +61,48 @@ end
 
 
 %% CORE
-
-% Extract latencies of events
-event_match = ismember({EEG.event.type}, Arg.evtype);
+% Get matching events
+if strcmpi(Arg.evtype, 'all')
+    event_match = true(1, numel(EEG.event));
+else
+    event_match = ismember({EEG.event.type}, Arg.evtype);
+end
 if isempty(event_match)
     error(  'CTAP_select_evdata:selectedEventError',...
             'Event %s was not found.', Arg.evtype);
 end
+
+% Extract latencies of events
 event_lat = [EEG.event(event_match).latency]';
-event_lat = [event_lat, event_lat];
-event_lat(:,2) = event_lat(:,1) + [EEG.event(event_match).duration]';
+switch Arg.covertype
+    case 'total'
+        event_lat = [event_lat(1) + Arg.duration(1)...
+                   , event_lat(end) + Arg.duration(2)];
+
+    case 'longest'
+        mxgp = max(diff([EEG.event(event_match).latency]));
+        event_lat = [event_lat(1) - mxgp, event_lat(end) + mxgp];
+
+    case 'own'
+        if isfield(EEG.event, 'duration')
+            event_lat(:,2) = event_lat(:,1) + [EEG.event(event_match).duration]';
+        else
+            error('CTAP_select_evdata:durationError',...
+                    'Events have no ''duration'' field.');
+        end
+
+    case 'next'
+        offsets = diff([EEG.event(event_match).latency]);
+        for i = 1:numel(EEG.event(event_match)) - 1
+            EEG.event(i).duration = offsets(i);
+        end
+        EEG.event(end).duration = min(mean(offsets), EEG.pnts);
+        event_lat(:,2) = event_lat(:,1) + [EEG.event(event_match).duration]';
+
+    case 'fixed'
+        event_lat = [event_lat + Arg.duration(1), event_lat + Arg.duration(2)];
+
+end
 
 % Select
 EEG = pop_select(EEG, 'point', event_lat);

@@ -1,4 +1,4 @@
-function [EEG, varargout] = ctapeeg_load_data( filename, varargin )
+function [EEG, varargout] = ctapeeg_load_data(filename, varargin )
 %CTAPEEG_LOAD_DATA load a eeg single file as an EEGLAB struct 
 %
 % SYNTAX
