@@ -79,7 +79,7 @@ EEG = struct;
 
 %% Run step sets
 % Find indices of sets to run
-if strcmp(Cfg.pipe.runSets{1},'all')
+if strcmp(Cfg.pipe.runSets{1}, 'all')
     runSets = 1:numel(Cfg.pipe.stepSets);
 else
     runSets = find(ismember({Cfg.pipe.stepSets.id}, Cfg.pipe.runSets));
