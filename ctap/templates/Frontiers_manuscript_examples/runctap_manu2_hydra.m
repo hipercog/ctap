@@ -64,15 +64,16 @@ OVERWRITE_OLD_RESULTS = true;
 pipeArr = {@sbf_pipe1,...
            @sbf_pipe2,...
            @sbf_peekpipe};
-first = 1;
-last = length(pipeArr);
+runps = 1:length(pipeArr);
+%If the sources exist to feed the later pipes, you can also run only a subset:
+% E.G. 2:length(pipeArr) OR [1 4]
 
 
 %% Run the pipe
 if PREPRO
     tic %#ok<*UNRCH>
-    CTAP_pipeline_brancher(Cfg, pipeArr, first, last...
-                        , STOP_ON_ERROR, OVERWRITE_OLD_RESULTS)
+        CTAP_pipeline_brancher(Cfg, pipeArr, 'runPipes', runps...
+                    , 'dbg', STOP_ON_ERROR, 'ovw', OVERWRITE_OLD_RESULTS)
     toc
 end
 

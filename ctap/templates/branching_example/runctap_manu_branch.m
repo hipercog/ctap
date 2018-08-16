@@ -44,13 +44,13 @@ pipeArr = {@cfg_pipe1,...
            @cfg_pipe2,...
            @cfg_pipe3a,...
            @cfg_pipe3b};
-first = 1;
-last = length(pipeArr);
-%You can also run only a subset of pipes, e.g. 2:length(pipeArr)
+runps = 1:length(pipeArr);
+%If the sources exist to feed the later pipes, you can also run only a subset:
+% E.G. 2:length(pipeArr) OR [1 4]
 
 
-%% Run
-tic %#ok<*UNRCH>
-CTAP_pipeline_brancher(Cfg, pipeArr, first, last...
-                    , STOP_ON_ERROR, OVERWRITE_OLD_RESULTS)
+%% Run the pipe
+tic
+    CTAP_pipeline_brancher(Cfg, pipeArr, 'runPipes', runps...
+                , 'dbg', STOP_ON_ERROR, 'ovw', OVERWRITE_OLD_RESULTS)
 toc

@@ -1,3 +1,4 @@
+% TODO: UPDATE ARGUMENTS TO TAKE RUNPIPES, NOT FIRST/LAST
 function CTAP_postproc_brancher(Cfg, dynFunc, dfArgs, pipeArr, varargin)
 %CTAP_postproc_brancher - Applies a post-processing function to pipes in pipeArr
 %

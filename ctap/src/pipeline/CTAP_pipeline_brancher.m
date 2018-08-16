@@ -1,4 +1,4 @@
-function CTAP_pipeline_brancher(Cfg, pipeArr, first, last, dbg, ovw)
+function CTAP_pipeline_brancher(Cfg, pipeArr, varargin)
 %CTAP_pipeline_brancher - Branches the pipes defined in pipeArr
 %
 % Description:
@@ -11,23 +11,14 @@ function CTAP_pipeline_brancher(Cfg, pipeArr, first, last, dbg, ovw)
 % Inputs:
 %   'Cfg'       struct, pipe configuration structure, see specifications above
 %   'pipeArr'   function handle array, specifies the pipe-config funtions
-%   'first'     scalar, index of first pipe to process
-%   'last'      scalar, index of last pipe to process
-%   'dbg'       boolean, see CTAP_pipeline_looper
-%   'ovw'       boolean, see CTAP_pipeline_looper
 %
 %   varargin    Keyword-value pairs
 %   Keyword     Type, description, values
+%   'runPipes'  [1 n] numeric, indices of pipes to process, default = 1:end
+%   'dbg'       boolean, see CTAP_pipeline_looper, default = false
+%   'ovw'       boolean, see CTAP_pipeline_looper, default = false
 %
 % Outputs:
-%
-% Assumptions:
-%
-% References:
-%
-% Example:
-%
-% Notes:
 %
 % See also:
 %
@@ -44,14 +35,37 @@ function CTAP_pipeline_brancher(Cfg, pipeArr, first, last, dbg, ovw)
 %global looplogFH
 
 
+%% Parse input arguments and set varargin defaults
+p = inputParser;
+
+p.KeepUnmatched = true;%unspecified varargin name-value pairs go in p.Unmatched
+
+p.addRequired('Cfg', @isstruct);
+p.addRequired('pipeArr', @iscell);
+
+p.addParameter('runPipes', 1:numel(pipeArr), @isnumeric);
+p.addParameter('dbg', false, @islogical);
+p.addParameter('ovw', false, @islogical);
+
+p.parse(Cfg, pipeArr, varargin{:});
+Arg = p.Results;
+
+
+%% Set up to run pipes
+%Ensure runPipes makes sense
+Arg.runPipes = sort(Arg.runPipes);
+%TODO: CHECK INDICES IN RUNPIPES EXIST IN PIPEARR!
+
+% Get the number of sets called before the current first one
 Cfg.pipe.totalSets = 0;
-for i = 1:first - 1
+for i = 1:Arg.runPipes(1) - 1
     [i_Cfg, ~] = pipeArr{i}(Cfg);
     Cfg.pipe.totalSets = sbf_get_total_sets(i_Cfg);
 end
 
-for i = first:last
-    
+
+%% Run the pipes
+for i = Arg.runPipes
     % Set Cfg
     [i_Cfg, i_ctap_args] = pipeArr{i}(Cfg);
     Cfg.pipe.totalSets = sbf_get_total_sets(i_Cfg);
@@ -74,13 +88,13 @@ for i = first:last
         k_Cfg.MC = Cfg.MC;
 
         % Run the pipe
-        CTAP_branchedpipe_looper(k_Cfg, 'debug', dbg, 'overwrite', ovw)
+        CTAP_branchedpipe_looper(k_Cfg, 'debug', Arg.dbg, 'overwrite', Arg.ovw)
 
 % TODO: CALL THIS USING CTAP_postproc_brancher() INSTEAD.
         if isfield(Cfg, 'export')
             export_features_CTAP([k_Cfg.id '_db']...
                 , {'bandpowers', 'PSDindices'}, Cfg.MC, k_Cfg...
-                , 'debug', dbg, 'overwrite', k_Cfg.export.ovw...
+                , 'debug', Arg.dbg, 'overwrite', k_Cfg.export.ovw...
                 , 'srcFilt', k_Cfg.export.featureSavePoints);
         end
 
