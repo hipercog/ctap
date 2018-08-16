@@ -1,0 +1,561 @@
+---
+title: "Seamless task switching ERPs: descriptive analysis"
+author: "Jussi Korpela"
+date: "June 26, 2018"
+
+output: 
+  html_document:
+    toc: true
+    theme: united
+    code_folding: hide
+    
+params:
+  r_base_dir: /home/jkor/work_local/projects/seamless/github/R
+  project_root_path: /ukko/projects/SeamlessCare_2015-16/
+  ctap_root_id: ctap_tswitch_uupu
+  
+---
+
+```{r setup}
+# Set up RMarkdown working directory & some options
+
+# Working directory for easy sourcing of helper functions
+R_BASE_DIR <- params$r_base_dir
+knitr::opts_knit$set(root.dir = normalizePath(R_BASE_DIR))
+
+# Set general options
+knitr::opts_knit$set(echo = TRUE,
+                     fig.align = "center")
+
+```
+
+# Objective
+
+Plot ERPs and related infromation. Plot extracted amplitudes and latencies (features) as well. A preliminary analysis to see if the are any effects in the data.
+
+
+# TODO
+
+
+# Setup
+Configurations for this analysis. To see them, tap open the code block.
+
+```{r initialize, message=FALSE}
+## Setup
+source("init_jkor.R")
+source("tools_dataload.R")
+
+require(cowplot)
+#require(plotly)
+require(DT)
+
+
+PROJECT_ROOT_PATH <- params$project_root_path
+CTAP_ROOT_ID <- params$ctap_root_id
+PATHS <- create_ctap_paths(PROJECT_ROOT_PATH, CTAP_ROOT_ID)
+#PATHS_LOCAL <- create_ctap_paths('/home/jkor/Dropbox/Shared/seamless_jkor/ukonkuva', CTAP_ROOT_ID)
+
+MBI_CUTOFF <- 1.49
+
+FIG_WIDTH <- 15
+OUT_WIDTH_FC <- 15*100
+
+```
+
+Setup summary:
+
+* project: `r CTAP_ROOT_ID`
+
+* MBI cutoff for grouping: `r MBI_CUTOFF`
+
+
+# Data
+
+The raw data consists of subject average ERPs stored as HDF5 files by the CTAP analysis pipe. These are collected into an R -dataset by a separate script `tswitch_prepare_erpfeat.R`. Also ERP features such as amplitude and latency are extracted by the same script and stored to disk for fast access. 
+
+Let's first load all this data. We also split `casename` into several columns for practicality.
+
+```{r}
+
+savedir <- PATHS$data_root
+
+# subject average ERPs
+savefile <- file.path(savedir, 'TS03_erp_sbjave.rds')
+erp_curves <- readRDS(savefile)
+# split casename into a set of classifier variables
+erp_curves <- erp_curves %>%
+  separate(casename , c('subject','part','session','measurement'),
+           remove = F) %>%
+  mutate(sbjnr = as.integer(
+                 str_replace_all(subject, '[A-Z]*', '')
+                 ))
+
+# ERP features
+savefile <- file.path(savedir, 'TS03_erpfeat.rds')
+erpfeat <- readRDS(savefile)
+
+```
+
+
+Filter out unwanted subjects:
+
+* `sbjnr` is less than 100 for seamless: burnout study
+* todo for uupuneet
+
+```{r, filter}
+
+if(CTAP_ROOT_ID == 'ctap_tswitch'){
+  
+  erp_curves <- erp_curves %>%
+    filter(sbjnr < 100)
+  
+  erpfeat <- erpfeat %>%
+    filter(sbjnr < 100)
+  
+}
+
+```
+
+
+
+## Subject average ERPs
+These are averages of all available trials for a given subject and ERP. The raw ERP data looks like this:
+```{r}
+DT::datatable(head(erp_curves))
+```
+
+The columns are:
+
+* `channel`: electrode position according to 10-20 system
+
+* `time`: data point latency in `ms`
+
+* `subject`: test subject id
+
+* `part`: the second position from casename
+
+* `session`: the third position from casename
+
+* `measurement`: the fourth position from casename
+
+* `amplitude`: ERP amplitude in microvolts
+
+* `trial_count`: ERP trial count (included for convenience)
+
+* `erpid`: ERP identification id
+
+* `sbjnr`: test subject number
+
+Let's look at the how many different levels there are for `erpid` and `channel`. The following are data row counts for different values of the classifying variable:
+
+```{r}
+erp_curves %>% group_by(erpid) %>% count()
+``` 
+
+```{r}
+erp_curves %>% group_by(channel) %>% count()
+``` 
+
+There are in total `r length(unique(erp_curves$subject))` different measurements included as identified by `subject`.
+
+
+
+## ERP features
+The ERP feature data has been extracted from the subject average ERPs. It looks like this:
+```{r}
+DT::datatable(head(erpfeat))
+```
+
+The columns are:
+
+* `erpid`: ERP identification id
+
+* `comp`: ERP component within one ERP wave, the "peak" selected
+
+* `channel`: electrode position according to 10-20 system
+
+* `subject`: test subject id
+
+* `part`: the second position from casename
+
+* `session`: the third position from casename
+
+* `measurement`: the fourth position from casename
+
+* `variable`: ERP feature
+
+* `value`: feature value
+
+* `sbjnr`: test subject number
+
+
+
+Let's look at how many different `comp`-`erpid` combinations we have and how many data rows there are per combination:
+
+```{r}
+erpfeat %>% 
+  filter(variable == 'amplitude') %>%
+  group_by(channel, comp, erpid) %>% 
+  count()
+``` 
+
+So there is `P3a` and `P3b` for each ERP identified by `erpid`.
+
+The definitions of each ERP are:
+
+| Task | ERP id | Included stimuli | Description |
+| -----|---------|-----------------|--------------|
+| TS01 | CR | 110, 120 | Number task |
+| TS02 | CR | 210, 220 | Letter task |
+| TS03 | CR | 111-119, 121-129, 211-219, 221-229 | Switch task: trials at all positions |
+| TS03 | CRp1 | 111, 121, 211, 221 | Switch task: switch trials position 1|
+| TS03 | CRp2 | 112, 122, 212, 222 | Switch task: switch trials position 2 |
+| TS03 | CRp2to9 | 112-119, 122-129, 212-219, 222-229 | Switch task: repetition trials positions 2-9|
+| TS03 | CRp3to9 | 113-119, 123-129, 213-219, 223-229 | Switch task: repetition trials positions 3-9 |
+
+
+
+# MBI scores
+
+Here we load MBI scores for each subject and add two classification variables: a two-level and a three-level MBI classifier.
+```{r}
+sbjd <- load_subject_features(PROJECT_ROOT_PATH)
+
+# Return three-level MBI class for a scalar MBI value
+get_mbi_3class_single <- function(x){
+  
+  if (x <= 1.49){
+    'low'
+  } else if ((1.49 < x) & (x <= 3.49)){
+    'mid'
+  } else { 
+    'high' 
+    }
+}
+
+# Return three-level MBI class for a vector of MBI values
+# To be used with mutate().
+get_mbi_3class <- function(mbi_vec){
+  sapply(mbi_vec, get_mbi_3class_single)
+}
+
+# Add class factors
+sbjd <- sbjd %>%
+  mutate(mbi_class = ordered(MBIScore > MBI_CUTOFF,
+                             levels = c(T,F),
+                             labels = c('high','low')),
+         mbi_class3 = ordered(get_mbi_3class(MBIScore),
+                              levels = c('high','mid','low'))
+         )
+
+# Save for reference
+sbj_info_dir <- file.path(PROJECT_ROOT_PATH,'data','taustatiedot')
+sbj_info_file <- file.path(sbj_info_dir, 'uupu_seam_metadata.xlsx')
+require(xlsx)
+xlsx::write.xlsx2(as.data.frame(sbjd),
+                  sbj_info_file,
+                  sheetName = 'data',
+                  col.names = T, row.names = F, append = F)
+
+```
+
+The table `sbjd` contains information on both UUPU and SEAMLESS subjects. The data as a searchable table looks like this:
+```{r}
+DT::datatable(sbjd)
+```
+
+
+
+# Trial counts
+
+Let's see what kind of trial counts exist in the data:
+```{r trial_counts, out.width = OUT_WIDTH_FC}
+
+ds <- erp_curves %>%
+  filter(channel == 'Pz', time == 0)
+p <- ggplot(ds) +
+  geom_dotplot(aes(x = trial_count), binwidth = 5) +
+  facet_grid(erpid ~ .) +
+  scale_x_continuous(breaks = seq(0, 600, 50)) +
+  theme_linedraw() +
+  labs(x = 'Subject trial count for ERP', y = 'Count of subjects')
+p
+```
+
+Most of these seem to be above 50 which should suffice for a large ERP such as the P3.
+
+A zoomed-in version of the figure above:
+
+```{r trial-counts-zoom, out.width = OUT_WIDTH_FC}
+p <- ggplot(ds) +
+  geom_dotplot(aes(x = trial_count), binwidth = 5) +
+  facet_wrap(erpid ~ ., scales = 'free_x', ncol = 2) +
+  theme_linedraw() +
+  labs(x = 'Subject trial count for ERP', y = 'Count of subjects')
+p
+
+```
+
+
+
+Let's also see if the high MBI score subjects have also low trial counts? This is suspected as their ERPs will later prove to be small...
+
+```{r trial_counts_byMBI, out.width = OUT_WIDTH_FC}
+ds <- erp_curves %>%
+  filter(channel == 'Pz', time == 0)
+
+# get MBI classes
+ds <- left_join(ds,
+                select(sbjd, c('subject', 'mbi_class', 'mbi_class3', 'MBIScore')),
+                by = 'subject')
+
+p <- ggplot(ds) +
+  geom_point(aes(x = trial_count, y = MBIScore, colour = mbi_class3)) +
+  facet_wrap(erpid ~ ., scales = 'free_x') +
+  theme_light() +
+  scale_colour_brewer(palette = 'Set1') +
+  labs(x = 'Subject trial count for ERP', y = 'MBI score')
+p
+
+
+```
+
+The answer is no: high MBI subjects have decent trial counts.
+
+
+
+# Grand Average (GA) ERP
+
+## GA ERP for all subjects
+The grand average is the average ERP averaged over all test subjects. Here are grand average ERPs for each erpid separately:
+```{r, fig.height = 20, fig.width = FIG_WIDTH}
+my_gaerp_plot <- function(pd){
+
+  cur_erpid <- unique(pd$erpid)
+
+  pd <- pd %>%
+    mutate(value = amplitude,
+           ds = subject)
+
+  gapd <- pd %>%
+    group_by(channel, time) %>%
+    summarise(n=n(), mean=mean(amplitude)) %>%
+    ungroup()
+
+  titlestr = sprintf('%s GA ERP, N_sbj = %d', cur_erpid, unique(gapd$n))
+  p <- ggplot.gaerp(gapd,
+                     ylimits = c(15, -7),
+                     titlestr = titlestr) #plot
+  p
+
+  # gp <- ggplotly(p)
+  # savedir_loc <- file.path(RESULTS_LOCAL_BASEPATH, 'figs', 'GA')
+  # dir.create(savedir_loc, showWarnings = F, recursive = T)
+  # savefile <- file.path(savedir_loc, sprintf('GAERP_%s.html', cur_erpid))
+  # htmlwidgets::saveWidget(gp, savefile)
+  # note: using local save directory as saving to Ukko fails
+  # for unknown reason.
+
+  #tibble(success = T, plot = list(p))
+}
+
+erpid_arr <- unique(erp_curves$erpid)
+p_list <- vector(length(erpid_arr), mode = 'list')
+i = 1
+for (id in erpid_arr){
+  p <- my_gaerp_plot(filter(erp_curves, erpid == id))
+  p_list[i] <- list(p)
+  i <- i +1
+}
+cowplot::plot_grid(plotlist = p_list, ncol = 2)
+```
+
+The two components are clearly visible. Because the ERPs are visual, we use channel `Pz` for finding the GA peak position and for extracting the ERP features.
+
+
+## GA ERP by MBI group
+
+```{r}
+# Merge MBI information into ERP curve data
+
+mbiage <- aggregate_subject_features(sbjd, mbi_th = MBI_CUTOFF)
+
+erp_curves_mbi <- left_join(erp_curves,
+                            mbiage %>% select(sbjnr, mbigroup),
+                            by = 'sbjnr')
+
+erp_curves_mbi <- left_join(erp_curves_mbi,
+                            sbjd %>% select(subject, mbi_class, mbi_class3),
+                            by = 'subject')
+```
+
+
+### MBI grouping - project specific
+
+```{r, fig.height = 15, fig.width = FIG_WIDTH}
+
+my_gaerp_plot_bymbi <- function(gapd, class_variable){
+
+  ext.val <- max(abs(gapd$mean_amp))
+  ylimits <- c(ceiling(ext.val), -ceiling(ext.val))
+  
+  p <- ggplot(data = gapd) +
+    geom_line(aes_string(x = 'time', y = 'mean_amp',
+                  group = class_variable, color = class_variable)) +
+    geom_hline(yintercept = 0, size = 0.3) +
+    geom_vline(xintercept = 0, size = 0.3) +
+    facet_grid(erpid ~ channel) +
+    scale_colour_brewer(type = 'qual', palette = 2) +
+    scale_y_reverse(limits = c(15, -7)) + #should apply to both projects!
+    labs(x = 'Time (ms)', y = 'Amplitude (muV)')
+  p
+}
+
+
+gapd1 <- erp_curves_mbi %>%
+  group_by(part, session, mbi_class, erpid, channel, time) %>%
+  summarise(n = n(), mean_amp = mean(amplitude)) %>%
+  ungroup() %>%
+  mutate(mbi_class = fct_rev(mbi_class))
+
+p <- my_gaerp_plot_bymbi(gapd1, 'mbi_class') +
+  labs(title = 'GA ERP by project MBI grouping, 2 levels')
+p
+```
+
+
+```{r, fig.height = 15, fig.width = FIG_WIDTH}
+gapd2 <- erp_curves_mbi %>%
+  group_by(part, session, mbi_class3, erpid, channel, time) %>%
+  summarise(n = n(), mean_amp = mean(amplitude)) %>%
+  ungroup() %>%
+  mutate(mbi_class3 = fct_rev(mbi_class3))
+
+p <- my_gaerp_plot_bymbi(gapd2, 'mbi_class3') +
+  labs(title = 'GA ERP by project MBI grouping, 3 levels')
+p
+```
+
+
+### MBI grouping - independent of project
+
+```{r, fig.height = 15, fig.width = FIG_WIDTH}
+gapd3 <- erp_curves_mbi %>%
+  group_by(part, session, mbigroup, erpid, channel, time) %>%
+  summarise(n = n(), mean_amp = mean(amplitude)) %>%
+  ungroup()
+
+p <- my_gaerp_plot_bymbi(gapd3 %>% filter(mbigroup %in% c('low','high')),
+                         'mbigroup') +
+  labs(title = 'GA ERP project-independent MBI grouping')
+p
+```
+
+
+
+# ERP features
+
+First we add the MBI data to ERP feature data.
+
+```{r}
+# Merge into ERP feature data
+pd <- left_join(erpfeat,
+                select(sbjd, c('subject', 'mbi_class', 'mbi_class3', 'MBIScore')),
+                by = 'subject') %>%
+  mutate(erpid_mbi = paste0(erpid,'_',mbi_class))
+
+```
+
+
+## Boxplot using two MBI classes
+Here a two-level MBI classification is used. Cutoff at MBIScore == `r sprintf('%1.1f', MBI_CUTOFF)`.
+
+```{r erpfeat_boxplot_2class, fig.height = 20, out.width = OUT_WIDTH_FC}
+## Boxplot
+
+erpid_boxplot <- function(pds, mbi_class_var){
+  p <- ggplot(filter(pds, variable == 'amplitude')) +
+    geom_boxplot(aes_string(x = mbi_class_var, y = 'value',
+                     color = mbi_class_var)) +
+    geom_jitter(aes_string(x = mbi_class_var, y = 'value'),
+                alpha = 0.25, size = 0.5, width = 0.25) +
+    facet_grid(comp ~ channel) +
+    theme_light() +
+    theme(axis.text.x = element_text(angle = -45, hjust = 0)) +
+    scale_colour_brewer(palette = "Set1") +
+    labs(x = 'Target stimulus', y = 'Amplitude (uV)',
+         title = sprintf('%s ERP amplitudes within MBI groups', unique(pds$erpid)))
+  p
+}
+
+erpid_arr <- unique(erpfeat$erpid)
+p_list <- vector(length(erpid_arr), mode = 'list')
+i = 1
+for (id in erpid_arr){
+  p <- erpid_boxplot(pd %>% 
+                       filter(erpid == id),
+                     'mbi_class')
+  p_list[i] <- list(p)
+  i <- i +1
+}
+cowplot::plot_grid(plotlist = p_list, ncol = 1)
+
+#tmp <- pd %>% filter(erpid == id)
+#erpid_boxplot(pd %>% filter(erpid == id), 'mbi_class')
+
+```
+
+
+## Boxplot using three MBI classes
+Here a three-level MBI classification is used. Cutoffs at 1.49 and 3.49 as in Ahola et. al. (2005).
+
+Sokka et. al. (2017) use also three groups but the MBI cutoffs are hard to find from that paper. However, Ahola et. al. (2005) define them as follows:
+
+"Burnout and the dimensional scores were categorized as follows: No burnout (scores 0–1.49), mild burnout (scores 1.50–3.49), and severe burnout (scores 3.50–6)."
+
+Reference: Ahola, K., Honkonen, T., Isometsä, E., Kalimo, R., Nykyri, E., Aromaa, A., & Lönnqvist, J. (2005). The relationship between job-related burnout and depressive disorders—results from the Finnish Health 2000 Study. Journal of affective disorders, 88(1), 55-62.
+
+
+```{r erpfeat_boxplot_3class, fig.height = 20, out.width = OUT_WIDTH_FC}
+erpid_arr <- unique(erpfeat$erpid)
+p_list <- vector(length(erpid_arr), mode = 'list')
+i = 1
+for (id in erpid_arr){
+  p <- erpid_boxplot(pd %>% 
+                       filter(erpid == id),
+                     'mbi_class3')
+  p_list[i] <- list(p)
+  i <- i +1
+}
+cowplot::plot_grid(plotlist = p_list, ncol = 1)
+```
+
+# Parallel coordinates plots
+Here is a parallel coordinates plot showing that (todo: only true fro seam):
+
+* high MBI subjects have very similar low amplitude ERPs accross erpid:s
+
+* some low MBI subjects show similar behavior
+
+```{r, out.width = OUT_WIDTH_FC}
+## Parallel coordinates plot
+pdtmp <- pd %>%
+  mutate(comp_mbi = paste0(comp,'_',mbi_class),
+         comp_mbi3 = paste0(comp,'_',mbi_class3)) %>%
+  filter(erpid %in% c('CR','CRp1','CRp2','CRp3to9'))
+p <- ggplot(filter(pdtmp, variable == 'amplitude')) +
+  geom_line(aes(x = erpid, y = value, color = mbi_class3, group = subject)) +
+  geom_point(aes(x = erpid, y = value, color = mbi_class3, group = subject),
+             size = 0.5) +
+  facet_grid(channel ~ comp_mbi3) +
+  scale_color_brewer(palette = 'Set1') +
+  theme_light() +
+  theme(axis.text.x = element_text(angle = -45, hjust = 0)) +
+  labs(x = 'Target stimulus', y = 'Amplitude (uV)',
+       title = 'ERP amplitudes within MBI groups')
+p
+```
+
+
+
+
