@@ -1,0 +1,510 @@
+---
+title: "Seamless task switching ERPs: project comparison"
+author: "Jussi Korpela"
+date: "June 26, 2018"
+
+output: 
+  html_document:
+    toc: true
+    theme: united
+    code_folding: hide
+    
+params:
+  r_base_dir: /home/jkor/work_local/projects/seamless/github/R
+  project_root_path: /ukko/projects/SeamlessCare_2015-16/
+  
+---
+
+```{r setup}
+# Set up RMarkdown working directory & some options
+
+# Working directory for easy sourcing of helper functions
+R_BASE_DIR <- params$r_base_dir
+knitr::opts_knit$set(root.dir = normalizePath(R_BASE_DIR))
+
+# Set general options
+knitr::opts_knit$set(echo = TRUE,
+                     fig.align = "center")
+```
+
+# Objective
+
+Plot ERPs and related infromation. Plot extracted amplitudes and latencies (features) as well. A preliminary analysis to see if the are any effects in the data.
+
+
+# TODO
+
+* Double check how peak averaging windows etc. have been defined? Same windows for both projects or not?
+
+* LME4 analyses: MBI cutoff (1.5 / 2.5)
+
+
+# Setup
+Configurations for this analysis. To see them, tap open the code block.
+
+```{r initialize, message=FALSE}
+## Setup
+source("init_jkor.R")
+source("tools_dataload.R")
+
+require(cowplot)
+#require(plotly)
+require(DT)
+
+MBI_CUTOFF <- 1.49 #cutoff value for MBI based grouping
+
+FIG_WIDTH <- 15
+OUT_WIDTH_FC <- 15*100
+
+PROJECT_ROOT_PATH <- params$project_root_path
+PATHS <- create_ctap_paths(PROJECT_ROOT_PATH, 'dummy')
+SEAM_INPUT_PATH <- file.path(PATHS$project_root, 'analysis', 'ctap_tswitch_results', 'rds')
+UUPU_INPUT_PATH <- file.path(PATHS$project_root, 'analysis', 'ctap_tswitch_uupu_results', 'rds')
+SBJD_INPUT_PATH = file.path(PATHS$project_root, 'data', 'taustatiedot')
+
+```
+
+Setup summary:
+
+* dataset 1: `r SEAM_INPUT_PATH`
+
+* dataset 2: `r UUPU_INPUT_PATH`
+
+* MBI cutoff for grouping: `r MBI_CUTOFF`
+
+
+# Data
+
+
+## Subject related metadata
+
+```{r}
+sbj_factor_file = file.path(SBJD_INPUT_PATH, 'uupu_seam_metadata.rds')
+sbjf = as_tibble(readRDS(sbj_factor_file))
+
+# aggregate_subject_features() comes from tools_dataload.R
+mbiage <- aggregate_subject_features(sbjf, mbi_th = MBI_CUTOFF)
+
+sbjf = sbjf %>%
+  rename(sbjnr = subjnr) %>%
+  mutate(sbjnr = as.integer(sbjnr))
+```
+
+
+```{r}
+mbiage %>% group_by(mbigroup) %>% count()
+```
+
+Add mbigroup to subject data.
+```{r}
+sbjf <- left_join(sbjf,
+                  mbiage %>% select(sbjnr, mbigroup),
+                  by = 'sbjnr')
+```
+
+
+There is one missing data point in key subject related variables:
+```{r}
+sum(is.na(sbjf %>% select(age, MBIScore, BDI2, BAI)))
+```
+
+Impute missing values using group averages:
+```{r}
+# Replace with group mean
+my_imputation <- function(ds){
+  cvar <- 'BDI2'
+  na.match <- is.na(ds[[cvar]])
+  ds[na.match] <- mean(ds[[cvar]], na.rm = T)
+  ds
+}
+
+sbjf <- sbjf %>%
+  group_by(project, mbigroup) %>%
+  do(my_imputation(.)) %>%
+  ungroup()
+```
+
+
+
+## ERP feature data
+The raw data consists of subject average ERPs stored as HDF5 files by the CTAP analysis pipe. These are collected into an R -dataset by a separate script `tswitch_prepare_erpfeat.R`. Also ERP features such as amplitude and latency are extracted by the same script and stored to disk for fast access. 
+
+Let's first load all this data for both projects and combine.
+
+```{r}
+erpf1 = readRDS(file.path(SEAM_INPUT_PATH, 'TS03_erpfeat.rds'))
+erpf1$project = 'SEAM'
+erpf2 = readRDS(file.path(UUPU_INPUT_PATH, 'TS03_erpfeat.rds'))
+erpf2$project = 'UUPU'
+
+# Combine + add subject number (to tell apart cardiovasculars)
+erpf = bind_rows(erpf1, erpf2) %>%
+  mutate(sbjnr = as.integer(str_replace_all(subject, '[A-Z]', '')),
+         project = ordered(project, levels = c('UUPU','SEAM')) )
+
+
+# Combine ERP feature and subject data
+
+## MBI group and mean age (independent of project)
+erpf <- left_join(erpf,
+                  mbiage %>% select(sbjnr, mbigroup, age),
+                  by = 'sbjnr')
+
+## MBIScore, BDI2, BAI (vary between projects)
+erpf <- left_join(erpf,
+                  sbjf %>% select(subject, MBIScore, BDI2, BAI),
+                  by = 'subject')
+
+```
+
+
+## Filter 
+
+```{r}
+#MBIG_LEVELS = c('low', 'high','low -> high','high -> low')
+MBIG_LEVELS = c('low', 'high')
+erpf <- erpf %>%
+  filter(mbigroup %in% MBIG_LEVELS, sbjnr < 100) %>%
+  mutate(mbigroup = ordered(mbigroup, levels = MBIG_LEVELS ))
+```
+
+There are `r sum(is.na(erpf))` missing values in `erpf`.
+
+
+Rename columns to match MMN analysis such that MMN LME models can be applied direclty:
+
+```{r}
+erpf <- erpf %>%
+  rename(subjectid = subject) %>%
+  mutate(subject = sbjnr)
+```
+
+
+## Aggregate feature values (for plotting)
+
+```{r}
+erpagg <- erpf %>%
+  group_by(project,mbigroup,erpid,comp,channel,variable) %>%
+  summarise(n = n(), mean = mean(value), sd = sd(value), se = sd / sqrt(n))
+```
+
+# Visualize
+
+### Amplitude - P3a
+```{r, out.width = OUT_WIDTH_FC}
+
+my_interaction_plot <- function(pd){
+  p <- ggplot(pd, aes(x = project, y = mean, color = mbigroup)) +
+  geom_errorbar(aes(ymin = mean - 1.96*se, ymax = mean + 1.96*se),
+                width = 0.2) +
+  geom_point() +
+  geom_line(aes(group = mbigroup)) +
+  scale_color_discrete() +
+  theme_bw() +
+  facet_grid(erpid ~ channel)
+  p
+}
+
+pd <- erpagg %>%
+  filter(comp == 'P3a', variable == 'amplitude', mbigroup %in% c('low','high'))
+p <- my_interaction_plot(pd)
+p
+```
+
+
+### Amplitude - P3b
+```{r, out.width = OUT_WIDTH_FC}
+pd <- erpagg %>%
+  filter(comp == 'P3b', variable == 'amplitude', mbigroup %in% c('low','high'))
+p <- my_interaction_plot(pd)
+p
+```
+
+
+### Latency - P3a
+```{r, out.width = OUT_WIDTH_FC}
+pd <- erpagg %>%
+  filter(comp == 'P3a', variable == 'latency', mbigroup %in% c('low','high'))
+p <- my_interaction_plot(pd)
+p
+```
+
+
+### Latency - P3b
+```{r, out.width = OUT_WIDTH_FC}
+pd <- erpagg %>%
+  filter(comp == 'P3b', variable == 'latency', mbigroup %in% c('low','high'))
+p <- my_interaction_plot(pd)
+p
+```
+
+
+
+
+
+
+# Linear Mixed Models (LMMs)
+
+
+```{r}
+
+erpfn <- erpf %>%
+  group_by(erpid, comp, variable) %>%
+  nest()
+
+#erpfn[1,'data'][[1]][[1]]
+
+
+require(lme4)
+require(lmerTest)
+source("mmn/lmm_models.R")
+source("tswitch/tswitch_lmm_models.R")
+
+# cmodel <- lmm_ia_chbdibai()
+# cdata <- as.data.frame(erpfn[1,'data'][[1]])
+# res <- eval_model(cmodel, cdata, p_method = "satterthwaite")
+
+# cmodf <- function(ds){
+#   eval_model(lmm_ia_chbdibai(), ds, p_method = "satterthwaite")
+# }
+# 
+# modres <- map(erpfn$data, cmodf)
+# erpfn$modres <- modres
+
+# Wrap model specifications into a function that accepts the data as input and
+# returns a list of results
+make_model_func <- function(model_list){
+  function(ds){
+    eval_model(model_list, ds, p_method = "satterthwaite")
+  }
+}
+
+cmodf1 <- make_model_func(lmm_ia_chbdibai())
+modres1 <- map(erpfn$data, cmodf1)
+
+cmodf2 <- make_model_func(lmm_ia_ch())
+modres2 <- map(erpfn$data, cmodf2)
+
+cmodf3 <- make_model_func(lmm_me_chbdibai())
+modres3 <- map(erpfn$data, cmodf3)
+
+cmodf4 <- make_model_func(lmm_me_ch())
+modres4 <- map(erpfn$data, cmodf4)
+
+```
+
+## Plot goodness of fit (GOF) values
+```{r}
+make_gof_pd <- function(erpfn, modres){
+  gof_pd <- bind_cols(erpfn %>% select(-data),
+                    tibble(a = map(modres, function(el){el$gof})) %>% unnest())
+  gof_pd <- gof_pd %>%
+    gather('gof', 'value', one_of(c(names(modres[[1]]$gof))) )
+  gof_pd$model <- modres[[1]]$model$description
+  gof_pd
+}
+
+gof_pd <- bind_rows(
+  map(list(modres1, modres2, modres3, modres4),
+          function(lel){make_gof_pd(erpfn, lel)})
+  )
+head(gof_pd)
+
+```
+
+### P3a - amplitude
+```{r, out.width = OUT_WIDTH_FC}
+my_gof_plot <- function(pd){
+  p <- ggplot(pd, aes(x = model, y = value, fill = model)) +
+  geom_col() +
+  scale_color_discrete() +
+  theme_bw() +
+  facet_grid(gof ~ erpid, scales = 'free_y') +
+  theme(axis.text.x = element_text(angle = -45, hjust = 0),
+        legend.position = "none")
+  p
+}
+
+pd <- gof_pd %>% filter(comp == 'P3a', variable == 'amplitude')
+p <- my_gof_plot(pd)
+p
+```
+
+### P3b - amplitude
+```{r, out.width = OUT_WIDTH_FC}
+pd <- gof_pd %>% filter(comp == 'P3b', variable == 'amplitude')
+p <- my_gof_plot(pd)
+p
+```
+
+### P3a - latency
+```{r, out.width = OUT_WIDTH_FC}
+pd <- gof_pd %>% filter(comp == 'P3a', variable == 'latency')
+p <- my_gof_plot(pd)
+p
+```
+
+### P3b - latency
+
+```{r, out.width = OUT_WIDTH_FC}
+pd <- gof_pd %>% filter(comp == 'P3b', variable == 'latency')
+p <- my_gof_plot(pd)
+p
+```
+
+
+
+### Plot significant components
+```{r}
+ALPHA <- 0.05
+
+make_fsig_pd <- function(erpfn, modres){
+  fsig_pd <- erpfn %>%
+    select(-data) %>%
+    mutate(fsig = map(modres, function(el){el$fsig}),
+           model = modres[[1]]$model$description) %>%
+    unnest(fsig)
+  fsig_pd
+}
+
+tmp <- make_fsig_pd(erpfn, modres2)
+
+fsig_pd <- bind_rows(
+  map(list(modres1, modres2, modres3, modres4),
+          function(lel){make_fsig_pd(erpfn, lel)})
+  ) %>%
+  mutate(is_signif = p < ALPHA)
+
+head(fsig_pd)
+
+```
+
+
+### Amplitude - P3a
+```{r, out.width = OUT_WIDTH_FC}
+
+my_interaction_plot2 <- function(pd){
+  p <- ggplot(pd, aes(x = project, y = mean, color = mbigroup)) +
+  geom_errorbar(aes(ymin = mean - 1.96*se, ymax = mean + 1.96*se),
+                width = 0.2) +
+  geom_point() +
+  geom_line(aes(group = mbigroup)) +
+  scale_color_discrete() +
+  theme_bw() +
+  facet_grid(channel ~ erpid)
+  p
+}
+
+pd <- erpagg %>%
+  filter(comp == 'P3a', variable == 'amplitude', mbigroup %in% c('low','high'))
+p <- my_interaction_plot2(pd)
+p
+```
+
+```{r, out.width = OUT_WIDTH_FC}
+my_fsig_plot <- function(pd){
+  p <- ggplot(pd, aes(x = model, y = p, color = is_signif)) +
+    geom_point() +
+    scale_color_discrete() +
+    theme_bw() +
+    scale_y_continuous(limits = c(0,1)) +
+    facet_grid(fname ~ erpid, scales = 'free_y') +
+    theme(axis.text.x = element_text(angle = -45, hjust = 0),
+          legend.position = "none")
+  p
+}
+
+pd <- fsig_pd %>% filter(comp == 'P3a', variable == 'amplitude')
+p <- my_fsig_plot(pd)
+p
+```
+
+```{r, out.width = OUT_WIDTH_FC}
+pd <- erpagg %>%
+  filter(comp == 'P3a', variable == 'amplitude', mbigroup %in% c('low','high'))
+p <- my_interaction_plot(pd)
+p
+```
+
+
+### Amplitude - P3b
+```{r, out.width = OUT_WIDTH_FC}
+pd <- erpagg %>%
+  filter(comp == 'P3b', variable == 'amplitude', mbigroup %in% c('low','high'))
+p <- my_interaction_plot2(pd)
+p
+```
+
+```{r, out.width = OUT_WIDTH_FC}
+pd <- fsig_pd %>% filter(comp == 'P3b', variable == 'amplitude')
+p <- my_fsig_plot(pd)
+p
+```
+
+```{r, out.width = OUT_WIDTH_FC}
+pd <- erpagg %>%
+  filter(comp == 'P3b', variable == 'amplitude', mbigroup %in% c('low','high'))
+p <- my_interaction_plot(pd)
+p
+```
+
+
+
+
+
+### Latency - P3a
+```{r, out.width = OUT_WIDTH_FC}
+pd <- erpagg %>%
+  filter(comp == 'P3a', variable == 'latency', mbigroup %in% c('low','high'))
+p <- my_interaction_plot2(pd)
+p
+```
+
+```{r, out.width = OUT_WIDTH_FC}
+pd <- fsig_pd %>% filter(comp == 'P3a', variable == 'latency')
+p <- my_fsig_plot(pd)
+p
+```
+
+```{r, out.width = OUT_WIDTH_FC}
+pd <- erpagg %>%
+  filter(comp == 'P3a', variable == 'latency', mbigroup %in% c('low','high'))
+p <- my_interaction_plot(pd)
+p
+```
+
+
+
+
+
+### Latency - P3b
+```{r, out.width = OUT_WIDTH_FC}
+pd <- erpagg %>%
+  filter(comp == 'P3b', variable == 'latency', mbigroup %in% c('low','high'))
+p <- my_interaction_plot2(pd)
+p
+```
+
+```{r, out.width = OUT_WIDTH_FC}
+pd <- fsig_pd %>% filter(comp == 'P3b', variable == 'latency')
+p <- my_fsig_plot(pd)
+p
+```
+
+```{r, out.width = OUT_WIDTH_FC}
+pd <- erpagg %>%
+  filter(comp == 'P3b', variable == 'latency', mbigroup %in% c('low','high'))
+p <- my_interaction_plot(pd)
+p
+```
+
+
+
+
+
+
+
+
+
+
+

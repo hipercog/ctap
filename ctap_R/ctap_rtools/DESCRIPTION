@@ -1,0 +1,20 @@
+Package: ctap_rtools
+Title: R functions related to the CTAP EEG analysis framework
+Version: 0.1.0
+Authors@R: person("Jussi", "Korpela", email = "jussitapiokorpela@gmail.com", role = c("aut", "cre"))
+Description: R functions related to the CTAP EEG analysis framework
+Depends:
+    R (>= 3.3.0)
+Imports: h5,
+    utils,
+    reshape2,
+    plyr,
+    tibble,
+    stringr,
+    xlsx,
+    DBI,
+    RSQLite
+License: MIT + file LICENSE
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 6.0.1
