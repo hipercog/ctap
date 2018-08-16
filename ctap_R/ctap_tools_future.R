@@ -87,6 +87,30 @@ parse.savename <- function(fname){
 }
 
 
+#' The hdf5-datasets are clustered by blink handling branches and levels of
+#' processing; Use this function to select the desired combination of blink
+#' handling method and level of processing.
+#'
+#' @param branch - Select analysis branch for blink handling;
+#'   asis       - No blink handling procedures.
+#'   BLICremove - Remove ICs found to be associated with blinks.
+#'   BLICfix    - Correction of blinks using empirical mode decomposition.
+#' @param level - Integer giving the level of processing in range 1-3.
+#'
+#' @return A subsetted tibble containing paths to .hdf5-files with specified
+#' blink handling method and level of processing.
+subset_fd <- function(fd, branch = "BLICremove", level = 2L){
+  PATH_PATTERNS <- c("src-1_ica", "src-1_blinkICfix", "src-1_blinkICremove")
+  BRANCHES <- c('asis', 'BLICfix', 'BLICremove')
+  fd %>% ungroup() %>%
+    mutate(Branch = Rtools::mystr_detect_replace(path, PATH_PATTERNS, BRANCHES),
+           setlev = parse_number(setfun)) %>%
+    group_by(casename, erpid, Branch) %>%
+    mutate(setrank = rank(setlev)) %>%
+    ungroup() %>%
+    filter(Branch == branch & setrank == level)
+}
+
 
 #' Function for loading subject average ERP data and binding it into
 #' a tibble, separately for each erpid.
@@ -95,8 +119,7 @@ parse.savename <- function(fname){
 #' @param channel_arr char vector, names of channels to load
 #'
 #' @return A tibble with subject average ERP data
-preload_data <- function(fd, channel_arr)
-{
+preload_data <- function(fd, channel_arr){
 
   load_condition <- function(fds, channel_arr) {
 
