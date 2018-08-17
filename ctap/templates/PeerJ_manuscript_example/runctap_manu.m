@@ -38,10 +38,10 @@ if ~isdir(project_dir), mkdir(project_dir); end;
 
 %% Create synthetic data (only if needed)
 data_dir_seed = fullfile(cd(),'ctap','data');
-data_dir_out = fullfile(Cfg.env.paths.projectRoot,'data','manuscript');
-if ( isempty(dir(fullfile(data_dir_out,'*.set'))) || overwrite_syndata)
+data_dir = fullfile(Cfg.env.paths.projectRoot,'data','manuscript');
+if ( isempty(dir(fullfile(data_dir,'*.set'))) || overwrite_syndata)
     % Normally this is run only once to create the data
-    generate_synthetic_data_manuscript(data_dir_seed, data_dir_out);
+    generate_synthetic_data_manuscript(data_dir_seed, data_dir);
 end
 
 
@@ -50,8 +50,7 @@ end
 sbj_filt = 1; 
 % Next, create measurement config (MC) based on folder of synthetic source 
 % files, & select subject subset
-[Cfg.MC, Cfg.pipe.runMeasurements] =...
-    confilt_meas_dir(data_dir_out, '*.set', sbj_filt);
+Cfg = get_meas_cfg_MC(Cfg, data_dir, 'eeg_ext', '*.set', 'sbj_filt', sbj_filt);
 
 
 %% Select step sets to process

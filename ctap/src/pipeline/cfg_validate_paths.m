@@ -7,6 +7,8 @@ function Cfg = cfg_validate_paths(Cfg)
     end
     
     function sbf_replace_path(pathpart)
+        Cfg.MC.measurement(i).(pathpart) =...
+            strrep(Cfg.MC.measurement(i).(pathpart), {'\' '/'}, filesep);
         tmp = strfind(Cfg.MC.measurement(i).(pathpart), servname);
         if ~isempty(tmp)
             Cfg.MC.measurement(i).(pathpart) = fullfile(servpath, ...

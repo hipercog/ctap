@@ -309,7 +309,7 @@ fu_names = strrep(uniqFuns, 'CTAP_', '');
 fu_names = strrep(fu_names, 'ctapeeg_', '');
 for i = 1:numel(uniqFuns)
     num_fun_occ = sum(ismember(runPipeFuns, uniqFuns{i}));
-    nopars = struct([fu_names{i} '_params'], 0);
+    nopars = struct([fu_names{i} '_user_params'], 0);
     Cfg.ctap.(fu_names{i}) = repmat(nopars, 1, num_fun_occ);
 end
 

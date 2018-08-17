@@ -16,7 +16,8 @@ function [EEG, Cfg] = CTAP_clock_start(EEG, Cfg)
 %
 % Notes: 
 %
-% See also: CTAP_clock_stop() %
+% See also: CTAP_clock_stop() 
+%
 % Copyright(c) 2017 :
 % Jan Brogger (jan@brogger.no)
 %
@@ -26,20 +27,19 @@ function [EEG, Cfg] = CTAP_clock_start(EEG, Cfg)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% Set optional arguments
-Arg.clockstart = [];
+Arg.clockstart = datetime('now');
 
 % Override defaults with user parameters
-if isfield(Cfg, 'elapsed')
-    Arg = joinstruct(Arg, Cfg.elapsed);
+if isfield(Cfg.ctap, 'clock_start')
+    Arg = joinstruct(Arg, Cfg.ctap.clock_start);
 end
 
+
+%% CORE
+Cfg.elapsed.clockstart = Arg.clockstart;
+
+
 %% ERROR/REPORT
-res = struct;
-res.clockstart = datetime('now');
-
-Arg = joinstruct(Arg, res);
-Cfg.elapsed = Arg;
-
 msg = myReport({'Started clock' Arg.clockstart}, Cfg.env.logFile);
 
 EEG = add_CTAP(EEG, Cfg);

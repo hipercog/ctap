@@ -35,7 +35,7 @@
 
 %% Setup MAIN parameters
 % set the input directory where your data is stored
-data_dir_in = '/home/ben/Benslab/CTAP/CTAPIIdata/testing';
+data_dir = '/home/ben/Benslab/CTAP/CTAPIIdata/testing';
 % specify the file type of your data
 data_type = '*.bdf';
 % use sbj_filt to select all (or a subset) of available recordings
@@ -55,14 +55,13 @@ OVERWRITE_OLD_RESULTS = true;
 
 %% Create the CONFIGURATION struct
 % First, define step sets & their parameters: sbf_cfg() is written by the USER
-[Cfg, ctap_args] = sbf_cfg(data_dir_in, ctapID);
+[Cfg, ctap_args] = sbf_cfg(data_dir, ctapID);
 
 % Select step sets to process
 Cfg.pipe.runSets = set_select;
 
 % Next, create measurement config (MC) based on folder, & select subject subset
-[Cfg.MC, Cfg.pipe.runMeasurements] =...
-    confilt_meas_dir(data_dir_in, data_type, sbj_filt);
+Cfg = get_meas_cfg_MC(Cfg, data_dir, 'eeg_ext', data_type, 'sbj_filt', sbj_filt);
 
 % Assign arguments to the selected functions, perform various checks
 Cfg = ctap_auto_config(Cfg, ctap_args);

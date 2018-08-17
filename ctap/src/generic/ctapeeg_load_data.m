@@ -61,9 +61,8 @@ function [EEG, varargout] = ctapeeg_load_data(filename, varargin )
 Arg = struct();
 sbf_check_input() % parse the varargin, set defaults
 
-% Check format and file existence, define list of allowed extensions
-extns = {'set' 'bdf' 'edf' 'gdf' 'vhdr' 'eeg' 'vpd' 'xml' 'mat' 'txt'};
-file = file_loadable(filename, extns);
+% Check format and file existence
+file = file_loadable(filename, ctap_supported_eeg_types());
 if ~file.load
     error('ctapeeg_load_data:bad_file',...
         'File does not exist or cannot be loaded')

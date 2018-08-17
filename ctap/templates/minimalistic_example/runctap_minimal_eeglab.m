@@ -19,8 +19,7 @@ batch_id = 'eeglabmini';
 sbj_filt = 1; 
 % Next, create measurement config (MC) based on folder of synthetic source 
 % files, & select subject subset
-[Cfg.MC, Cfg.pipe.runMeasurements] =...
-    confilt_meas_dir(dataRoot, '*_data.set', sbj_filt);
+Cfg = get_meas_cfg_MC(Cfg, dataRoot, 'eeg_ext', '*_data.set', 'sbj_filt', sbj_filt);
 
 
 %% Define pipeline

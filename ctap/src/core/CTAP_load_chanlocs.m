@@ -125,6 +125,10 @@ if ~isempty(Arg.field)
                 [EEG.chanlocs(idx).(Arg.field{fdx}{2})] = deal(Arg.field{fdx}{3});
             end
         end
+        if fdx > 1
+            ovw = ismember(Arg.field{fdx - 1}{1}, Arg.field{fdx}{1});
+            Arg.field{fdx - 1}{1}(ovw) = [];
+        end
     end
     % Feedback about types
     myReport({EEG.chanlocs.labels; EEG.chanlocs.type},...
@@ -168,9 +172,10 @@ Cfg.ctap.load_chanlocs = Arg;
 
 msg = '';
 if ~isempty(Arg.field)
-    msg = myReport({'Made channel type assignment -' Arg.field});
+    msg = myReport({'Made channel type assignment -'...
+        cellfun(@myReport, Arg.field, 'Un', 0)}, [], newline);
 end
-msg = myReport(sprintf('Loaded chanlocs from %s.\n%s', Arg.file, msg)...
+msg = myReport(sprintf('Loaded chanlocs from %s%s%s', Arg.file, newline, msg)...
     , Cfg.env.logFile);
 
 EEG.CTAP.history(end+1) = create_CTAP_history_entry(msg, mfilename, Arg);

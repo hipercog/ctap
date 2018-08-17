@@ -57,8 +57,7 @@ OVERWRITE_OLD_RESULTS = true;
 [Cfg, ~] = sbf_cfg(data_dir_in, ctapID);
 
 % Next, create measurement config (MC) based on folder, & select subject subset
-[Cfg.MC, Cfg.pipe.runMeasurements] =...
-    confilt_meas_dir(data_dir_in, data_type, sbj_filt);
+Cfg = get_meas_cfg_MC(Cfg, data_dir, 'eeg_ext', data_type, 'sbj_filt', sbj_filt);
 
 % Select pipe array and first and last pipe to run
 pipeArr = {@sbf_pipe1,...

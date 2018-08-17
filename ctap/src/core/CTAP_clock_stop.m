@@ -34,33 +34,27 @@ function [EEG, Cfg] = CTAP_clock_stop(EEG, Cfg)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% Set optional arguments
-Arg.elapsed = [];
+elapsed = seconds(time(between(Cfg.elapsed.clockstart, datetime('now'))));
+Arg.elapsed = elapsed;
 
 % Override defaults with user parameters
-if isfield(Cfg, 'elapsed')
-    Arg = joinstruct(Arg, Cfg.elapsed);
+if isfield(Cfg.ctap, 'clock_stop')
+    Arg = joinstruct(Arg, Cfg.ctap.clock_stop);
 end
 
-elapsed = seconds(time(between(Cfg.elapsed.clockstart, datetime('now'))));
+[INFO, SEGMENT] = gather_measurement_metadata(Cfg.subject, Cfg.measurement); %#ok<*ASGLU>
 
-
-[INFO SEGMENT] = gather_measurement_metadata(Cfg.subject, Cfg.measurement);
-
-savepath = fullfile(Cfg.env.paths.featuresRoot,'elapsed');
-if ~isdir(savepath)
-    mkdir(savepath); 
-end
+savepath = fullfile(Cfg.env.paths.featuresRoot, 'elapsed');
+if ~isdir(savepath), mkdir(savepath); end
 savename = sprintf('%s_elapsed.mat', Cfg.measurement.casename);
-save(fullfile(savepath,savename), 'INFO', 'SEGMENT', 'elapsed');
+save(fullfile(savepath, savename), 'INFO', 'SEGMENT', 'elapsed');
+
+
+%% CORE
+Cfg.elapsed.elapsed = elapsed;
 
 
 %% ERROR/REPORT
-res = struct;
-res.elapsed = elapsed;
-
-Arg = joinstruct(Arg, res);
-Cfg.elapsed = Arg;
-
 msg = myReport({'Elapsed ' Arg.elapsed}, Cfg.env.logFile);
 
 EEG = add_CTAP(EEG, Cfg);

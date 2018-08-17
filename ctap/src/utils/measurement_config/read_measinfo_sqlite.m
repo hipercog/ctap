@@ -22,9 +22,9 @@ function measurement_config = read_measinfo_sqlite(mc_source, varargin)
 p = inputParser;
 p.addRequired('mc_source', @isstr);
 p.addOptional('dbfilter', {}, @isstruct);
-p.addParamValue('tableNameMeasConf', 'mc', @isstr);
-p.addParamValue('tableNameEvents', 'events', @isstr);
-p.addParamValue('tableNameBlocks', 'blocks', @isstr);
+p.addParameter('tableNameMeasConf', 'mc', @isstr);
+p.addParameter('tableNameEvents', 'events', @isstr);
+p.addParameter('tableNameBlocks', 'blocks', @isstr);
 
 p.parse(mc_source, varargin{:});
 Arg = p.Results;
@@ -100,7 +100,7 @@ and_fields = {'id', 'subjectnr', 'age'};
 
 for i = 1:numel(fields)
     
-    if strmatch(fields{i}, and_fields, 'exact')
+    if strcmpi(fields{i}, and_fields)
         bool_op = 'and';
     else
         bool_op = 'or';

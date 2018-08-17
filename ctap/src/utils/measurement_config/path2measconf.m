@@ -9,7 +9,7 @@ function MC = path2measconf(filepath, filepattern)
 filepattern = strrep(filepattern, '*..', '*.');
 files = dir(fullfile(filepath, filepattern));
 file_arr = {files.name};
-file_arr = cellfun(@(x) fullfile(filepath,x), file_arr, 'UniformOutput', false);
+file_arr = cellfun(@(x) fullfile(filepath, x), file_arr, 'Unif', false);
 
 MC = filearr2measconf(file_arr);
 
