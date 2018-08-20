@@ -60,6 +60,9 @@ function [EEG, Cfg] = CTAP_load_chanlocs(EEG, Cfg)
 
 
 %% Set optional arguments
+if ~Cfg.eeg.chanlocs
+    return
+end
 Arg.file = ctap_eeg_find_chlocs(Cfg);
 Arg.field = {}; %user must set this based on his own knowledge!
 Arg.tidy = {};
@@ -172,7 +175,7 @@ Cfg.ctap.load_chanlocs = Arg;
 
 msg = '';
 if ~isempty(Arg.field)
-    msg = myReport({'Made channel type assignment -'...
+    msg = myReport({'SHSHMade channel type assignment -'...
         cellfun(@myReport, Arg.field, 'Un', 0)}, [], newline);
 end
 msg = myReport(sprintf('Loaded chanlocs from %s%s%s', Arg.file, newline, msg)...

@@ -136,8 +136,10 @@ else
 end
 
 if ~isfield(Cfg.eeg, 'chanlocs')
+    Cfg.eeg.chanlocs = false;
     warning('ctap_auto_config:cfgFieldMissing',...
-         'Field Cfg.eeg.chanlocs is required for CTAP to work.');
+         ['Field Cfg.eeg.chanlocs not detected; assuming chanlocs are present'...
+         ' in EEG already and setting Cfg.eeg.chanlocs = false.']);
 end
 
 if ~isfield(Cfg.eeg, 'veogChannelNames')
