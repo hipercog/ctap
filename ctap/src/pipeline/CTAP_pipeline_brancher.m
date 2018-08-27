@@ -53,8 +53,12 @@ Arg = p.Results;
 
 %% Set up to run pipes
 %Ensure runPipes makes sense
+tmp = ~ismember(Arg.runPipes, 1:numel(pipeArr));
+if any(tmp)
+    error('CTAP_pipeline_brancher:bad_param',...
+        '''runPipes'' value(s) %d NOT in ''pipeArr''!', Arg.runPipes(tmp))
+end
 Arg.runPipes = sort(Arg.runPipes);
-%TODO: CHECK INDICES IN RUNPIPES EXIST IN PIPEARR!
 
 % Get the number of sets called before the current first one
 Cfg.pipe.totalSets = 0;

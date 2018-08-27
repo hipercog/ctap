@@ -78,6 +78,9 @@ end
 
 
 %% FILTER
+if isempty(MC)
+    error('get_meas_cfg_MC:no_MC', 'No measurement configuration was found')
+end
 % Select measurements to process, matching to contents of Arg.sbj_filt
 Filt.subject = {MC.subject.subject};
 if ~isempty(Arg.sbj_filt)

@@ -6,6 +6,9 @@ function file_arr = path2filearr(filepath, filepattern)
 %
 % Authors: Benjamin Cowley (HY, 2018)
 % -------------------------------------------------------------------------
+if ~isdir(filepath)
+    error('path2filearr:bad_path', 'Path ''%s'' does NOT exist!', filepath)
+end
 if ~isempty(filepattern)
     filepattern = strrep(filepattern, '*..', '*.');
 end
