@@ -75,8 +75,8 @@ function [artICs, horiz, verti, blink, disco] = ctapeeg_ADJUST(EEG, varargin)
 % ----------------------------------------------------
 % |  Collect useful data from EEG structure          |
 % ----------------------------------------------------
-ICArows = size(EEG.icawinv, 1);
-ICAcols = size(EEG.icawinv, 2);
+ICArows = size(EEG.icaact, 1);
+ICAcols = numel(EEG.icachansind);
 %number of time points = size(EEG.data,2);
 if isfield(EEG, 'trials')
     num_epoch = EEG.trials;
@@ -125,7 +125,7 @@ topografie = EEG.icawinv'; %computes IC topographies
 %% Topographies and time courses normalization
 disp('Normalizing topographies...Scaling time courses...')
 
-for i = 1:ICAcols % number of ICs
+for i = 1:ICArows % number of ICs
     ScalingFactor = norm(topografie(i,:));
     topografie(i,:) = topografie(i,:) / ScalingFactor;
     if length(size(EEG.data)) == 3
@@ -143,14 +143,14 @@ disp('SED - Spatial Eye Difference...');
 [SED, med_L, med_R] = computeSED_NOnorm(...
     topografie,...
     EEG.chanlocs(ismember({EEG.chanlocs.type}, {'EEG' 'EOG'})),...
-    ICAcols); 
+    ICArows); 
 
 %SAD - Spatial Average Difference
 disp('SAD - Spatial Average Difference...');
 [SAD, var_front, var_back, ~, ~] = computeSAD(...
     topografie,...
     EEG.chanlocs(ismember({EEG.chanlocs.type}, {'EEG' 'EOG'})),...
-    ICAcols, ICArows);
+    ICArows, ICAcols);
 
 %SVD - Spatial Variance Difference between front zone and back zone
 diff_var = var_front - var_back;
@@ -160,7 +160,7 @@ disp('Computing variance and kurtosis of all epochs...')
 K = zeros(num_epoch, size(EEG.icawinv, 2)); %kurtosis
 Vmax = zeros(num_epoch, size(EEG.icawinv, 2)); %variance
 
-for i = 1:size(EEG.icawinv, 2) % number of ICs
+for i = 1:ICArows % number of ICs
     for j = 1:num_epoch
         Vmax(j,i) = var(EEG.icaact(i,:,j));
         %K(j,i) = kurtosis(EEG.icaact(i,:,j)); %stats toolbox
@@ -171,8 +171,8 @@ end
 %MEV - Maximum Epoch Variance
 disp('Maximum epoch variance...')
 if num_epoch > 1
-    maxvar = zeros(1, ICAcols);
-    meanvar = zeros(1, ICAcols);
+    maxvar = zeros(1, ICArows);
+    meanvar = zeros(1, ICArows);
 
     for i = 1:ICAcols
         if num_epoch>100
@@ -187,7 +187,7 @@ if num_epoch > 1
     % MEV in reviewed formulation:
     nuovaV = maxvar ./ meanvar;
 else
-    nuovaV = ones(1, ICAcols);
+    nuovaV = ones(1, ICArows);
 end
 
 
@@ -225,7 +225,7 @@ if detect(4)
     GDSF = compute_GD_feat(...
         topografie,...
         EEG.chanlocs(ismember({EEG.chanlocs.type}, {'EEG' 'EOG'})),...
-        ICAcols);
+        ICArows);
     thr_GDSF = EM(GDSF);
 end
 
