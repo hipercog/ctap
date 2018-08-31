@@ -86,7 +86,7 @@ for i = Arg.runPipes
         if isnan(k_Cfg.srcid{k}), continue, end %skip empty sources
 
         k_Cfg.env.paths = cfg_create_paths(Cfg.env.paths.ctapRoot, k_Cfg.id...
-            , k_Cfg.srcid{k}, length(k_Cfg.srcid) > 1);
+                                                            , k_Cfg.srcid, k);
         % Assign arguments to the selected functions, perform various checks
         k_Cfg = ctap_auto_config(k_Cfg, i_ctap_args);
         k_Cfg.MC = Cfg.MC;
