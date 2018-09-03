@@ -27,6 +27,7 @@ function [EEG, Cfg] = CTAP_peek_data(EEG, Cfg)
 %                       .peekevent is defined): uniform distribution of 10
 %       .hists          scalar, square number histograms per figure, default: 16
 %       .channels       cellstring array, chanlocs labels or type, default: 'EEG'
+%       .overwrite      logical, wipe existing output from prior peek_data runs
 %
 % Outputs:
 %   EEG         struct, EEGLAB structure modified by this function

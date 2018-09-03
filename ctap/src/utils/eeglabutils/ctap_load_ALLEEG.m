@@ -1,5 +1,5 @@
-function files = dir_extended( directory, varargin )
-%DIR_EXTENDED carefully controlled selection of files from a directory - should
+function files = ctap_load_ALLEEG( directory, varargin )
+%CTAP_LOAD_ALLEEG carefully controlled selection of files from a directory - should
 %be generic but now still focused on EEG files: work in progress.
 %
 % SYNTAX

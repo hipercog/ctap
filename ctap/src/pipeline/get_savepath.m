@@ -7,9 +7,9 @@ function savedir = get_savepath(Cfg, funcname, type, varargin)
 % Inputs:
 %   'Cfg'       struct, Pipe configuration structure, see documentation
 %   'funcname'  string, Name of function saving out quality control figure
-%   'type'      string, The kind of savepath to be produced,
-%               allowed values {'qc','fig','data'} each corresponding to a
-%               different sub-directory
+%   'type'      string, The kind of savepath to be produced, allowed values are 
+%                           {'qc','fig','data','features','sweep'}
+%                       each one corresponding to a different sub-directory
 %
 %
 % Outputs:
@@ -29,6 +29,7 @@ function savedir = get_savepath(Cfg, funcname, type, varargin)
 % This would have to be chosen explicitly by the user, and done on a
 % per-subject, per-file basis (not for whole QC folder returned by this
 % function)
+% DONE: function prepare_savepath() does this based on 'deleteExisting' param?
 
     p = inputParser;
     p.addRequired('Cfg', @isstruct);
