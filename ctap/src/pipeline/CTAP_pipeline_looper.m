@@ -149,15 +149,28 @@ for n = 1:numMC %over measurements
     for i = runSets %over stepSets
         myReport(sprintf('\n\nSTEP SET %s', Cfg.pipe.stepSets(i).id),...
             Cfg.env.logFile);
-        %respect prior run of this stepSet - don't overwrite (if save is true)
-        
-        if ~Arg.overwrite && Cfg.pipe.stepSets(i).save
-            thisfile = fullfile(Cfg.env.paths.analysisRoot...
-                , Cfg.pipe.stepSets(i).id, [Cfg.measurement.casename, '.set']);
-            if exist(thisfile, 'file')
-                myReport(sprintf('Overwrite is OFF and %s exists already.%s',...
-                    thisfile, ' Skipping this STEP SET'), Cfg.env.logFile);
-                continue;
+
+        %respect prior run of this stepSet - don't overwrite...
+        if ~Arg.overwrite
+            %...if save is true...
+            if Cfg.pipe.stepSets(i).save
+                thisfile = fullfile(Cfg.env.paths.analysisRoot...
+                 , Cfg.pipe.stepSets(i).id, [Cfg.measurement.casename, '.set']);
+                if exist(thisfile, 'file')
+                    myReport(sprintf('Overwrite is OFF and %s exists already.%s',...
+                        thisfile, ' Skipping this STEP SET'), Cfg.env.logFile);
+                    continue
+                end
+            %...OR, if stepSet calls peek_data ONLY, and it has been done before
+            elseif ismember(cellfun(@func2str...
+                   , Cfg.pipe.stepSets(i).funH, 'Un', 0), 'CTAP_peek_data')
+               testi = fullfile(Cfg.env.paths.qualityControlRoot...
+                   , 'CTAP_peek_data', sprintf('set%d_fun1'...
+                   , i + Cfg.pipe.totalSets - numel(runSets))...
+                   , Cfg.measurement.casename);
+               if ~isdir(testi) || ~isempty(dirflt(testi))
+                   continue
+               end
             end
         end
         i_ctap_hist_sz = 0;
