@@ -168,7 +168,7 @@ for n = 1:numMC %over measurements
                    , 'CTAP_peek_data', sprintf('set%d_fun1'...
                    , i + Cfg.pipe.totalSets - numel(runSets))...
                    , Cfg.measurement.casename);
-               if ~isdir(testi) || ~isempty(dirflt(testi))
+               if isdir(testi) && ~isempty(dirflt(testi))
                    continue
                end
             end
