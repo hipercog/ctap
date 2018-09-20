@@ -14,9 +14,9 @@ function CTAP_postproc_brancher(Cfg, dynFunc, dfArgs, pipeArr, varargin)
 %                               implement the interface dynFunc(Cfg, varargin)
 %   'dfArgs'    cell array, name-value pair arguments to pass to 'dynFunc'
 %   'pipeArr'   function handle array, specifies the pipe-config funtions
+% 
 % Varargin:
-%   'first'     scalar, index of first pipe to process
-%   'last'      scalar, index of last pipe to process
+%   'runPipes'  [1 n] numeric, indices of pipes to process, default = 1:end
 %   'dbg'       boolean, see CTAP_pipeline_looper
 %
 %
@@ -31,25 +31,41 @@ function CTAP_postproc_brancher(Cfg, dynFunc, dfArgs, pipeArr, varargin)
 % Please see the file LICENSE for details.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+
 p = inputParser;
+p.KeepUnmatched = true;%unspecified varargin name-value pairs go in p.Unmatched
+
 p.addRequired('Cfg', @isstruct)
 p.addRequired('dynFunc', @(f) isa(f, 'function_handle'))
 p.addRequired('dfArgs', @iscell)
 p.addRequired('pipeArr', @iscell)
-p.addParameter('first', 1, @isnumeric)
-p.addParameter('last', numel(pipeArr), @isnumeric)
+
+p.addParameter('runPipes', 1:numel(pipeArr), @isnumeric)
 p.addParameter('dbg', false, @islogical)
+
 p.parse(Cfg, dynFunc, dfArgs, pipeArr, varargin{:});
 Arg = p.Results;
 
 
+%% Set up to run pipes
+%Ensure runPipes makes sense
+tmp = ~ismember(Arg.runPipes, 1:numel(pipeArr));
+if any(tmp)
+    error('CTAP_pipeline_brancher:bad_param',...
+        '''runPipes'' value(s) %d NOT in ''pipeArr''!', Arg.runPipes(tmp))
+end
+Arg.runPipes = sort(Arg.runPipes);
+
+% Get the number of sets called before the current first one
 Cfg.pipe.totalSets = 0;
-for i = 1:Arg.first - 1
+for i = 1:Arg.runPipes(1) - 1
     [i_Cfg, ~] = pipeArr{i}(Cfg);
     Cfg.pipe.totalSets = sbf_get_total_sets(i_Cfg);
 end
 
-for i = Arg.first:Arg.last
+
+%% Run the pipes
+for i = Arg.runPipes
     
     % Set Cfg
     [i_Cfg, i_ctap_args] = pipeArr{i}(Cfg);
@@ -63,7 +79,7 @@ for i = Arg.first:Arg.last
         if isnan(k_Cfg.srcid{k}), continue, end %skip empty sources
 
         k_Cfg.env.paths = cfg_create_paths(Cfg.env.paths.ctapRoot, k_Cfg.id...
-            , k_Cfg.srcid{k}, length(k_Cfg.srcid) > 1);
+                                                            , k_Cfg.srcid, k);
         % Assign arguments to the selected functions, perform various checks
         k_Cfg = ctap_auto_config(k_Cfg, i_ctap_args);
         k_Cfg.MC = Cfg.MC;

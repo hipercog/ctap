@@ -11,9 +11,8 @@ function CTAP_pipeline_brancher(Cfg, pipeArr, varargin)
 % Inputs:
 %   'Cfg'       struct, pipe configuration structure, see specifications above
 %   'pipeArr'   function handle array, specifies the pipe-config funtions
-%
-%   varargin    Keyword-value pairs
-%   Keyword     Type, description, values
+% 
+% Varargin:
 %   'runPipes'  [1 n] numeric, indices of pipes to process, default = 1:end
 %   'dbg'       boolean, see CTAP_pipeline_looper, default = false
 %   'ovw'       boolean, see CTAP_pipeline_looper, default = false
@@ -37,15 +36,14 @@ function CTAP_pipeline_brancher(Cfg, pipeArr, varargin)
 
 %% Parse input arguments and set varargin defaults
 p = inputParser;
-
 p.KeepUnmatched = true;%unspecified varargin name-value pairs go in p.Unmatched
 
-p.addRequired('Cfg', @isstruct);
-p.addRequired('pipeArr', @iscell);
+p.addRequired('Cfg', @isstruct)
+p.addRequired('pipeArr', @iscell)
 
-p.addParameter('runPipes', 1:numel(pipeArr), @isnumeric);
-p.addParameter('dbg', false, @islogical);
-p.addParameter('ovw', false, @islogical);
+p.addParameter('runPipes', 1:numel(pipeArr), @isnumeric)
+p.addParameter('dbg', false, @islogical)
+p.addParameter('ovw', false, @islogical)
 
 p.parse(Cfg, pipeArr, varargin{:});
 Arg = p.Results;
