@@ -1,5 +1,5 @@
-function CTAP_pipeline_looper(Cfg, varargin)
-%CTAP_pipeline_looper - Loops over the functions defined in Cfg.pipe.stepSets
+function CTAP_branchedpipe_looper(Cfg, varargin)
+%CTAP_branchedpipe_looper - Loops over the functions defined in Cfg.pipe.stepSets
 %
 % Description:
 %   Input structs are documented in Google Docs:
@@ -37,7 +37,7 @@ function CTAP_pipeline_looper(Cfg, varargin)
 % See also:
 %
 % Version History:
-% 1.06.2014 Created (Jussi Korpela, FIOH)
+% 10.02.2017 Created (Benjamin Cowley, FIOH)
 %
 % Copyright(c) 2015 FIOH:
 % Benjamin Cowley (Benjamin.Cowley@ttl.fi), Jussi Korpela (jussi.korpela@ttl.fi)
@@ -46,7 +46,9 @@ function CTAP_pipeline_looper(Cfg, varargin)
 % http://opensource.org/licenses/mit-license.php
 % Please see the file LICENSE for details.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
+%global looplogFH
+looplogfile = 'looplog.txt';
+looplogFH = fopen(looplogfile, 'a'); %#ok<NASGU>
 
 %% Parse input arguments and set varargin defaults
 p = inputParser;
@@ -72,8 +74,8 @@ for fn = 1:numel(fnames)
     end
 end
 
-myReport(sprintf('Begin analysis run at %s with stepSets:%s %s %s',...
-    datestr(now), newline, char(Cfg.pipe.runSets)', newline), Cfg.env.logFile);
+myReport(sprintf('Pipe analysis has stepSets:%s %s %s',...
+    newline, char(Cfg.pipe.runSets)', newline), Cfg.env.logFile);
 EEG = struct;
 
 
@@ -87,19 +89,30 @@ end
 
 
 %% Load and subset measurement config data
+%Establish where we get our first measurement files
+% if ~isempty(Cfg.env.paths.branchSource)
+%     pipeSrcDir = Cfg.env.paths.branchSource;
+% elseif runSets(1) == 1
+%     pipeSrcDir = NaN;
+% else
+%     pipeSrcDir = sbf_get_src_subdir(Cfg, runSets(1));
+% end
+
 badFlag = {'_BAD_FILE'};
-if runSets(1) == 1
+% TODO: badFlag approach is not always working. For example
+% CTAP_load_data_seamless does not create a file at all if it fails...
+if runSets(1) == 1 && isempty(Cfg.env.paths.branchSource)
     %At the start of the pipe, user-defined measurements are all processed
     strucFilt.casename = Cfg.pipe.runMeasurements;
 else
     %After 1+ steps, some measurements may have failed.
     %Use source directory to find loadable files
-    srcSubDir = sbf_get_src_subdir(Cfg, runSets(1));
-    Filt = dir(fullfile(srcSubDir, '*.set'));
+    pipeSrcDir = sbf_get_src_subdir(Cfg, runSets(1));
+    Filt = dir(fullfile(pipeSrcDir, '*.set'));
     if numel(Filt) == 0
         error('CTAP_pipeline_looper:inputError',...
         'Source directory ''%s'' is either empty or doesnt exist. Please check.',...
-        srcSubDir);
+        pipeSrcDir);
     end
     Filt = {Filt(cellfun(@isempty, strfind({Filt.name}, badFlag{1}))).name};
     [~, Filt, ~] = cellfun(@fileparts, Filt, 'UniformOutput', false);
@@ -109,7 +122,7 @@ else
     if numel(strucFilt.casename) == 0
        warning('CTAP_pipeline_looper:inputError',...
         'Source directory ''%s'' does not contain data for casename ''%s''. Please check.',...
-        srcSrcDir, Cfg.pipe.runMeasurements{1});
+        pipeSrcDir, Cfg.pipe.runMeasurements{1});
     end
     
 end
@@ -124,9 +137,6 @@ if numMC == 0 && ~isempty(strucFilt)
                 'WHY DON''T YOU TRY: specifying a different set of measurements.');
     myReport(msg, Cfg.env.logFile);
 end
-% get the index of the start stepSet - i.e. where the first data was loaded
-% using this approach, runSets can jump around, jump around
-idx_start_sets = find([Cfg.pipe.stepSets.save], 1, 'first');
 
 
 %% Run sets
@@ -138,26 +148,7 @@ for n = 1:numMC %over measurements
     Cfg.subject = struct_filter(Cfg.MC.subject, SbjFilt);
     tmp_Cfg = Cfg; %hold a copy of Cfg as it may be edited during Sets
     clear('SbjFilt');
-    
-    %{
-    % Add extra information structures to Cfg if they exist
-    TmpFilt.casename = Cfg.measurement.casename;
-    
-    if isfield(MCSub, 'events')
-       Cfg.events = struct_filter(MCSub.events, TmpFilt);
-    else
-       Cfg.events = struct([]);
-    end
-    
-    if isfield(MCSub, 'blocks')
-       Cfg.blocks = struct_filter(MCSub.blocks, TmpFilt);
-       Cfg.blocks = struct([]);
-    end
-    
-    clear('TmpFilt');
-    %}
-    
-    
+
     for i = runSets %over stepSets
         myReport(sprintf('\n\nSTEP SET %s', Cfg.pipe.stepSets(i).id),...
             Cfg.env.logFile);
@@ -191,12 +182,12 @@ for n = 1:numMC %over measurements
         %% Load source data for current step set
         try
             % Load source dataset
-            if (i == idx_start_sets)
+            if (i == 1) && isempty(Cfg.env.paths.branchSource)
                 % assuming step1,func1 is CTAP_load_data() and
                 % loading based on MC.measurement.physiodata
                 i_EEG = struct();
             else
-                % middle of pipe, load from previous step set
+                % middle of pipe, load from some previous step set or branch
                 i_EEG = pop_loadset(...
                     'filepath', sbf_get_src_subdir(Cfg, i),...
                     'filename', [Cfg.measurement.casename, '.set']);
@@ -209,7 +200,12 @@ for n = 1:numMC %over measurements
 
         %% Perform analysis steps in current step set
         for k = 1:numel(Cfg.pipe.stepSets(i).funH) %over analysis steps
-            if (i + k > idx_start_sets + 1)
+            looplogfile = 'looplog.txt';
+            looplogFH = fopen(looplogfile, 'a');
+            fprintf(looplogFH, '\tn: %d, i2: %d, k2: %d\n', n, i, k);
+            fclose(looplogFH);
+            
+            if (i + k > 2)
                 if ~is_valid_CTAPEEG(i_EEG)
                     warning('EEG file was not processed by CTAP pipe');
                     break;
@@ -412,19 +408,28 @@ end
 
 % Get source directory of loadable files
 function src_subdir = sbf_get_src_subdir(Cfg, idx)
+
     if ~isempty(Cfg.pipe.stepSets(idx).srcID)
-        src_subdir = Cfg.pipe.stepSets(idx).srcID;
+        parts = strsplit(Cfg.pipe.stepSets(idx).srcID, '#');
+        if numel(parts) == 2
+            src_subdir = fullfile(Cfg.env.paths.ctapRoot, parts{1}, parts{2});
+        else
+            src_subdir = fullfile(Cfg.env.paths.analysisRoot, parts{1});
+        end
     else
         %get first stepSet index with saved data
         idx = find([Cfg.pipe.stepSets(1:idx - 1).save], 1, 'last' );
         if isempty(idx)
-            error('CTAP_pipeline_looper:badSaveSpec',...
-            'NO SAVE POINT FOUND TO LOAD DATA - check your save specification');
+            if ~isempty(Cfg.env.paths.branchSource)
+                src_subdir = Cfg.env.paths.branchSource;
+            else
+                error('CTAP_pipeline_looper:badSaveSpec',...
+                'NO SAVE POINT FOUND TO LOAD DATA - check your save specification');
+            end
+        else
+            src_subdir = fullfile(Cfg.env.paths.analysisRoot, Cfg.pipe.stepSets(idx).id);
         end
-        src_subdir = Cfg.pipe.stepSets(idx).id;
     end
-    src_subdir = fullfile(Cfg.env.paths.analysisRoot, src_subdir);
-
 end
 
-end% CTAP_pipeline_looper()
+end% CTAP_branchedpipe_looper()

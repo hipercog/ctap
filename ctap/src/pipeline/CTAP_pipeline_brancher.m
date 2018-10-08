@@ -70,6 +70,7 @@ end
 for i = Arg.runPipes
     % Set Cfg
     [i_Cfg, i_ctap_args] = pipeArr{i}(Cfg);
+    if ~iscell(i_Cfg.srcid), i_Cfg.srcid = {i_Cfg.srcid}; end
     Cfg.pipe.totalSets = sbf_get_total_sets(i_Cfg);
     myReport(sprintf('Begin analysis run at %s with pipe:%s ''%s'''...
         , datestr(now), newline, i_Cfg.id));
@@ -550,4 +551,4 @@ function src_subdir = sbf_get_src_subdir(Cfg, idx)
     end
 end
 
-end% CTAP_pipeline_looper()
+end% CTAP_branchedpipe_looper()

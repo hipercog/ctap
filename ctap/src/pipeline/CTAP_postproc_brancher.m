@@ -66,9 +66,9 @@ end
 
 %% Run the pipes
 for i = Arg.runPipes
-    
     % Set Cfg
     [i_Cfg, i_ctap_args] = pipeArr{i}(Cfg);
+    if ~iscell(i_Cfg.srcid), i_Cfg.srcid = {i_Cfg.srcid}; end
     Cfg.pipe.totalSets = sbf_get_total_sets(i_Cfg);
     myReport(sprintf('Post-processing pipe ''%s'' at %s with function:%s ''%s'''...
         , i_Cfg.id, datestr(now), newline, func2str(dynFunc)));
