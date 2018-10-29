@@ -5,19 +5,20 @@ function plot_histogram(data, varargin)
 
 %% Parse input arguments and set varargin defaults
 p = inputParser;
-p.addRequired('data', @isnumeric);
-p.addParameter('title', 'Histogram & Gaussian fit', @isstr);
-p.addParameter('xlabel', 'data value', @isstr);
-p.addParameter('ylabel', 'Count / PDF value', @isstr);
-p.addParameter('plotTitle',  true, @islogical);
-p.addParameter('plotLabels',  true, @islogical);
-p.addParameter('plotYLabels', true, @islogical);
-p.addParameter('tailPrc',  0.05, @isnumeric);
-p.addParameter('xlim', [NaN, NaN], @isnumeric);
-p.addParameter('ylim', [NaN, NaN], @isnumeric);
-p.addParameter('plotLegend', false, @islogical);
+p.addRequired('data', @isnumeric)
+p.addParameter('title', 'Histogram & Gaussian fit', @isstr)
+p.addParameter('xlabel', 'data value', @isstr)
+p.addParameter('ylabel', 'Count / PDF value', @isstr)
+p.addParameter('plotTitle',  true, @islogical)
+p.addParameter('plotLabels',  true, @islogical)
+p.addParameter('plotYLabels', true, @islogical)
+p.addParameter('tailPrc',  0.05, @isnumeric)
+p.addParameter('xlim', [NaN, NaN], @isnumeric)
+p.addParameter('ylim', [NaN, NaN], @isnumeric)
+p.addParameter('plotLegend', false, @islogical)
+p.addParameter('plotPDFs', true, @islogical)
 
-p.parse(data, varargin{:});
+p.parse(data, varargin{:})
 Arg = p.Results;
 
 
@@ -103,13 +104,15 @@ if Arg.plotLabels
     end
 end
 
-% Overplotting a normal distribution using sd (in red)
 hold on;
-h1 = plot(binpos, datafit, 'r', 'LineWidth', 1);
-set(gca, 'XLim', Arg.xlim)
+if Arg.plotPDFs
+    % Overplotting a normal distribution using sd (in red)
+    h1 = plot(binpos, datafit, 'r', 'LineWidth', 1);
+    set(gca, 'XLim', Arg.xlim)
 
-% Overplotting a normal distribution using trimmed sd (in black)
-h2 = plot(binpos, tdatafit, 'k');
+    % Overplotting a normal distribution using trimmed sd (in black)
+    h2 = plot(binpos, tdatafit, 'k');
+end
 
 if zlo > Arg.xlim(1)
     plot([zlo zlo], [0 Arg.ylim(2)/2], 'k', 'LineWidth', 1) % low  percentile
@@ -131,9 +134,14 @@ set(gca, 'XMinorTick', 'on', 'XLim', Arg.xlim);
 
 if Arg.plotLegend
     tmp = get(gca, 'Position');
-    H = [h1 h2 h3];
-    l = legend(H, 'gaussian fit', 'trimmed g. fit', 'mean',...
-        'Location', 'southoutside', 'Orientation', 'horizontal');
+    if Arg.plotPDFs
+        H = [h1 h2 h3];
+        L = {'gaussian fit', 'trimmed g. fit', 'mean'};
+    else
+        H = h3;
+        L = {'mean'};
+    end
+    l = legend(H, L, 'Location', 'southoutside', 'Orientation', 'horizontal');
     set(l, 'FontSize', 12)
     legend boxoff
     set(gca, 'Position', tmp)

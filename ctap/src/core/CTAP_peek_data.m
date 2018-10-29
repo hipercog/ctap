@@ -112,9 +112,15 @@ end
 %% make and save stats to log file
 if Arg.logStats
     % get stats of each channel in the file, build a matrix of stats
+    %TODO: Matlab tables are very slow: optimise for speed
     [~, ~, statab] = ctapeeg_stats_table(EEG, 'channels', chidx...
         , 'outdir', savepath, 'id', 'peekall');
     
+    % plot the stats as histograms
+    fh = ctap_stat_hists(statab);
+    print(fh, '-dpng', fullfile(savepath, 'EEG_allchan_stats.png'))
+    close(fh)
+
     % Write the stats for each peek for each subject to 1 log file
     stalog = fullfile(Cfg.env.paths.logRoot, 'peek_stats_log.xlsx');
     rptname = strrep(EEG.CTAP.measurement.casename, '_session_meas', '');
@@ -138,8 +144,8 @@ if Arg.plotEEGHist
             , 'chans', chidx(i:min(i+fx-1, nchan)));
         %named after channels shown
         savename = sprintf('EEGHIST_chan%d-%d.png', i, min(i+fx-1, nchan));
-        print(fh, '-dpng', fullfile(savepath, savename));
-        close(fh);
+        print(fh, '-dpng', fullfile(savepath, savename))
+        close(fh)
     end
 end
 
@@ -241,16 +247,17 @@ if Arg.peekStats
 end
 
 
-%% Plot raw data from channels
-% for either all peeks, or just one (if plotting all would be a mountain)
+%% Subselect only peek 1...
+% if plotting all peeks would give a fig mountain, e.g. many channel data
 if ~Arg.plotAllPeeks
     pkidx = 1;
     starts = starts(pkidx);
     labels = labels(pkidx);
 end
 
-if Arg.plotEEG
 
+%% Plot raw data from channels
+if Arg.plotEEG
     % set channels to plot in red
     if isfield(EEG.CTAP, 'badchans') &&...
        isfield(EEG.CTAP.badchans, 'detect')

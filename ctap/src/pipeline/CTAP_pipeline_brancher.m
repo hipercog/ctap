@@ -187,7 +187,7 @@ end
 fnames = fieldnames(Cfg.env.paths);
 fnames(~cellfun(@ischar, struct2cell(Cfg.env.paths))) = [];
 for fn = 1:numel(fnames)
-    if ~isdir(Cfg.env.paths.(fnames{fn})) && ...
+    if ~isfolder(Cfg.env.paths.(fnames{fn})) && ...
        ~isempty(Cfg.env.paths.(fnames{fn}))
         mkdir(Cfg.env.paths.(fnames{fn}));
     end
@@ -290,7 +290,7 @@ for n = 1:numMC %over measurements
                    , 'CTAP_peek_data', sprintf('set%d_fun1'...
                    , i + Cfg.pipe.totalSets - numel(runSets))...
                    , Cfg.measurement.casename);
-               if isdir(testi) && ~isempty(dirflt(testi))
+               if isfolder(testi) && ~isempty(dirflt(testi))
                    continue
                end
             end
@@ -311,7 +311,7 @@ for n = 1:numMC %over measurements
                     'filepath', sbf_get_src_subdir(Cfg, i),...
                     'filename', [Cfg.measurement.casename, '.set']);
             end
-        catch ME,
+        catch ME
             funStr = 'intermediate_data_load';
             sbf_report_error(ME);
             break;
@@ -349,7 +349,7 @@ for n = 1:numMC %over measurements
             else
                 try
                     i_Cfg_tmp = sbf_execute_pipefun;
-                catch ME,
+                catch ME
                     sbf_report_error(ME);
                     if isfield(i_EEG, 'CTAP')
                         i_EEG.CTAP.history(end+1) = create_CTAP_history_entry(...
@@ -380,7 +380,7 @@ for n = 1:numMC %over measurements
         end
         %actions to take whatever happened during ananlysis steps
         i_sv = fullfile(Cfg.env.paths.analysisRoot, Cfg.pipe.stepSets(i).id);
-        if ~isdir(i_sv), mkdir(i_sv); end %make stepSet directory
+        if ~isfolder(i_sv), mkdir(i_sv); end %make stepSet directory
         EEG = i_EEG; %store EEG state to write out history after loops
 
         % if stepSet loop didn't complete, measurement is no longer processed.
@@ -431,7 +431,7 @@ myReport(sprintf('\nAnalysis run ended at %s.\n', datestr(now, 30)),...
     Cfg.env.logFile);
 if any(MCbad)
     myReport({'Analysis failed for: ' MCSub.measurement(MCbad).casename},...
-        Cfg.env.logFile, sprintf('\n'));
+        Cfg.env.logFile, newline);
 else
     myReport('All Analysis Successful!', Cfg.env.logFile);
 end
@@ -457,7 +457,7 @@ if ismember('CTAP_reject_data', cellfun(@func2str...
 %TODO(feature-request)(BEN) join tables with non-matching rownames, use missing values
             try
                 rejtab = join(rejtab, tmp.rejtab, 'Keys', 'RowNames');
-            catch ME,
+            catch ME
                 fprintf('%s::%s misses rows, can''t join\n', ME.message, nxt)
             end
         end
