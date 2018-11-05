@@ -9,12 +9,16 @@ p.addRequired('data', @isnumeric)
 p.addParameter('title', 'Histogram & Gaussian fit', @isstr)
 p.addParameter('xlabel', 'data value', @isstr)
 p.addParameter('ylabel', 'Count / PDF value', @isstr)
-p.addParameter('plotTitle',  true, @islogical)
-p.addParameter('plotLabels',  true, @islogical)
-p.addParameter('plotYLabels', true, @islogical)
-p.addParameter('tailPrc',  0.05, @isnumeric)
 p.addParameter('xlim', [NaN, NaN], @isnumeric)
 p.addParameter('ylim', [NaN, NaN], @isnumeric)
+p.addParameter('plotTitle',  true, @islogical)
+p.addParameter('plotBox',  true, @islogical)
+p.addParameter('plotLabels',  true, @islogical)
+p.addParameter('plotXLabels', true, @islogical)
+p.addParameter('plotYLabels', true, @islogical)
+p.addParameter('plotXTickLabels', true, @islogical)
+p.addParameter('plotYTickLabels', true, @islogical)
+p.addParameter('tailPrc',  0.05, @isnumeric)
 p.addParameter('plotLegend', false, @islogical)
 p.addParameter('plotPDFs', true, @islogical)
 
@@ -73,6 +77,9 @@ tdatafit = tdatafit * pnts * dx;
 
 
 %% Plot histogram
+if ~Arg.plotBox
+    box off
+end
 if any(isnan(Arg.xlim))
     Arg.xlim = get(gca, 'XLim');
 end
@@ -97,11 +104,21 @@ if any(isnan(Arg.ylim))
 end
 
 if Arg.plotTitle, title(Arg.title); end
-if Arg.plotLabels
-    xlabel(Arg.xlabel);
-    if Arg.plotYLabels
-        ylabel(Arg.ylabel);
-    end
+if ~Arg.plotLabels
+    Arg.plotXLabels = false;
+    Arg.plotYLabels = false;
+end
+if Arg.plotXLabels
+    xlabel(Arg.xlabel)
+end
+if Arg.plotYLabels
+    ylabel(Arg.ylabel)
+end
+if Arg.plotXTickLabels
+    xticklabels({''})
+end
+if Arg.plotYLabels
+    yticklabels({''})
 end
 
 hold on;
