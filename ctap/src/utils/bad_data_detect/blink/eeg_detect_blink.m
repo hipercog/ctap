@@ -140,7 +140,7 @@ switch Arg.classMethod
 % Could not verify the problem with class imbalance.
         blink_match_tmp = sbf_1Dclass_kmeans(Dv_sub);
 
-    case 'emgauss_heuristic' | 'emgauss_asymmetric'
+    case {'emgauss_heuristic', 'emgauss_asymmetric'}
 %--------------------------------------------------------------------------
 %%% Fit two 1D gaussian using EM -approach
 % Pros:

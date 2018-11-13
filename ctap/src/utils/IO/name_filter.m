@@ -1,10 +1,17 @@
-function fltnames = name_filter(rawnames, varargin)
+function [fltnames, nameidx] = name_filter(rawnames, varargin)
 %NAME_FILTER returns those elements from rawnames that match by:
-%           being equal to, or containing, one of the given strings
-%           having an index equal to one of the given numbers, or
-%           having a filename containing one of the given numbers
+%           - being equal to, or containing, one of the given strings, or
+%           - having an index equal to one of the given numbers, or
+%           - having a filename containing one of the given numbers
 %           If keyword 'all' is used, all elements are returned (default)
 %           If filters are empty, no elements are returned
+% 
+% Input:
+%   rawnames    struct, array with .name field; as return-value of dir()
+% Varargin:
+%   subj_filt   cell, cell array of string names (or name parts) of files
+%                  OR vector of file indices
+%                  OR vector of numbers occurring in file names
 
 %--------------------------------------------------------------------------
 % Initialise inputs
@@ -17,6 +24,7 @@ Arg = p.Results;
 
 if strcmp('all', Arg.subj_filt)
     fltnames = rawnames;
+    nameidx = ones(numel(rawnames), 1);
     return
 end
 
@@ -47,7 +55,7 @@ if ~isempty(str_filt)
 end
 
 if ~isempty(num_filt)
-    % Filter by numeric index or numeric part of folder name
+    % Filter by numeric index or numeric part of given name
     testi = num_filt(ismember(num_filt, 1:length(rawnames)));
     if isempty(testi)
         testi = num2cell(num_filt);
@@ -58,12 +66,13 @@ if ~isempty(num_filt)
 end
 
 fltnames = rawnames(stridx | numidx);
+nameidx = find(stridx | numidx);
 
 end
 
 
 function idx = sbf_string_match(names, FILT)
-    % Filter by exact OR partial string matches to folder names
+    % Filter by exact OR partial string matches to given names
     idx = ismember({names.name}, FILT);
     if ~any(idx)
         idx = contains({names.name}, FILT);

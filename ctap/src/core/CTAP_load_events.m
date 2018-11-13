@@ -2,10 +2,11 @@ function [EEG, Cfg] = CTAP_load_events(EEG, Cfg)
 % CTAP_load_events - Load events into EEG
 %
 % Description:
-%   Loads events from MC.measurementLog into EEG.
-%   Cfg.measurement.measurementlog is used as the log file. This is typically
-%   read from measurement info spreadsheet, but can also be given as a folder
-%   when the log files have matching names to the EEG files
+%   Loads events from a given source into EEG.
+%   Source can be:
+%       a file, read automagically from measurement info spreadsheet into 
+%               ''Cfg.measurement.measurementlog''
+%       a folder, where exists a log file with name matching the EEG file
 %
 % Syntax:
 %   [EEG, Cfg] = CTAP_load_events(EEG, Cfg);
@@ -20,7 +21,7 @@ function [EEG, Cfg] = CTAP_load_events(EEG, Cfg)
 %               default: 'importevent'     
 %   .handle     function handle, Function handle to a custom function to 
 %               load events with, function should be of type 
-%               [EEG, ~] = function(EEG, eventfile)
+%               [EEG, ~] = function(EEG, eventfile, varargin)
 %
 % Outputs:
 %   EEG         struct, EEGLAB structure modified by this function
@@ -50,24 +51,25 @@ if isfield(Cfg.ctap, 'load_events')
     Arg = joinstruct(Arg, Cfg.ctap.load_events);
 end
 
+
 %% ASSIST
 errmsg = 'Log file is needed to load events';
 if ~isfield(Arg, 'src')
     error('CTAP_load_events:no_log', '%s :: No source given', errmsg)
 elseif isfolder(Arg.src)
     % Find events from directory = filename closest matching to EEG filename
-    exts = {'log', 'txt' Arg.src_ext};
+    exts = {'log', 'txt', Arg.src_ext};
     log = find_closest_file(Cfg.measurement.physiodata, Arg.src, exts);
     Arg.src = fullfile(Arg.src, log);
 elseif ischar(Arg.src) && ~exist(Arg.src, 'file') == 2
     error('CTAP_load_events:no_log', '%s :: Bad filename or not a file', errmsg)
 end
 
-Arg.handle
+
 %% CORE
 switch Arg.method
     case 'handle'
-        EEG = Arg.handle(EEG, Arg.src);
+        EEG = Arg.handle(EEG, Arg.src, rmfield(Arg, 'src'));
         
     case 'presentation'
         EEG = pop_importpres(EEG, Arg.src);

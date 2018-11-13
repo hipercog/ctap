@@ -250,10 +250,14 @@ MCSub = Cfg.MC;
 MCSub.measurement = struct_filter(Cfg.MC.measurement, strucFilt);
 numMC = numel(MCSub.measurement);
 MCbad = false(numMC, 1);
-if numMC == 0 && ~isempty(strucFilt)
-    msg = sprintf('\nNo measurements matching the filter: %s. %s',...
-                catcellstr({strucFilt.casename}, 'sep',', '),...
-                'WHY DON''T YOU TRY: specifying a different set of measurements.');
+if numMC == 0
+    if ~all(cellfun(@isempty, struct2cell(strucFilt)))
+        strucFilt = strjoin(strucFilt.casename, ',\t');
+    else
+        strucFilt = strjoin(Cfg.pipe.runMeasurements, ',\t');
+    end
+    msg = sprintf('FAIL\nNo measurements match your filter: %s. \n%s',...
+            strucFilt, 'NOW TRY to specify a different set of measurements.');
     myReport(msg, Cfg.env.logFile);
 end
 

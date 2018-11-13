@@ -36,13 +36,15 @@ function [EEG, Cfg] = CTAP_blink2event(EEG, Cfg)
 % Please see the file LICENSE for details.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+
 %% Set optional arguments
-Arg.invert = false;
+Arg.invert_polarity = false;
 
 % Override defaults with user parameters
 if isfield(Cfg.ctap, 'blink2event')
     Arg = joinstruct(Arg, Cfg.ctap.blink2event); %override with user params
 end
+
 
 %% ASSIST
 if ~isfield(Cfg.eeg, 'veogChannelNames')
@@ -61,10 +63,10 @@ Eog = eeglab_extract_eog(EEG,...
                         Cfg.eeg.veogChannelNames,...
                         Cfg.eeg.heogChannelNames);
                     
-if Arg.invert
-    EEG = eeglab_blink2event(EEG, -Eog.veog, Arg);
+if Arg.invert_polarity
+    EEG = eeglab_blink2event(EEG, -Eog.veog, rmfield(Arg, 'invert_polarity'));
 else 
-    EEG = eeglab_blink2event(EEG, Eog.veog, Arg);
+    EEG = eeglab_blink2event(EEG, Eog.veog, rmfield(Arg, 'invert_polarity'));
 end
 
 %% ERROR/REPORT

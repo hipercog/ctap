@@ -26,7 +26,7 @@ idx = []; %#ok<NASGU>
 locs.occipital = {'Oz'};
 locs.parietal = {'Pz'};
 locs.vertex = {'Cz'};
-locs.frontal = {'Fz' 'Fp1' 'Fp2'};
+locs.frontal = {'Fz'}; %TODO: WHY WOULD WE WANT THESE ALSO? 'Fp1' 'Fp2'
 locs.frontopolar = {'Fpz'};
 locs.midleft = {'C3'};
 locs.midright = {'C4'};
@@ -47,6 +47,8 @@ end
 
 
 %% If 10/20 assumption fails, try using cartesian coordinates.
+% WHAT IF NAMED CHANNELS DON'T EXIST? USE GEOMETRY TO FIND CANONICAL LOCATIONS,
+% E.G. VERTEX, OCCIPITAL, FRONTAL
 if isempty(idx)
 % Convert to cartesian if needed, and assume cartesian coordinates have: 
 % X = min at inion, max at nasion

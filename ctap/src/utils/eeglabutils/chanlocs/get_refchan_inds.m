@@ -84,8 +84,6 @@ end
 
 
 %% Make sure something is found
-% MAYBEDO (BEN) - WHAT IF NAMED CHANNELS DON'T EXIST? USE GEOMETRY TO FIND, E.G.
-% VERTEX? ALL CENTRE-LINE CHANNELS (PICK 3-5 EQUI-SPACED ONES)?
 if isempty(chaninds)
     warning('get_refchan_inds:channelsNotFound',...
        'Reference channels ''%s'' not found.', strjoin(reference,', ')); 

@@ -152,10 +152,14 @@ end
 
 % Auto-optimise the head centre and convert to spherical and polar coords
 if Arg.optimise_centre
+    xidx = ~cellfun(@isempty, {EEG.chanlocs.X});
+    yidx = ~cellfun(@isempty, {EEG.chanlocs.Y});
+    zidx = ~cellfun(@isempty, {EEG.chanlocs.Z});
     [X, Y, Z] =...
         chancenter([EEG.chanlocs.X]', [EEG.chanlocs.Y]', [EEG.chanlocs.Z]', []);
     X = num2cell(X);    Y = num2cell(Y);    Z = num2cell(Z);
-    [EEG.chanlocs.X, EEG.chanlocs.Y, EEG.chanlocs.Z] = deal(X{:}, Y{:}, Z{:});
+    [EEG.chanlocs(xidx).X, EEG.chanlocs(yidx).Y, EEG.chanlocs(zidx).Z] =...
+                                                    deal(X{:}, Y{:}, Z{:});
 end
 if Arg.convert_coords
     myReport('Note: auto-converted XYZ coordinates to spherical & polar'...

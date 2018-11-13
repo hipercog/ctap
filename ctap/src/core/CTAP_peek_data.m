@@ -1,9 +1,12 @@
 function [EEG, Cfg] = CTAP_peek_data(EEG, Cfg)
-%CTAP_peek_data - Take a peek at the data and save it as an image
+%CTAP_peek_data - Take a 'peek' at the data: make one or more windows of time
+% to examine raw and IC data, in stats and visuals, and save output
 %
 % Description:
-%   Generate EEG data stats. Make a histogram thereof. Make eegplot of a random
-%   (or user-specified) window of raw EEG data, and raw IC data. 
+%   To enable easier human evaluation of data quality and denoising success,
+%   look at some fixed timepoints that can be compared at different stages.
+%   Make plot of a random (or user-specified) window of raw EEG data, and raw 
+%   IC data. Also for all EEG-data, generate stats and make histograms. 
 %   Save stats in tables, and figures to disk for later viewing.
 %
 % Syntax:
@@ -21,6 +24,7 @@ function [EEG, Cfg] = CTAP_peek_data(EEG, Cfg)
 %       .savePeekICA    logical, Save IC values from each peek, default: false
 %       .logStats       logical, compute stats for whole data, default: true
 %       .peekStats      logical, compute stats for each peek, default: false
+%       .numpeeks       numeric, number of randomly generated peeks, default=10
 %       .secs           numeric, seconds to plot from min to max, default: 0 16
 %       .peekevent      cellstring array, event name(s) to base peek windows on
 %       .peekindex      vector, index of such events to use, default (only if 

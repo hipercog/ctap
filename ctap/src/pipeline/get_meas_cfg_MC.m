@@ -55,10 +55,11 @@ switch ext
         if isempty(Arg.eeg_ext)%Get only EEG files of one type in file array
             [~, ~, es] = cellfun(@fileparts, f_arr, 'Un', 0);
             rejfs = ~ismember(strrep(es, '.', ''), ctap_supported_eeg_types);
-            es(rejfs) = [];
-            if ~isscalar(unique(es))
+            if ~isscalar(unique(es(~rejfs)))
                 error('get_meas_cfg_MC:fileTypeError',...
                     'Too many EEG input types discovered at ''%s''.', srcfile)
+            else
+                f_arr(rejfs) = [];
             end
         end
         MC = filearr2measconf(f_arr, p.Unmatched);
@@ -84,12 +85,16 @@ end
 % Select measurements to process, matching to contents of Arg.sbj_filt
 Filt.subject = {MC.subject.subject};
 if ~isempty(Arg.sbj_filt)
-    if iscell(Arg.sbj_filt)
-        comparand = {MC.subject.subject};
-    else
-        comparand = [MC.subject.subjectnr];
-    end
-    Filt.subject = Filt.subject(ismember(comparand, Arg.sbj_filt));
+    [~, fltidx] = name_filter(cell2struct({MC.subject.subject}, 'name')...
+                        , 'subj_filt', {Arg.sbj_filt});
+    Filt.subject = Filt.subject(fltidx);
+% OLD WAY:
+%     if iscell(Arg.sbj_filt)
+%         comparand = {MC.subject.subject};
+%     else
+%         comparand = [MC.subject.subjectnr];
+%     end
+%     Filt.subject = Filt.subject(ismember(comparand, Arg.sbj_filt));
 end
 runMC = get_measurement_id(MC, Filt);
 
