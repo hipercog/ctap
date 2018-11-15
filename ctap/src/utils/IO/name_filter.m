@@ -1,68 +1,101 @@
-function [fltnames, nameidx] = name_filter(rawnames, varargin)
+function [fltnames, nameidx] = name_filter(rawnames, subj_filt)
 %NAME_FILTER returns those elements from rawnames that match by:
-%           - being equal to, or containing, one of the given strings, or
-%           - having an index equal to one of the given numbers, or
-%           - having a filename containing one of the given numbers
-%           If keyword 'all' is used, all elements are returned (default)
-%           If filters are empty, no elements are returned
+%       names: being equal to, or containing, one of the given strings, or
+%       indices: having an index equal to one of the given numbers, or
+%       subject numbers: having a filename containing one of given numbers
+%   CAN MIX TYPE MODES LIKE SO: USE strings AND/OR indices OR subj_numbers, 
+% 
+%   Can also do inverse filtering, same modes as above but flipped logic:
+%       ~names: reject filenames containing these strings, if prepended with '~'
+%       -1 * indices: reject files at any index with negative sign
+%       -1 * subject numbers: reject filenames containing negative signed numbers
+%   CANNOT MIX INVERSE MODES: will treat ALL as positive unless ALL are negative
+% 
+%   If keyword 'all' is used, all elements are returned
+%   If filters are empty, no elements are returned
 % 
 % Input:
 %   rawnames    struct, array with .name field; as return-value of dir()
-% Varargin:
 %   subj_filt   cell, cell array of string names (or name parts) of files
-%                  OR vector of file indices
+%                  AND/OR vector of file indices
 %                  OR vector of numbers occurring in file names
 
 %--------------------------------------------------------------------------
 % Initialise inputs
 p = inputParser;
 p.addRequired('rawnames', @isstruct);
-p.addParameter('subj_filt', {'all'}, @iscell);
-p.parse(rawnames, varargin{:});
-Arg = p.Results;
+p.addRequired('subj_filt', @(x) iscell(x) || isnumeric(x) || ischar(x));
+p.parse(rawnames, subj_filt);
+% Arg = p.Results;
 
 
-if strcmp('all', Arg.subj_filt)
+%% Return all
+if strcmp('all', subj_filt)
     fltnames = rawnames;
     nameidx = ones(numel(rawnames), 1);
     return
 end
 
+
+%% Parse filters
+if ~iscell(subj_filt)
+    subj_filt = {subj_filt};
+end
+
 num_filt = [];
-str_filt = {};
-testchar = cellfun(@ischar, Arg.subj_filt);
-if all(testchar)
-    str_filt = Arg.subj_filt;
-else
-    testcell = cellfun(@iscell, Arg.subj_filt);
+testchar = cellfun(@ischar, subj_filt);
+str_filt = subj_filt(testchar);
+if ~all(testchar)
+    testcell = cellfun(@iscell, subj_filt);
     if any(testcell)
-        testchar = cellfun(@ischar, Arg.subj_filt{testcell});
-        if all(testchar)
-            str_filt = Arg.subj_filt{testcell};
+        if all(cellfun(@ischar, subj_filt{testcell}))%test for cell strings
+            str_filt = [str_filt(:)' subj_filt{testcell}];
         end
     end
-    testnum = cellfun(@isnumeric, Arg.subj_filt);
+    testnum = cellfun(@isnumeric, subj_filt);
     if any(testnum)
-        num_filt = Arg.subj_filt{testnum};
+        num_filt = subj_filt{testnum};
     end
 end
 
+
+%% Find indices of filtered files
 stridx = false(1, length(rawnames));
 numidx = false(1, length(rawnames));
+invert_strs = false;
+invert_nums = false;
 
 if ~isempty(str_filt)
+    if all(cellfun(@(x) startsWith(x, '~'), str_filt, 'Un', 0))
+        invert_strs = true;
+    end
+    str_filt = cellfun(@(x) [strrep(x(1), '~', '') x(2:end)], str_filt, 'Un', 0);
     stridx = sbf_string_match(rawnames, str_filt);
 end
 
 if ~isempty(num_filt)
+    if all(num_filt < 0)
+        invert_nums = true;
+    end
+    num_filt = abs(num_filt);
     % Filter by numeric index or numeric part of given name
     testi = num_filt(ismember(num_filt, 1:length(rawnames)));
     if isempty(testi)
         testi = num2cell(num_filt);
-        numidx = sbf_string_match(rawnames, cellfun(@num2str, testi, 'Uni', false));
+        numidx = sbf_string_match(rawnames...
+                                , cellfun(@num2str, testi, 'Uni', false));
     else
         numidx = num_filt;
     end
+end
+
+
+%% Return filtered files
+if invert_strs
+    stridx = ~stridx;
+end
+if invert_nums
+    numidx = ~numidx;
 end
 
 fltnames = rawnames(stridx | numidx);

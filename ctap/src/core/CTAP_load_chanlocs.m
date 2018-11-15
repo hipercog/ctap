@@ -145,8 +145,8 @@ if ~isempty(Arg.tidy)
         Arg.tidy = {Arg.tidy};
     end
     for i = 1:numel(Arg.tidy)
-        tidyidx = find(ismember({EEG.chanlocs.(Arg.tidy{i}{1})}, Arg.tidy{i}{2}));
-        if ~isempty(tidyidx), EEG = pop_select(EEG, 'nochannel', tidyidx); end
+        tidx = find(ismember({EEG.chanlocs.(Arg.tidy{i}{1})}, Arg.tidy{i}{2}));
+        if ~isempty(tidx), EEG = pop_select(EEG, 'nochannel', tidx); end
     end
 end
 

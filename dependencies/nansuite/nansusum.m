@@ -1,4 +1,4 @@
-function y = nansum(x,dim)
+function y = nansusum(x,dim)
 % FORMAT: Y = NANSUM(X,DIM)
 % 
 %    Sum of values ignoring NaNs
@@ -17,7 +17,7 @@ function y = nansum(x,dim)
 %    See also SUM
 
 % -------------------------------------------------------------------------
-%    author:      Jan Gläscher
+%    author:      Jan Glï¿½scher
 %    affiliation: Neuroimage Nord, University of Hamburg, Germany
 %    email:       glaescher@uke.uni-hamburg.de
 %    
@@ -29,7 +29,7 @@ if isempty(x)
 end
 
 if nargin < 2
-	dim = min(find(size(x)~=1));
+	dim = find(size(x)~=1, 1);
 	if isempty(dim)
 		dim = 1;
 	end
@@ -41,10 +41,8 @@ x(isnan(x)) = 0;
 
 % Protect against all NaNs in one dimension
 count = size(x,dim) - sum(nans,dim);
-i = find(count==0);
-
 y = sum(x,dim);
-y(i) = NaN;
+y(count==0) = NaN;
 
 
 

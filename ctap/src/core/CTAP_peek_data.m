@@ -116,7 +116,7 @@ end
 %% make and save stats to log file
 if Arg.logStats
     % get stats of each channel in the file, build a matrix of stats
-    %TODO: Matlab tables are very slow: optimise for speed
+    %TODO: Matlab tables are very slow: optimise for speed??
     [~, ~, statab] = ctapeeg_stats_table(EEG, 'channels', chidx...
         , 'outdir', savepath, 'id', 'peekall');
     
@@ -126,15 +126,16 @@ if Arg.logStats
     close(fh)
 
     % Write the stats for each peek for each subject to 1 log file
-    stalog = fullfile(Cfg.env.paths.logRoot, 'peek_stats_log.xlsx');
-    rptname = strrep(EEG.CTAP.measurement.casename, '_session_meas', '');
-    rptname = sprintf('%s_set%d_fun%d'...
-        , rptname(1:min(17, length(rptname)))...
+    tabs_dir = fullfile(Cfg.env.paths.logRoot, 'log_stats');
+    if ~isfolder(tabs_dir), mkdir(tabs_dir); end
+    rptname = sprintf('%s_set%d_fun%d_stats.dat'...
+        , strrep(EEG.CTAP.measurement.casename, '_session_meas', '')...
         , Cfg.pipe.current.set...
         , Cfg.pipe.current.funAtSet);
+    stalog = fullfile(tabs_dir, rptname);
     myReport(sprintf('Writing channel-wise peek statistics for %s to %s.'...
         , rptname, stalog), Cfg.env.logFile);
-    writetable(statab, stalog, 'WriteRowNames', true, 'Sheet', rptname)
+    writetable(statab, stalog, 'WriteRowNames', true, 'Delimiter', 'tab')
 
 end
 

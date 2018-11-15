@@ -21,6 +21,7 @@ p.addParameter('plotYTickLabels', true, @islogical)
 p.addParameter('tailPrc',  0.05, @isnumeric)
 p.addParameter('plotLegend', false, @islogical)
 p.addParameter('plotPDFs', true, @islogical)
+p.addParameter('BarFaceColor', [180, 180, 220], @isnumeric)
 
 p.parse(data, varargin{:})
 Arg = p.Results;
@@ -59,7 +60,7 @@ tSD = std(data(tndx)); % trimmed SD
 %dx=binpos(2)-binpos(1); % bin width
 h = histogram(data, nbins,...
               'EdgeColor', 'none', ...
-              'FaceColor', [180, 180, 220]/255);
+              'FaceColor', Arg.BarFaceColor/255);
 binpos = h.BinEdges(1:end-1);
 dx = h.BinWidth;
 if ~isscalar(dx)
@@ -103,21 +104,26 @@ if any(isnan(Arg.ylim))
     end
 end
 
-if Arg.plotTitle, title(Arg.title); end
+if Arg.plotTitle
+    title(Arg.title); 
+end
+%turn off both axis labels
 if ~Arg.plotLabels
     Arg.plotXLabels = false;
     Arg.plotYLabels = false;
 end
+%plot axis labels if requested
 if Arg.plotXLabels
     xlabel(Arg.xlabel)
 end
 if Arg.plotYLabels
     ylabel(Arg.ylabel)
 end
-if Arg.plotXTickLabels
+%remove axis tick mark labels if requested
+if ~Arg.plotXTickLabels
     xticklabels({''})
 end
-if Arg.plotYLabels
+if ~Arg.plotYTickLabels
     yticklabels({''})
 end
 

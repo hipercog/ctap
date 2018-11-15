@@ -12,7 +12,7 @@ function chaninds = get_refchan_inds(EEG, reference)
 %                 'occipital' = Oz
 %                 'parietal' = Pz
 %                 'vertex' = Cz
-%                 'frontal' = Fz, Fp1, Fp2
+%                 'frontal' = Fz
 %                 'frontopolar' = Fpz
 %                 'midleft' = C3
 %                 'midright' = C4
@@ -69,11 +69,11 @@ if length(reference) == 1 %only one string -> maybe something special
             
         otherwise %assume a canonical or actual channel name
             
-            %Try to find channel by canonical name
-            chaninds = canonical_eloc(EEG.chanlocs, reference{1});
-            %...if that failed (returned empty), try just matching to label
+            %Try just matching to label
+            chaninds = find(ismember({EEG.chanlocs.labels}, reference{1}));
+            %...if that failed, try to find channel by canonical name
             if isempty(chaninds)
-                chaninds = find(ismember({EEG.chanlocs.labels}, reference{1}));
+                chaninds = canonical_eloc(EEG.chanlocs, reference{1});
             end
     end
    

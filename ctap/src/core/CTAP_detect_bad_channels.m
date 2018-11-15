@@ -48,9 +48,11 @@ Arg.plot_detections = Cfg.grfx.on;
 if isfield(Cfg.eeg, 'reference')
     Arg.orig_ref = Cfg.eeg.reference;
 end
-if isfield(Cfg.eeg, 'chanlocs')
-    Arg.refChannel = {EEG.chanlocs(get_refchan_inds(EEG, 'frontal')).labels};
-end
+%NOTE: removed the default refchan here since it is replicated (where
+%      needed) in 'ctapeeg_detect_bad_channels'
+% if isfield(Cfg.eeg, 'chanlocs')
+%     Arg.refChannel = {EEG.chanlocs(get_refchan_inds(EEG, 'frontal')).labels};
+% end
 
 % Override defaults with user parameters
 if isfield(Cfg.ctap, 'detect_bad_channels')

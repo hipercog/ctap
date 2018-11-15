@@ -137,11 +137,11 @@ switch Arg.method
 
 
     case 'maha_fast'
-        [bad_chan_match, ~, scores] =...
-            eeg_detect_bad_channels(EEG, Arg.refChannel{1},...
-                                    'channels', Arg.channels,...
-                                    'factorVal', Arg.factorVal);
-        result.scores = table(scores...
+        [bad_chan_match, ~, scores] = eeg_detect_bad_channels(EEG...
+                                , EEG.chanlocs(Arg.refChannel(1)).labels...
+                                , 'channels', Arg.channels...
+                                , 'factorVal', Arg.factorVal);
+        result.scores = table(scores(:)...
             , 'RowNames', {EEG.chanlocs(Arg.channels).labels}'...
             , 'VariableNames', {'maha_fast'});
 
@@ -225,16 +225,16 @@ EEG = EEGtmp;
 
         if ~isempty(strfind(Arg.method, 'fast'))
             % get frontal vertex
-            try Arg.refChannel = vargs.refChannel;
+            try Arg.refChannel = get_refchan_inds(EEG, vargs.refChannel);
             catch
-                Arg.refChannel =...
-                    {EEG.chanlocs(get_refchan_inds(EEG, 'frontal')).labels};
+                Arg.refChannel = get_refchan_inds(EEG, 'frontal');
+%                     {EEG.chanlocs(get_refchan_inds(EEG, 'frontal')).labels};
             end
             % Define default 'original' reference
             try Arg.orig_ref = vargs.orig_ref;
             catch
-                Arg.orig_ref =...
-                    {EEG.chanlocs(get_refchan_inds(EEG, 'asis')).labels};
+                Arg.orig_ref = get_refchan_inds(EEG, 'asis');
+%                     {EEG.chanlocs(get_refchan_inds(EEG, 'asis')).labels};
             end
         end
         

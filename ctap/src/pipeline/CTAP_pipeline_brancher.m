@@ -278,25 +278,29 @@ for n = 1:numMC %over measurements
 
         %respect prior run of this stepSet - don't overwrite...
         if ~Arg.overwrite
+            cont = false;
             %...if save is true...
             if Cfg.pipe.stepSets(i).save
-                thisfile = fullfile(Cfg.env.paths.analysisRoot...
+                testifile = fullfile(Cfg.env.paths.analysisRoot...
                  , Cfg.pipe.stepSets(i).id, [Cfg.measurement.casename, '.set']);
-                if exist(thisfile, 'file')
-                    myReport(sprintf('Overwrite is OFF and %s exists already.%s',...
-                        thisfile, ' Skipping this STEP SET'), Cfg.env.logFile);
-                    continue
+                if exist(testifile, 'file') == 2
+                    cont = true;
                 end
             %...OR, if stepSet calls peek_data ONLY, and it has been done before
-            elseif ismember(cellfun(@func2str...
-                   , Cfg.pipe.stepSets(i).funH, 'Un', 0), 'CTAP_peek_data')
-               testi = fullfile(Cfg.env.paths.qualityControlRoot...
+            elseif ismember(cellfun(@func2str, Cfg.pipe.stepSets(i).funH...
+                                                , 'Un', 0), 'CTAP_peek_data')
+               testifile = fullfile(Cfg.env.paths.qualityControlRoot...
                    , 'CTAP_peek_data', sprintf('set%d_fun1'...
                    , i + Cfg.pipe.totalSets - numel(runSets))...
                    , Cfg.measurement.casename);
-               if isfolder(testi) && ~isempty(dirflt(testi))
-                   continue
+               if isfolder(testifile) && ~isempty(dirflt(testifile))
+                   cont = true;
                end
+            end
+            if cont
+                myReport(sprintf('Overwrite is OFF and %s exists already.%s',...
+                    testifile, ' Skipping this STEP SET'), Cfg.env.logFile);
+                continue
             end
         end
         i_ctap_hist_sz = 0;
@@ -423,9 +427,11 @@ for n = 1:numMC %over measurements
     suxes = sprintf('\n================\nMeasurement ''%s'' analyzed %s\n',...
         Cfg.measurement.casename, suxes{MCbad(n) + 1});
     histfile = sprintf('%s_history.txt', Cfg.measurement.casename);
+    histdir = fullfile(Cfg.env.paths.logRoot, 'histories');
+    if ~isfolder(histdir), mkdir(histdir); end
     myReport(suxes, Cfg.env.logFile);
-    myReport(suxes, fullfile(Cfg.env.paths.logRoot, histfile));
-    ctap_check_hist(EEG, fullfile(Cfg.env.paths.logRoot, histfile));
+    myReport(suxes, fullfile(histdir, histfile));
+    ctap_check_hist(EEG, fullfile(histdir, histfile));
 
 end %over measurements
 

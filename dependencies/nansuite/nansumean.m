@@ -1,4 +1,4 @@
-function y = nanmean(x,dim)
+function y = nansumean(x,dim)
 % FORMAT: Y = NANMEAN(X,DIM)
 % 
 %    Average or mean value ignoring NaNs
@@ -17,7 +17,7 @@ function y = nanmean(x,dim)
 %    See also MEAN
 
 % -------------------------------------------------------------------------
-%    author:      Jan Gläscher
+%    author:      Jan Glï¿½scher
 %    affiliation: Neuroimage Nord, University of Hamburg, Germany
 %    email:       glaescher@uke.uni-hamburg.de
 %    
@@ -29,7 +29,7 @@ if isempty(x)
 end
 
 if nargin < 2
-	dim = min(find(size(x)~=1));
+	dim = find(size(x) ~= 1, 1);
 	if isempty(dim)
 		dim = 1;
 	end

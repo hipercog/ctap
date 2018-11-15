@@ -18,7 +18,7 @@ function idx = canonical_eloc(chlocs, canon)
 %   NOTE: if chanlocs are not 10/20, the function attempts to use Cartesian
 %   coordinates and this is not guaranteed to work well.
 
-idx = []; %#ok<NASGU>
+idx = [];
 
 
 %% Start by assuming 10/20 naming scheme
@@ -41,8 +41,9 @@ locs.farright = {'T8'};
 if ismember(canon, fieldnames(locs))
     idx = find(ismember({chlocs.labels}, locs.(canon)));
 else
-    error('canonical_eloc:bad_param'...
+    warning('canonical_eloc:bad_param'...
         , 'requested canonical location %s not supported', canon)
+    return
 end
 
 

@@ -1,4 +1,4 @@
-function [z,mu,sigma] = nanzscore(x,flag,dim)
+function [z,mu,sigma] = nansuzscore(x,flag,dim)
 %ZSCORE Standardized z score.
 %   Z = ZSCORE(X) returns a centered, scaled version of X, the same size as X.
 %   For vector input X, Z is the vector of z-scores (X-MEAN(X)) ./ STD(X). For
@@ -39,8 +39,8 @@ if nargin < 3
 end
 
 % Compute X's mean and sd, and standardize it
-mu = nanmean(x,dim);
-sigma = nanstd(x,dim,flag);
+mu = nansumean(x,dim);
+sigma = nansustd(x,dim,flag);
 sigma0 = sigma;
 sigma0(sigma0==0) = 1;
 z = bsxfun(@minus,x,mu);
