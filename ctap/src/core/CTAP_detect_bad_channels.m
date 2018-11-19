@@ -19,7 +19,6 @@ function [EEG, Cfg] = CTAP_detect_bad_channels(EEG, Cfg)
 %                   specify which channels are to be analyzed, default: 'EEG'
 %   .orig_ref       cellstring, Original reference channels, needed by some
 %                   methods that rereference the data, default: Cfg.eeg.reference
-%   .refChannel     cellstring, {'Fz'}
 %   .refChannel     cellstring, reference channel name for FASTER
 %                   default: get_refchan_inds(EEG, 'frontal')
 %   .method         string, Detection method, see
@@ -44,6 +43,7 @@ function [EEG, Cfg] = CTAP_detect_bad_channels(EEG, Cfg)
 
 %% Set optional arguments
 Arg.channelType = 'EEG';
+
 Arg.plot_detections = Cfg.grfx.on;
 if isfield(Cfg.eeg, 'reference')
     Arg.orig_ref = Cfg.eeg.reference;
@@ -59,17 +59,28 @@ if isfield(Cfg.ctap, 'detect_bad_channels')
     Arg = joinstruct(Arg, Cfg.ctap.detect_bad_channels); %override w user params
 end
 
+
 %% ASSIST
 if ~isfield(Arg, 'channels')
-    Arg.channels = find(ismember({EEG.chanlocs.type}, Arg.channelType));
+    chidx = get_eeg_inds(EEG, Arg.channelType);
+    Arg.channels = {EEG.chanlocs(chidx).labels};
+elseif isnumeric(Arg.channels)
+    chidx = Arg.channels;
+    Arg.channels = {EEG.chanlocs(chidx).labels};
+else
+    chidx = get_eeg_inds(EEG, Arg.channels);
 end
 
 % Check that given channels are EEG channels
-if isempty(Arg.channels) ||...
-        sum(strcmp('EEG', {EEG.chanlocs.type})) < length(Arg.channels)
-    myReport(['WARN CTAP_detect_bad_channels:: '...
+if isempty(Arg.channels) || ~all(ismember({EEG.chanlocs(chidx).type}, 'EEG'))
+    myReport(['WARN ' mfilename ':: '...
         'EEG channel type has not been well defined,'...
         ' or given channels are not all EEG!'], Cfg.env.logFile);
+end
+
+% Don't pay attention to any deliberately-excluded channels
+if isfield(Arg, 'badchannels')
+    Arg.channels = setdiff(Arg.channels, Arg.badchannels);
 end
 
 

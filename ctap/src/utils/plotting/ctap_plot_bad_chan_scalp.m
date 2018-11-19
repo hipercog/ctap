@@ -15,7 +15,7 @@ p.parse(EEG, badness, varargin{:});
 Arg = p.Results;
 
 % define indices of EEG channels as numeric
-chinds = get_eeg_inds(EEG, {'EEG'});
+chinds = get_eeg_inds(EEG, 'EEG');
 
 
 %% Make plots

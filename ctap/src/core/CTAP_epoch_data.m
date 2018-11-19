@@ -1,4 +1,4 @@
-function [EEG, Cfg] = CTAP_epoch_data(EEG, Cfg)
+gtfunction [EEG, Cfg] = CTAP_epoch_data(EEG, Cfg)
 %CTAP_epoch_data - Create epochs as events in the dataset
 %
 % Description:

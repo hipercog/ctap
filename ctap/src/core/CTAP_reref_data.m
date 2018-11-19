@@ -61,7 +61,7 @@ end
 
 %% CORE
 % Set any old reference channels back to type='EEG'
-% EEG = pop_chanedit(EEG, 'changefield', {get_eeg_inds(EEG, {'REF'}) 'type' 'EEG'});
+% EEG = pop_chanedit(EEG, 'changefield', {get_eeg_inds(EEG, 'REF') 'type' 'EEG'});
 
 % Re-reference
 EEG = pop_reref(EEG, chaninds, 'keepref', Arg.keepref);

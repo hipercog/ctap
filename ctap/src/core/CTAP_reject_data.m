@@ -208,7 +208,7 @@ end %of sbf_plotNsave_blinkERP()
 function sbf_plotNsave_bad_ICs(EEG0, savepath)
     %get bad IC indices
     comps = badness;
-    chans = get_eeg_inds(EEG0, {'EEG'});
+    chans = get_eeg_inds(EEG0, 'EEG');
     %make output dir path
 
     myReport(sprintf('Plotting diagnostics to ''%s''...\n', savepath)...
@@ -235,7 +235,7 @@ end %sbf_plotNsave_bad_ICs()
 %% sbf_plot_channel_rejections
 % Visualize channel rejections
 function sbf_plot_channel_rejections(EEG0, savepath)
-    chs = {EEG0.chanlocs(get_eeg_inds(EEG0, {'EEG'})).labels};
+    chs = {EEG0.chanlocs(get_eeg_inds(EEG0, 'EEG')).labels};
     plotNsave_raw(EEG0, savepath, EEG0.setname,...
                   'channels', chs,...
                   'markChannels', badness)
@@ -260,7 +260,7 @@ function sbf_plot_bad_segments(EEG0, Cfg, savepath)
         , Cfg.env.logFile);
     %save a bunch of pngs to a unique subdirectory.
     for i = 1:numel(ev)
-        inds = get_eeg_inds(EEG0, {'EEG'});
+        inds = get_eeg_inds(EEG0, 'EEG');
         figH = plot_raw(EEG0, ...
             'channels', {EEG0.chanlocs(inds).labels},...
             'startSample', max(1, ev(i).latency - extraWinSec * EEG0.srate),...

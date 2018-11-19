@@ -218,9 +218,9 @@ EEG = EEGtmp;
         end
         
         % If desired, the default values can be changed below:
-        try Arg.channels = vargs.channels;
+        try Arg.channels = get_eeg_inds(EEG, vargs.channels);
         catch
-            Arg.channels = get_eeg_inds(EEG, {'EEG'});
+            Arg.channels = get_eeg_inds(EEG, 'EEG');
         end
 
         if ~isempty(strfind(Arg.method, 'fast'))

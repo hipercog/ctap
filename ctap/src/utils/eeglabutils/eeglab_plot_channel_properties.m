@@ -7,7 +7,7 @@ p = inputParser;
 p.addRequired('EEG', @isstruct);
 p.addRequired('fixplots', @isnumeric);
 
-p.addParameter('chans', get_eeg_inds(EEG, {'EEG'}), @isnumeric);
+p.addParameter('chans', get_eeg_inds(EEG, 'EEG'), @isnumeric);
 p.addParameter('paperwh', [42 42], @isnumeric);
 p.addParameter('figVisible', 'off', @isstr);
 p.addParameter('xlim', [-150 150], @isnumeric);%fixed size makes comparison easier

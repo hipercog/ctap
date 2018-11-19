@@ -25,7 +25,7 @@ function [ERPS, ERP] = ctap_manu2_oddball_erps(Cfg, varargin)
     codes = 100:50:250;
     for i = 1:numel(fnames)
         eeg = ctapeeg_load_data(fullfile(setpth, fnames{i}));
-        loc = get_eeg_inds(eeg, {Arg.loc_label});
+        loc = get_eeg_inds(eeg, Arg.loc_label);
         eeg.event(isnan(str2double({eeg.event.type}))) = [];
 
         for c = 1:2

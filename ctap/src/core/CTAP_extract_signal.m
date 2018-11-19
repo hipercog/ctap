@@ -83,6 +83,6 @@ Arg = params;
 Cfg.ctap.extract_signal = Arg;
 
 msg = myReport({'Extracted DATA corresponding to channel types: ' chanTypes...
-    sprintf('\n')}, Cfg.env.logFile);
+    newline}, Cfg.env.logFile);
 
 EEG.CTAP.history(end+1) = create_CTAP_history_entry(msg, mfilename, Arg);

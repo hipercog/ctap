@@ -108,7 +108,7 @@ varargout{2} = statab;
         end
 
         % If desired, the default values can be changed here:
-        Arg.channels = get_eeg_inds(EEG, {'EEG'});
+        Arg.channels = get_eeg_inds(EEG, 'EEG');
         Arg.latency = 1;
         Arg.duration = EEG.pnts * EEG.trials;
         Arg.outdir = '';

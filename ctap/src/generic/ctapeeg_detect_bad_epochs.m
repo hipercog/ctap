@@ -91,7 +91,7 @@ faster_vars = {'ampRange' 'variance' 'chanDev'};
 % faster, recufast, eegthresh, rejspec
 if ~ismember(Arg.method, {'hasEvent','hasEventProperty'})
     EEGtmp = pop_select(EEG, 'channel', Arg.channels);
-    Arg.channels = get_eeg_inds(EEGtmp, {'EEG'});
+    Arg.channels = get_eeg_inds(EEGtmp, 'EEG');
 else
     EEGtmp = EEG;
 end
@@ -272,9 +272,9 @@ varargout{2} = result;
         end
         
         % If desired, the default values can be changed here:
-        try Arg.channels = vargs.channels;
+        try Arg.channels = get_eeg_inds(EEG, vargs.channels);
         catch
-            Arg.channels = get_eeg_inds(EEG, {'EEG'});
+            Arg.channels = get_eeg_inds(EEG, 'EEG');
         end
 
         switch Arg.method

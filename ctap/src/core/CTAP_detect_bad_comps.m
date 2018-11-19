@@ -129,7 +129,7 @@ EEG.CTAP.history(end+1) = create_CTAP_history_entry(msg, mfilename, params);
 if Arg.plot && prcbad > 0
     sbf_plot_bad_comps
 else
-    myReport(sprintf('\n'), Cfg.env.logFile);
+    myReport(newline, Cfg.env.logFile);
 end
 
 
@@ -144,7 +144,7 @@ function sbf_plot_bad_comps()
 
     %plot scalp maps of bad components
     comps = EEG.CTAP.badcomps.(Arg.method).comps;
-    chans = get_eeg_inds(EEG, {'EEG'});
+    chans = get_eeg_inds(EEG, 'EEG');
     saveid = sprintf('%s_Method-%s', EEG.CTAP.measurement.casename, Arg.method);
 
     figh = ctap_ic_topoplot(EEG, comps...

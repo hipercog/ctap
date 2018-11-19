@@ -16,28 +16,31 @@ function [EEG, Cfg] = CTAP_peek_data(EEG, Cfg)
 %   EEG         struct, EEGLAB structure
 %   Cfg         struct, CTAP configuration structure
 %   Cfg.ctap.peek_data:
+%       .channels       cellstring array, chanlocs labels or type, default: 'EEG'
+%       .overwrite      logical, wipe existing output from prior peek_data runs
+%       .logStats       logical, compute stats for whole data, default: true
 %       .plotEEGHist    logical, Plot EEG histogram?, default: Cfg.grfx.on
+%       .hists          scalar, square number histograms per figure, default: 16
+% 
+%       .makePeeks      logical, make individual peeks at all? Default: true
 %       .plotEEG        logical, Plot EEG data?, default: Cfg.grfx.on
 %       .plotICA        logical, Plot ICA components?, default: Cfg.grfx.on
 %       .plotAllPeeks   logical, Plot all peeks or 1 random one?, default: true
 %       .savePeekData   logical, Save EEG data from each peek, default: false
 %       .savePeekICA    logical, Save IC values from each peek, default: false
-%       .logStats       logical, compute stats for whole data, default: true
 %       .peekStats      logical, compute stats for each peek, default: false
 %       .numpeeks       numeric, number of randomly generated peeks, default=10
 %       .secs           numeric, seconds to plot from min to max, default: 0 16
 %       .peekevent      cellstring array, event name(s) to base peek windows on
 %       .peekindex      vector, index of such events to use, default (only if 
 %                       .peekevent is defined): uniform distribution of 10
-%       .hists          scalar, square number histograms per figure, default: 16
-%       .channels       cellstring array, chanlocs labels or type, default: 'EEG'
-%       .overwrite      logical, wipe existing output from prior peek_data runs
 %
 % Outputs:
 %   EEG         struct, EEGLAB structure modified by this function
 %   Cfg         struct, Cfg struct is updated by parameters,values actually used
 %
 % Notes: 
+%   Plotting depends on global flag Cfg.grfx.on, unless specified by user!
 %   To check raw EEG latencies, we create new peeks, options are:
 %   1. explicitly user guided by choosing some existing events
 %   2. use the events user has defined for selecting data (because we know
@@ -56,20 +59,22 @@ function [EEG, Cfg] = CTAP_peek_data(EEG, Cfg)
 
 
 %% Set optional arguments
-% plot settings follow the global flag, unless specified by user!
+% First some global settings
+Arg.channels = 'EEG';
+Arg.overwrite = true;
+Arg.logStats = true;
 Arg.plotEEGHist = Cfg.grfx.on;
+Arg.hists = 16;
+% Then settings related to individual peeks
+Arg.makePeeks = true;
 Arg.plotEEG = Cfg.grfx.on;
 Arg.plotICA = Cfg.grfx.on;
 Arg.plotAllPeeks = true;
 Arg.savePeekData = false;
 Arg.savePeekICA = false;
-Arg.logStats = true;
 Arg.peekStats = false;
 Arg.numpeeks = 10;
 Arg.secs = [0 16];
-Arg.hists = 16; %number of histograms per figure, should be a square number
-Arg.channels = 'EEG';
-Arg.overwrite = true;
 
 % Override defaults with user parameters...
 if isfield(Cfg.ctap, 'peek_data')
@@ -86,7 +91,7 @@ if ~isscalar(dur) || (dur < 1)
 end
 %...and we treat only EEG channels
 if ismember('EEG', Arg.channels)
-    chidx = get_eeg_inds(EEG, {'EEG'});
+    chidx = get_eeg_inds(EEG, 'EEG');
 else
     chidx = find(ismember({EEG.chanlocs.labels}, Arg.channels));
 end

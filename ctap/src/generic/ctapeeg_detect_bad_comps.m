@@ -132,7 +132,7 @@ switch Arg.method
 
     case 'faster' %TODO: latent parameters = blink
         % Get the 5 magic FASTER properties for each component
-        EOG = get_eeg_inds(EEG, {'EOG'});
+        EOG = get_eeg_inds(EEG, 'EOG');
         icprp = component_properties(EEG, EOG, 1, icacomps);
         % Choose which properties to match on
         if iscell(Arg.match_measures)

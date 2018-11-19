@@ -10,6 +10,12 @@ function matrixToMul(filepath, muldata, segname)
 % 
 % 
 
+[pt, fn, ex] = fileparts(filepath);
+pt = strrep(pt, '\', filesep);
+if ~strcmpi(strrep(ex, '.', ''), 'mul')
+    filepath = fullfile(pt, [fn '.mul']);
+end
+
 f = fopen(filepath,'wt+');
 
 header = sprintf(['TimePoints=%i\t'...

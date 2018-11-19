@@ -57,7 +57,7 @@ p.addRequired('EEG', @isstruct);
 p.addRequired('result', @isstruct);
 p.addRequired('recuLim', @isscalar);
 p.addParameter('bound', [-2 2], @ismatrix);
-p.addParameter('channels', get_eeg_inds(EEG, {'EEG'}), @ismatrix);
+p.addParameter('channels', get_eeg_inds(EEG, 'EEG'), @ismatrix);
 p.addParameter('outdir', '', @ischar);
 p.parse(EEG, result, recuLim, varargin{:});
 

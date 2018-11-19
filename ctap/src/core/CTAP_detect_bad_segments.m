@@ -48,7 +48,6 @@ end
 
 %% Set optional arguments
 Arg.method = 'quantileTh';
-Arg.channels = {EEG.chanlocs(ismember({EEG.chanlocs.type}, 'EEG')).labels};
 Arg.normalEEGAmpLimits = [-75, 75];
 Arg.tailPercentage = 0.001;
 Arg.coOcurrencePrc = 0.25;
@@ -61,20 +60,35 @@ if isfield(Cfg.ctap, 'detect_bad_segments')
 end
 
 %% ASSIST
+if ~isfield(Arg, 'channels')
+    chidx = get_eeg_inds(EEG, Arg.channelType);
+    Arg.channels = {EEG.chanlocs(chidx).labels};
+elseif isnumeric(Arg.channels)
+    chidx = Arg.channels;
+    Arg.channels = {EEG.chanlocs(chidx).labels};
+else
+    chidx = get_eeg_inds(EEG, Arg.channels);
+end
+
+% Check that given channels are EEG channels
+if isempty(Arg.channels) || ~all(ismember({EEG.chanlocs(chidx).type}, 'EEG'))
+    myReport(['WARN ' mfilename ':: '...
+        'EEG channel type has not been well defined,'...
+        ' or given channels are not all EEG!'], Cfg.env.logFile);
+end
 
 % Running more than once without rejection in between not (yet) supported
-if isfield(EEG.CTAP, 'badsegev')
-    if isfield(EEG.CTAP.badsegev, 'detect')
-        warning('CTAP_detect_bad_channels:runMoreThanOnce',...
-            'Running CTAP_detect_bad_segments() more than once without rejection in between is not supported. Overwriting existing detections...');
-    end
+if isfield(EEG.CTAP, 'badsegev') && isfield(EEG.CTAP.badsegev, 'detect')
+    warning('CTAP_detect_bad_channels:runMoreThanOnce',...
+        'Running CTAP_detect_bad_segments() more than once without rejection in between is not supported. Overwriting existing detections...');
 end
 
 % Don't pay attention to any bad channels
-if isfield(EEG.CTAP, 'badchans')
-    if isfield(EEG.CTAP.badchans, 'detect')
-        Arg.channels = setdiff(Arg.channels, EEG.CTAP.badchans.detect.chans);
-    end
+if isfield(Arg, 'badchannels')
+    Arg.channels = setdiff(Arg.channels, Arg.badchannels);
+end
+if isfield(EEG.CTAP, 'badchans') && isfield(EEG.CTAP.badchans, 'detect')
+    Arg.channels = setdiff(Arg.channels, EEG.CTAP.badchans.detect.chans);
 end
 
 
@@ -119,9 +133,9 @@ EEG.CTAP.badsegev.detect.src = {Arg.method, 1};
 
 %% ERROR/REPORT
 reportStr = sprintf(...
-    ['Bad segments by ''%s'' for ''%s'': '...
-    '%d segments involving %d/%d = %3.1f prc of samples marked as bad.'],...
-    Arg.method, EEG.setname, Rej.allChannelsCount, numbad, EEG.pnts, prcbad);
+    ['Bad segments by ''%s'' for ''%s'': %d segments involving %d/%d = %3.1f'...
+    ' prc of samples marked as bad.'], Arg.method, EEG.CTAP.measurement.casename...
+    , Rej.allChannelsCount, numbad, EEG.pnts, prcbad);
 msg = myReport({reportStr}, Cfg.env.logFile);
 
 Cfg.ctap.detect_bad_segments = Arg;

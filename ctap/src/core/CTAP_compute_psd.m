@@ -91,7 +91,7 @@ end
 
 % Compute PSD, for all 'safe' channels
 refchans = get_refchan_inds(EEG, EEG.CTAP.reference);
-chans = setdiff(get_eeg_inds(EEG, {'EEG'}), refchans);
+chans = setdiff(get_eeg_inds(EEG, 'EEG'), refchans);
 if isempty(chans)
     chans = refchans; 
 end

@@ -71,13 +71,14 @@ function [EEG, Cfg] = CTAP_event_modify(EEG, Cfg)
 % Test if the function can be run?
 if verLessThan('matlab', '9.1')
    error('matlabVersionError',...
-        'Matlab versions older than 9.1 (R2016b) break CTAP_event_modify(): all events get the same (wrong) class.'); 
+        ['Matlab versions older than 9.1 (R2016b) break CTAP_event_modify():'...
+        ' all events get the same (wrong) class.']);  %#ok<CTPCT>
 end
 
 
 %% create Arg and assign any defaults to be chosen at the CTAP_ level
 Arg = struct;
-Arg.channels = {EEG.chanlocs(get_eeg_inds(EEG, {'EEG'})).labels};
+Arg.channels = {EEG.chanlocs(get_eeg_inds(EEG, 'EEG')).labels};
 % check and assign the defined parameters to structure Arg, for brevity
 if isfield(Cfg.ctap, 'event_modify')
     Arg = joinstruct(Arg, Cfg.ctap.event_modify);%override with user params
@@ -99,7 +100,7 @@ end
 if isfield(Arg, 'coreFunc')
     funHandle = Arg.coreFunc;
     fun_varargs = rmfield(Arg, 'coreFunc');
-    [EEG, Arg, result] = funHandle(EEG, fun_varargs);
+    [EEG, Arg, ~] = funHandle(EEG, fun_varargs);
     
 else
     
