@@ -129,6 +129,8 @@ EEG.CTAP.badepochs.detect.prc = prcbad;
 
 
 %% ERROR/REPORT
+% TODO - PLOT BAD EPOCHS, WITH RED LINES FOR CHANNELS CAUSING BADNESS?
+
 Cfg.ctap.detect_bad_epochs = params;
 
 msg = myReport({repstr1 repstr2 repstr3}, Cfg.env.logFile);

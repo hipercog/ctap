@@ -34,7 +34,8 @@ function [EEG, Cfg] = CTAP_reject_data(EEG, Cfg)
 %           'badcomps' - clean ICA comps marked in EEG.CTAP.badcomps.detect
 %
 %           The 'detect' field is removed after cleaning, so that a
-%           given set of badness will only be cleaned once.
+%           given set of badness will only be cleaned once. Thus, normal
+%           usage is to call pairs of CTAP_detect_*, CTAP_reject_data
 %
 % See also: ctapeeg_reject_data()
 %

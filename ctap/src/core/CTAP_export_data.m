@@ -10,7 +10,7 @@ function [EEG, Cfg] = CTAP_export_data(EEG, Cfg)
 %   'EEG'       eeglab data struct
 %   Cfg         struct, CTAP configuration structure
 %   Cfg.ctap.export_data:
-%   .outdir     string, output directory, Default = pwd
+%   .outdir     string, output directory, Default = Cfg.env.paths.exportRoot
 %   .name       string, name of file, default = EEG.setname
 %   .type       string, file type to save as, NO Default:
 %                      - 'set', 'gdf','edf','bdf','cfwb','cnt', 'leda', 'mul'
@@ -34,20 +34,28 @@ function [EEG, Cfg] = CTAP_export_data(EEG, Cfg)
 
 %% Set optional arguments
 Arg.name = EEG.CTAP.measurement.casename;
-Arg.outdir = pwd;
+Arg.outdir = Cfg.env.paths.exportRoot;
 
 % Override defaults with user parameters
 if isfield(Cfg.ctap, 'export_data')
     Arg = joinstruct(Arg, Cfg.ctap.export_data); %override w user params
 end
 
+
+%% ASSIST
 if ~isfield(Arg, 'type')
     error('CTAP_export_data:bad_param', 'Need an export data-type to proceed')
+end
+Arg.type = strrep(Arg.type,'.','');
+
+[outpath, outfolder, ~] = fileparts(Arg.outdir);
+if ~isfolder(outpath) && isfield(Cfg.env.paths, outpath)
+    Arg.outdir = fullfile(Cfg.env.paths.(outpath), outfolder);
 end
 if ~isfolder(Arg.outdir), mkdir(Arg.outdir); end
 
 
-%% ...operation
+%% CORE
 switch Arg.type
     case 'set'
         savename = fullfile(Arg.outdir, [Arg.name '.set']);
@@ -61,7 +69,7 @@ switch Arg.type
         savename = fullfile(Arg.outdir, [Arg.name '.' Arg.type]);
         writeeeg(savename,...
             EEG.data, EEG.srate,...
-            'TYPE', upper(strrep(Arg.type,'.','')),...
+            'TYPE', upper(Arg.type),...
             'EVENT', EEG.event,...
             'Label', {EEG.chanlocs.labels},...
             'SPR', EEG.srate);
@@ -70,45 +78,60 @@ switch Arg.type
         data = eeglab2leda(EEG);
         savename = fullfile(Arg.outdir, [Arg.name '.mat']);
         save(savename, 'data');
-        
+        msg = myReport('Exporting EDA data to Ledalab', Cfg.env.logFile);
+
     case 'mul'
         if ~ismatrix(EEG.data)
-            error('CTAP_export_data:epoched', 'Can''t export epoched data to Besa mul')
+            if ~ismember({EEG.event.type}, Arg.segname)
+                error('CTAP_export_data:bad_event_name', ['Event name %s was'...
+                    ' not found in the event structure: cannot export'])
+            end
+            msg = myReport(['Exporting a mul-file ERP for ''' Arg.segname ''''...
+                ' for time-locked, averaged data'], Cfg.env.logFile);
+            %average data for segname event here
+            %first 3 lines find epochs with wanted event - must be easier way?
+            idx = squeeze(struct2cell(EEG.epoch));
+            idx = squeeze(idx(ismember(fieldnames(EEG.epoch), 'eventtype'), :));
+            idx = cell2mat(cellfun(@(x) any(strcmpi(x, Arg.segname)), idx, 'Un', 0));
+            epx = EEG.data(get_eeg_inds(EEG, 'EEG'), :, idx);
+            eegdata = mean(epx, 3)';
+        else
+            eegdata = EEG.data(get_eeg_inds(EEG, 'EEG'), :)';
         end
         %make structure to feed to matrixToMul
         mul = struct(...
-            'data', EEG.data',...
+            'data', eegdata,...
             'Npts', EEG.pnts,...
-            'ChannelLabels', {EEG.chanlocs(get_eeg_inds(EEG, 'EEG')).labels},...
-            'TSB', -1000,...
+            'TSB', EEG.xmin * 1000,...
             'DI', 1000 / EEG.srate,...
-            'Scale', 1.0);
+            'Scale', 1.0,...
+            'ChannelLabels', {{EEG.chanlocs(get_eeg_inds(EEG, 'EEG')).labels}});
         
-        savename = fullfile(Arg.outdir, [Arg.name '.mul']);
-        matrixToMul(savename, mul, EEG.CTAP.measurement.measurement)
-        %must write out separate event file: currently only supports a few
-        %paradigms: CBRU's AV, multiMMN, and switching task
+        savename = fullfile(Arg.outdir, [Arg.name '_' Arg.segname '.mul']);
+        matrixToMul(savename, mul, Arg.segname)
+        
+        % Write out separate event file: currently only supports a few
+        % paradigms: CBRU's AV, multiMMN, and switching task
         %TODO : write general version of this, include in ctap/src/utils/IO!
-        evtfname = fullfile(Arg.outdir...
-            , [EEG.CTAP.measurement.casename '-recoded.evt']);
+        evtfname = fullfile(Arg.outdir, [Arg.name '_' Arg.segname '-recoded.evt']);
         if isfield(EEG.CTAP.err, 'preslog_evt') && ~EEG.CTAP.err.preslog_evt
             evtfname = [evtfname '-recoded_missingTriggers.evt'];
         end
-        writeEVT(EEG.event, EEG.srate, evtfname, EEG.CTAP.measurement.measurement)
-        
+        writeEVT(EEG.event, EEG.srate, evtfname, Arg.name)
+
 end
 
 
 %% ERROR/REPORT
-Cfg.ctap.export_data = params;
+Cfg.ctap.export_data = Arg;
 
 if exist(savename, 'file')
-    msg = myReport('Export successful', Cfg.env.logFile);
+    msg = myReport([msg '::Export successful'], Cfg.env.logFile);
 else
-    msg = myReport('Export unsuccessful', Cfg.env.logFile);
+    msg = myReport([msg '::Export unsuccessful'], Cfg.env.logFile);
 end
 
-EEG.CTAP.history(end+1) = create_CTAP_history_entry(msg, mfilename, params);
+EEG.CTAP.history(end+1) = create_CTAP_history_entry(msg, mfilename, Arg);
 
 
 end % ctapeeg_export()
