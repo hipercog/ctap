@@ -1,4 +1,4 @@
-function matrixToMul(filepath, muldata, segname)
+function matrixToMul(filepath, muldata, segname, delim)
 %MATRIXTOMUL 
 % 
 % Description:
@@ -10,6 +10,8 @@ function matrixToMul(filepath, muldata, segname)
 % 
 % 
 
+if nargin < 4, delim = '\t'; end
+
 [pt, fn, ex] = fileparts(filepath);
 pt = strrep(pt, '\', filesep);
 if ~strcmpi(strrep(ex, '.', ''), 'mul')
@@ -18,11 +20,11 @@ end
 
 f = fopen(filepath,'wt+');
 
-header = sprintf(['TimePoints=%i\t'...
-                  'Channels=%i\t'...
-                  'BeginSweep[ms]=%d\t'...
-                  'SamplingInterval[ms]=%d\t'...
-                  'Bins/uV=%d\t'...
+header = sprintf(['TimePoints=%i' delim...
+                  'Channels=%i' delim...
+                  'BeginSweep[ms]=%d' delim...
+                  'SamplingInterval[ms]=%d' delim...
+                  'Bins/uV=%d' delim...
                   'SegmentName=%s\n']...
                   , muldata.Npts...
                   , size(muldata.data,2)...
@@ -34,13 +36,13 @@ header = sprintf(['TimePoints=%i\t'...
 fprintf(f, header);
 
 for c = 1:size(muldata.data, 2)
-    fprintf(f, '%s\t', muldata.ChannelLabels{1, c});
+    fprintf(f, '%s%s', muldata.ChannelLabels{1, c}, delim);
 end
 fprintf(f, '\n');
 
 for s = 1:size(muldata.data, 1)
     for c = 1:size(muldata.data, 2)
-        fprintf(f, '%d\t', muldata.data(s, c));
+        fprintf(f, '%f%s', muldata.data(s, c), delim);
     end
     fprintf(f, '\n');
 end
