@@ -16,6 +16,7 @@ function [EEG, Cfg] = CTAP_detect_bad_segments(EEG, Cfg)
 %                       default: 'quantileTh'
 %   .channels           cellstring, Channels to include in the analysis, 
 %                       default: EEG.chanlocs.type == 'EEG'
+%   .badchannels        cellstring, Channels to exclude from the analysis, 
 %   .normalEEGAmpLimits [1,2] numeric, Normal EEG amplitude limits in muV,
 %                       If data has been normalized the defaults will fail. 
 %                       default: [-75, 75]
@@ -48,6 +49,7 @@ end
 
 %% Set optional arguments
 Arg.method = 'quantileTh';
+Arg.channelType = 'EEG';
 Arg.normalEEGAmpLimits = [-75, 75];
 Arg.tailPercentage = 0.001;
 Arg.coOcurrencePrc = 0.25;
@@ -80,7 +82,8 @@ end
 % Running more than once without rejection in between not (yet) supported
 if isfield(EEG.CTAP, 'badsegev') && isfield(EEG.CTAP.badsegev, 'detect')
     warning('CTAP_detect_bad_channels:runMoreThanOnce',...
-        'Running CTAP_detect_bad_segments() more than once without rejection in between is not supported. Overwriting existing detections...');
+        ['Running CTAP_detect_bad_segments() more than once without rejection'...
+        ' in between is not supported. Overwriting existing detections...']);
 end
 
 % Don't pay attention to any bad channels

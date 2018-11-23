@@ -91,7 +91,7 @@ end
 try
     detected = EEG.CTAP.(Arg.method).detect;
     [badness, scores] = ctap_read_detections(EEG, Arg.method);
-catch ME,
+catch ME
     error('CTAP_reject_data:noDetectField',...
         '%s : %s results not defined...', ME.message, Arg.method);
 end
@@ -134,7 +134,7 @@ if Arg.plot && detected.prc > 0
         case 'badcomps'
             sbf_plotNsave_bad_ICs(EEG0, savepath);
             
-            if ~isempty(strfind(strjoin(detected.src(:,1),'-'), 'blink')) &&...
+            if contains(strjoin(detected.src(:,1),'-'), 'blink') &&...
                 ismember('blink', unique({EEG0.event.type}))
                 sbf_plotNsave_blinkERP(EEG0, EEG, savepath);
             end
@@ -284,7 +284,7 @@ function sbf_report_bad_data
     func = sprintf('s%df%d', Cfg.pipe.current.set, Cfg.pipe.current.funAtSet);
     if isempty(badness)
         bdstr = 'none'; %a placeholder to keep the variable type consistent
-    elseif ~iscellstr(badness)
+    elseif ~iscellstr(badness) %#ok<ISCLSTR>
             bdstr = num2str(badness, 3);
     else
             bdstr = strjoin(badness);
