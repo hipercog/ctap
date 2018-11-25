@@ -216,17 +216,14 @@ if sum(samprej_match)~=0
 
     EEGtmp = EEG;
     EEGtmp = rmfield(EEGtmp, 'data');
-    %EEGtmp2 = EEGtmp;
     EEGtmp.event = th_event;
-    %EEGtmp2.event = th_event2;
 
     if ~isempty(EEG.event)
         EEG.event = eeglab_merge_event_tables(EEG.event, EEGtmp.event,...
-                                                'ignoreDiscontinuousTime');
-        %EEG.event = eeglab_merge_event_tables(EEG.event, EEGtmp2.event, 'ignoreDiscontinuousTime');
+                                                    'ignoreDiscontinuousTime');
     else
-        EEG.event = eeglab_merge_event_tables(EEGtmp.event, 'ignoreDiscontinuousTime');
-        %EEG.event = eeglab_merge_event_tables(EEGtmp.event, EEGtmp2.event, 'ignoreDiscontinuousTime');
+        EEG.event = eeglab_merge_event_tables(EEGtmp.event,...
+                                                    'ignoreDiscontinuousTime');
     end
 
     clear('EEGtmp*');
