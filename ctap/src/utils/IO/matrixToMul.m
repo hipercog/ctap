@@ -36,13 +36,13 @@ header = sprintf(['TimePoints=%i' delim...
 fprintf(f, header);
 
 for c = 1:size(muldata.data, 2)
-    fprintf(f, '%s%s', muldata.ChannelLabels{1, c}, delim);
+    fprintf(f, ['%s' delim], muldata.ChannelLabels{1, c});
 end
 fprintf(f, '\n');
 
 for s = 1:size(muldata.data, 1)
     for c = 1:size(muldata.data, 2)
-        fprintf(f, '%f%s', muldata.data(s, c), delim);
+        fprintf(f, ['%f' delim], muldata.data(s, c));
     end
     fprintf(f, '\n');
 end

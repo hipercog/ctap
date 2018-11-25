@@ -24,6 +24,9 @@ function [EEG, varargout] = ctapeeg_detect_bad_comps(EEG, varargin)
 %                 Default = [-2 2]
 %   'match_logic' choice of logic to aggregate measures, either 'any' or 'all'
 %                 Default = 'all'
+%   'match_measures' choice of measures to use, default all from the list:
+%               medianGradient, spectralSlope, kurtosis, hurst, eogCorrelation
+%               Partial string matches (down to 1 letter) will also work
 % 
 %   FOR 'recufast' recursive FASTER method
 %   'bounds'      sigma thresholds to detect bad components with recufast method
@@ -136,7 +139,7 @@ switch Arg.method
         icprp = component_properties(EEG, EOG, 1, icacomps);
         % Choose which properties to match on
         if iscell(Arg.match_measures)
-            match_measures = ismember(faster_vars, Arg.match_measures);
+            match_measures = startsWith(faster_vars, Arg.match_measures);
         end
         if isscalar(Arg.bounds)
             Arg.bounds = [(abs(Arg.bounds) * -1) abs(Arg.bounds)];
@@ -269,6 +272,7 @@ function sbf_check_input() % parse the varargin, set defaults
         case 'recu_blink_tmpl'
             Arg.veog = {'VEOG'};
             Arg.test_pc = 25;
+            Arg.epoch_len_secs = 0.3;
 
         otherwise
             error('ctapeeg_detect_bad_comps:bad_method',...

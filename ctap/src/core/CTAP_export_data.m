@@ -14,6 +14,7 @@ function [EEG, Cfg] = CTAP_export_data(EEG, Cfg)
 %   .name       string, name of file, default = EEG.setname
 %   .type       string, file type to save as, NO Default:
 %                      - 'set', 'gdf','edf','bdf','cfwb','cnt', 'leda', 'mul'
+%   .write_evts logical, write events to separate text file, default = false
 %
 % Outputs:
 %   EEG         struct, EEGLAB structure modified by this function
@@ -35,6 +36,7 @@ function [EEG, Cfg] = CTAP_export_data(EEG, Cfg)
 %% Set optional arguments
 Arg.name = EEG.CTAP.measurement.casename;
 Arg.outdir = Cfg.env.paths.exportRoot;
+Arg.write_evts = false;
 
 % Override defaults with user parameters
 if isfield(Cfg.ctap, 'export_data')
@@ -110,15 +112,17 @@ switch Arg.type
         savename = fullfile(Arg.outdir, [Arg.name '_' Arg.locking_event '.mul']);
         matrixToMul(savename, mul, Arg.locking_event)
         
-        % Write out separate event file: currently only supports a few
-        % paradigms: CBRU's AV, multiMMN, and switching task
-        %TODO : write general version of this, include in ctap/src/utils/IO!
-        evtfname = fullfile(Arg.outdir, [Arg.name '_' Arg.locking_event '-recoded.evt']);
-        if isfield(EEG.CTAP.err, 'preslog_evt') && ~EEG.CTAP.err.preslog_evt
-            evtfname = [evtfname '-recoded_missingTriggers.evt'];
+        if Arg.write_evts
+            % Write out separate event file: currently only supports a few
+            % paradigms: CBRU's AV, multiMMN, and switching task
+            %TODO : write general version of this, include in ctap/src/utils/IO!
+            evtfname = fullfile(Arg.outdir...
+                        , [Arg.name '_' Arg.locking_event '-recoded.evt']);
+            if isfield(EEG.CTAP.err, 'preslog_evt') && ~EEG.CTAP.err.preslog_evt
+                evtfname = [evtfname '-recoded_missingTriggers.evt'];
+            end
+            writeEVT(EEG.event, EEG.srate, evtfname, Arg.name)
         end
-        writeEVT(EEG.event, EEG.srate, evtfname, Arg.name)
-
 end
 
 
