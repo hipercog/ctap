@@ -126,7 +126,7 @@ EEG.CTAP.history(end+1) = create_CTAP_history_entry(msg, mfilename, params);
 
 
 %% DIAGNOSTICS
-if Arg.plot && prcbad > 0
+if Arg.plot && numel(result.comps) > 0
     sbf_plot_bad_comps
 else
     myReport(newline, Cfg.env.logFile);

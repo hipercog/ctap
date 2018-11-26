@@ -3,7 +3,7 @@ function [fltnames, nameidx] = name_filter(rawnames, subj_filt)
 %       names: being equal to, or containing, one of the given strings, or
 %       indices: having an index equal to one of the given numbers, or
 %       subject numbers: having a filename containing one of given numbers
-%   CAN MIX TYPE MODES LIKE SO: USE strings AND/OR indices OR subj_numbers, 
+%   CAN MIX TYPE MODES LIKE SO: strings AND/OR (indices OR subj_numbers),
 % 
 %   Can also do inverse filtering, same modes as above but flipped logic:
 %       ~names: reject filenames containing these strings, if prepended with '~'
@@ -29,10 +29,14 @@ p.parse(rawnames, subj_filt);
 % Arg = p.Results;
 
 
-%% Return all
+%% Return all or none
 if strcmp('all', subj_filt)
     fltnames = rawnames;
     nameidx = ones(numel(rawnames), 1);
+    return
+elseif isempty(subj_filt)
+    fltnames = struct('name', {});
+    nameidx = zeros(numel(rawnames), 1);
     return
 end
 
