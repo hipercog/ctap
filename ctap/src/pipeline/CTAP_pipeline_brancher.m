@@ -198,12 +198,16 @@ myReport(sprintf('Pipe analysis has stepSets:%s %s %s',...
 EEG = struct;
 
 
-%% Run step sets
+%% Check what we will Run
 % Find indices of sets to run
-if strcmp(Cfg.pipe.runSets{1},'all')
+if strcmp(Cfg.pipe.runSets{1}, 'all')
     runSets = 1:numel(Cfg.pipe.stepSets);
 else
     runSets = find(ismember({Cfg.pipe.stepSets.id}, Cfg.pipe.runSets));
+end
+
+if isempty(Cfg.pipe.runMeasurements) || isempty(runSets)
+    return
 end
 
 

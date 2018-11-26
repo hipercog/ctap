@@ -32,11 +32,11 @@ p.parse(rawnames, subj_filt);
 %% Return all or none
 if strcmp('all', subj_filt)
     fltnames = rawnames;
-    nameidx = ones(numel(rawnames), 1);
+    nameidx = true(numel(rawnames), 1);
     return
 elseif isempty(subj_filt)
     fltnames = struct('name', {});
-    nameidx = zeros(numel(rawnames), 1);
+    nameidx = false(numel(rawnames), 1);
     return
 end
 

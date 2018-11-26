@@ -27,6 +27,9 @@ function [EEG, varargout] = ctapeeg_detect_bad_channels(EEG, varargin)
 %                 Default = {'Fz','C21'}
 %                 Fz is used by the authors of FASTER since it is common 
 %                 to 32, 64 and 128 channel setups.
+%   'match_measures' choice of measures to use, default all from the list:
+%                    'chanCorrelation', 'variance', 'hurst'
+%                    Partial string matches (down to 1 letter) will also work
 %
 %   FOR method Mahalanobis dist & 'factorVal'*mad thresholding
 %   'factorVal'   factor to multiply the outlier detection threshold
@@ -110,7 +113,7 @@ switch Arg.method
         chprp = channel_properties(EEG, Arg.channels, Arg.refChannel);
         % Choose which properties to match on
         if iscell(Arg.match_measures)
-            match_measures = ismember(faster_vars, Arg.match_measures);
+            match_measures = startsWith(faster_vars, Arg.match_measures);
         end
         if isscalar(Arg.bounds)
             Arg.bounds = [(abs(Arg.bounds) * -1) abs(Arg.bounds)];
@@ -180,7 +183,7 @@ end
 
 
 %% return the bad channel names...create data frame
-result.chans = {EEG.chanlocs(bad_chan_match).labels};
+result.chans = {EEG.chanlocs(Arg.channels(bad_chan_match)).labels};
 
 if ~istable(result.scores)
     error('ctapeeg_detect_bad_chans:bad_output',...
@@ -263,13 +266,11 @@ EEG = EEGtmp;
             try Arg.refChannel = get_refchan_inds(EEG, vargs.refChannel);
             catch
                 Arg.refChannel = get_refchan_inds(EEG, 'frontal');
-%                     {EEG.chanlocs(get_refchan_inds(EEG, 'frontal')).labels};
             end
             % Define default 'original' reference
             try Arg.orig_ref = vargs.orig_ref;
             catch
                 Arg.orig_ref = get_refchan_inds(EEG, 'asis');
-%                     {EEG.chanlocs(get_refchan_inds(EEG, 'asis')).labels};
             end
         end
     end

@@ -18,6 +18,9 @@ function [EEG, varargout] = ctapeeg_detect_bad_epochs(EEG, varargin)
 %   FOR 'faster' = plain FASTER
 %   'bounds'    : sigma thresholds for bad epoch detection.
 %                 Default=[-2 2]
+%   'match_measures' choice of measures to use, default all from the list:
+%               	 'ampRange', 'variance', 'chanDev'
+%                    Partial string matches (down to 1 letter) will also work
 %
 %   FOR 'recufast' recursive FASTER method
 %   'bounds'    : sigma thresholds for bad epoch detection with 'recufast'.
@@ -113,7 +116,7 @@ switch Arg.method
         
         % Choose which properties to match on
         if iscell(Arg.match_measures)
-            match_measures = ismember(faster_vars, Arg.match_measures);
+            match_measures = startsWith(faster_vars, Arg.match_measures);
         end
         if isscalar(Arg.bounds)
             Arg.bounds = [(abs(Arg.bounds) * -1) abs(Arg.bounds)];
