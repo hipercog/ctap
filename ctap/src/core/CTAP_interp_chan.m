@@ -15,6 +15,13 @@ function [EEG, Cfg] = CTAP_interp_chan(EEG, Cfg)
 %   Cfg.ctap.interp_chan:
 %   .method     string, Method to use, see eeg_interp() for details,
 %               default: spherical
+%   .select     string, how to select channels to interpolate, can be:
+%               'given' exactly as given in 'channels' argument
+%               'missing' check current channels against originals
+%               'bad' use the record of detected bad channels in EEG.CTAP
+%               default = 'missing'
+%   .miss_types cellstring, channel types to find in urchanlocs if select = 
+%               'missing', default = {'EEG','EOG','REF'}
 %   .channels   struct OR cell string array OR vector, chanlocs structure OR 
 %               names OR indices of channels to interpolate
 %               default: if present, CTAP_interp_chan uses original chanlocs 
@@ -42,13 +49,21 @@ function [EEG, Cfg] = CTAP_interp_chan(EEG, Cfg)
 %% Set optional arguments
 Arg.method = 'spherical';
 Arg.channels = [];
+Arg.select = 'missing';
+Arg.missing_types = {'EEG','EOG','REF'};
+
+% Override defaults with user parameters
+if isfield(Cfg.ctap, 'interp_chan')
+    Arg = joinstruct(Arg, Cfg.ctap.interp_chan);
+end
 
 %check if urchanlocs exists, use as chanlocs struct
-if isfield( EEG, 'urchanlocs' )
-    eeg_chan_match = ismember({EEG.urchanlocs.type}, {'EEG','EOG','REF'});
+if strcmp(Arg.select, 'given')
+elseif strcmp(Arg.select, 'missing') && isfield(EEG, 'urchanlocs')
+    eeg_chan_match = ismember({EEG.urchanlocs.type}, Arg.missing_types);
     Arg.channels = EEG.urchanlocs(eeg_chan_match);
     
-elseif isfield(EEG.CTAP, 'badchans')
+elseif strcmp(Arg.select, 'bad') && isfield(EEG.CTAP, 'badchans')
     if isfield(EEG.CTAP.badchans, 'detect')
         Arg.channels = get_eeg_inds(EEG, EEG.CTAP.badchans.detect.chans);
 
@@ -61,13 +76,8 @@ elseif isfield(EEG.CTAP, 'badchans')
     end
 end
 
-% Override defaults with user parameters
-if isfield(Cfg.ctap, 'interp_chan')
-    Arg = joinstruct(Arg, Cfg.ctap.interp_chan);
-end
-
 if isempty(Arg.channels)
-   error('ctapeeg_interp_chan:urchanlocsNotFound',...
+   warning('ctapeeg_interp_chan:urchanlocsNotFound',...
        'Lack of channel information, cannot interpolate.');
 end
 

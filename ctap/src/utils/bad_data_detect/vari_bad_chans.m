@@ -43,7 +43,7 @@ function result = vari_bad_chans(EEG, EEGchan, bounds, varargin)
 %% Parse input arguments and set varargin defaults
 p = inputParser;
 p.addRequired('EEG', @isstruct);
-p.addRequired('EEGchan', @ismatrix);
+p.addRequired('EEGchan', @isnumeric);
 p.addRequired('bounds', @ismatrix);
 p.addParameter('take_worst_n', 0, @isscalar);
 p.addParameter('plot', true, @islogical);

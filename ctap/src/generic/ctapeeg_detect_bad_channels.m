@@ -217,27 +217,6 @@ EEG = EEGtmp;
                 'It is necessary to define the chosen ''method'': see help')
         end
         
-        % If desired, the default values can be changed below:
-        try Arg.channels = get_eeg_inds(EEG, vargs.channels);
-        catch
-            Arg.channels = get_eeg_inds(EEG, 'EEG');
-        end
-
-        if ~isempty(strfind(Arg.method, 'fast'))
-            % get frontal vertex
-            try Arg.refChannel = get_refchan_inds(EEG, vargs.refChannel);
-            catch
-                Arg.refChannel = get_refchan_inds(EEG, 'frontal');
-%                     {EEG.chanlocs(get_refchan_inds(EEG, 'frontal')).labels};
-            end
-            % Define default 'original' reference
-            try Arg.orig_ref = vargs.orig_ref;
-            catch
-                Arg.orig_ref = get_refchan_inds(EEG, 'asis');
-%                     {EEG.chanlocs(get_refchan_inds(EEG, 'asis')).labels};
-            end
-        end
-        
         switch Arg.method
             case 'recufast'
                 Arg.report = false;
@@ -272,6 +251,27 @@ EEG = EEGtmp;
         
         % Arg fields are canonical, vargs values are canonical: intersect-join
         Arg = intersect_struct(Arg, vargs);
+        
+        % If desired, the default values can be changed below:
+        try Arg.channels = get_eeg_inds(EEG, vargs.channels);
+        catch
+            Arg.channels = get_eeg_inds(EEG, 'EEG');
+        end
+
+        if ~isempty(strfind(Arg.method, 'fast'))
+            % get frontal vertex
+            try Arg.refChannel = get_refchan_inds(EEG, vargs.refChannel);
+            catch
+                Arg.refChannel = get_refchan_inds(EEG, 'frontal');
+%                     {EEG.chanlocs(get_refchan_inds(EEG, 'frontal')).labels};
+            end
+            % Define default 'original' reference
+            try Arg.orig_ref = vargs.orig_ref;
+            catch
+                Arg.orig_ref = get_refchan_inds(EEG, 'asis');
+%                     {EEG.chanlocs(get_refchan_inds(EEG, 'asis')).labels};
+            end
+        end
     end
 
 end % ctapeeg_detect_bad_channels()
