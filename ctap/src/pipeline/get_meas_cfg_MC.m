@@ -14,7 +14,8 @@ function Cfg = get_meas_cfg_MC(Cfg, srcfile, varargin)
 %   srcfile     char, path to a spreadsheet, sqlite, or directory to read MC
 % 
 %   varargin:
-%   sbj_filt    cell | vector | empty, some index of subjects to choose
+%   sbj_filt    cell | vector | empty, some index of subjects to choose,
+%               default = 'all' (a keyword to return all available)
 %   eeg_ext     char, file-type of the EEG data if using directory as 'srcfile'
 %
 % Outputs:
@@ -38,7 +39,7 @@ p.KeepUnmatched = true;
 p.addRequired('Cfg', @isstruct);
 p.addRequired('srcfile', @ischar);
 
-p.addParameter('sbj_filt', {''}, @(x) iscell(x) || isvector(x) || isempty(x));
+p.addParameter('sbj_filt', 'all', @(x) iscell(x) || isvector(x) || isempty(x));
 p.addParameter('eeg_ext', '', @ischar);
 
 p.parse(Cfg, srcfile, varargin{:});

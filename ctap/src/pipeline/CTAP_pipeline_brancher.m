@@ -193,10 +193,6 @@ for fn = 1:numel(fnames)
     end
 end
 
-myReport(sprintf('Pipe analysis has stepSets:%s %s %s',...
-    newline, char(Cfg.pipe.runSets)', newline), Cfg.env.logFile);
-EEG = struct;
-
 
 %% Check what we will Run
 % Find indices of sets to run
@@ -207,8 +203,13 @@ else
 end
 
 if isempty(Cfg.pipe.runMeasurements) || isempty(runSets)
+    myReport('runMeasurements or runSets undefined: aborting', Cfg.env.logFile);
     return
 end
+
+myReport(sprintf('Pipe analysis has stepSets:\n\t%s\n', char(Cfg.pipe.runSets)')...
+    , Cfg.env.logFile);
+EEG = struct;
 
 
 %% Load and subset measurement config data

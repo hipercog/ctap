@@ -16,7 +16,8 @@ function [EEG, Cfg] = CTAP_detect_bad_segments(EEG, Cfg)
 %                       default: 'quantileTh'
 %   .channels           cellstring, Channels to include in the analysis, 
 %                       default: EEG.chanlocs.type == 'EEG'
-%   .badchannels        cellstring, Channels to exclude from the analysis, 
+%   .exclude_channels   cellstring, Channels to exclude from the analysis, will 
+%                       include channels marked bad in EEG.CTAP.badchans.detect
 %   .normalEEGAmpLimits [1,2] numeric, Normal EEG amplitude limits in muV,
 %                       If data has been normalized the defaults will fail. 
 %                       default: [-75, 75]
@@ -50,6 +51,7 @@ end
 %% Set optional arguments
 Arg.method = 'quantileTh';
 Arg.channelType = 'EEG';
+Arg.exclude_channels = {};
 Arg.normalEEGAmpLimits = [-75, 75];
 Arg.tailPercentage = 0.001;
 Arg.coOcurrencePrc = 0.25;
@@ -86,13 +88,12 @@ if isfield(EEG.CTAP, 'badsegev') && isfield(EEG.CTAP.badsegev, 'detect')
         ' in between is not supported. Overwriting existing detections...']);
 end
 
-% Don't pay attention to any bad channels
-if isfield(Arg, 'badchannels')
-    Arg.channels = setdiff(Arg.channels, Arg.badchannels);
-end
+% Don't pay attention to any bad or deliberately-excluded channels
 if isfield(EEG.CTAP, 'badchans') && isfield(EEG.CTAP.badchans, 'detect')
-    Arg.channels = setdiff(Arg.channels, EEG.CTAP.badchans.detect.chans);
+    Arg.exclude_channels =...
+        union(Arg.exclude_channels, EEG.CTAP.badchans.detect.chans);
 end
+Arg.channels = setdiff(Arg.channels, Arg.exclude_channels);
 
 
 %% CORE

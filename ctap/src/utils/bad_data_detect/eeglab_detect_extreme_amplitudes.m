@@ -146,7 +146,7 @@ rej_match = true(size(eegdata));
 qnt_th = NaN(size(rej_match,1),2);
 rej_th = NaN(size(rej_match,1),2);
 
-fprintf('Analyzing channels: %s...', strjoin(Arg.rejectionChannels, ', '))
+fprintf('Analyzing channels: %s...\n', strjoin(Arg.rejectionChannels, ', '))
 for i = 1:size(rej_match,1) %over channels
     % Compute quantiles
     qnt_th(i,:) = [ quantile(eegdata(i,:), (Arg.tailPercentage/2)),...
@@ -219,11 +219,9 @@ if sum(samprej_match)~=0
     EEGtmp.event = th_event;
 
     if ~isempty(EEG.event)
-        EEG.event = eeglab_merge_event_tables(EEG.event, EEGtmp.event,...
-                                                    'ignoreDiscontinuousTime');
+        EEG.event = eeglab_merge_event_tables(EEG.event, EEGtmp.event, 'ignor');
     else
-        EEG.event = eeglab_merge_event_tables(EEGtmp.event,...
-                                                    'ignoreDiscontinuousTime');
+        EEG.event = eeglab_merge_event_tables(EEGtmp.event, 'ignore');
     end
 
     clear('EEGtmp*');
@@ -245,33 +243,4 @@ Rej.allChannelsMatch = samprej_match;
 Rej.allChannelsPrc = sum(samprej_match)/EEG.pnts;
 Rej.allChannelsCount = size(rej_inds, 1);
 
-
-%% Plot and save
-%{
-if Arg.showPlot
-    fh = figure();
-else
-    fh = figure('Visible','off');
-end  
-%this allows for the creation of an invisible figure. But calling plot
-makes the figure visible again.... pläh...
-
-
-if Arg.savePlot
-    fh = plot_nxm(xdata, ydata, plotGrid,...
-        'plotorder', plotorder,...
-        'xlinePos', vert_line_pos,...
-        'plotlegend', 'all',...
-        'legendstrs', legendstrs,...
-        'ylabels', ylabels,...
-        'xlabels', xlabels,...
-        'xlimits', repmat([-500,500],size(ydata,1),1),...
-        'titlestr','Channel amplitude histograms');
-        %set(gcf, 'Position',  [0 0.0244 0.5000 0.8701]);
-
-    [status,message,messageid] = mkdir(Arg.savePath);
-    savename = ['channel-histograms_' EEG.ttl.ssc.measurement.casename '.png'];
-    saveas(fh, fullfile(Arg.savePath, savename));
-    close(fh);
-end
-%}
+end %eeglab_detect_extreme_amplitudes

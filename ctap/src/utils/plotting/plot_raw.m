@@ -14,6 +14,7 @@ function [figh, startSamp] = plot_raw(EEG, varargin)
 %   'dataname'      string, what to call data rows, default = 'Channels'
 %   'startSample'   integer, first sample to plot, default = NaN
 %   'secs'          integer, seconds to plot from min to max, default = [0 16]
+%   'timeResolution'string, time resolution to plot, sec or ms, default = 'sec'
 %   'channels'      cell string array, labels, default = {EEG.chanlocs.labels}
 %   'markChannels'  cell string array, labels of bad channels, default = {}
 %   'plotEvents'    boolean, add labels & vertical dash lines, default = true
@@ -44,10 +45,11 @@ p.addRequired('EEG', @isstruct);
 p.addParameter('dataname', 'Channels', @isstr); %what is data called?
 p.addParameter('startSample', 1, @isnumeric); %start of plotting in samples
 p.addParameter('secs', [0 16], @isnumeric); %how much to plot
+p.addParameter('timeResolution', 'sec', @ischar); %time res to plot, sec or ms
 p.addParameter('channels', {EEG.chanlocs.labels}, @iscellstr); %channels to plot
 p.addParameter('markChannels', {}, @iscellstr); %channels to plot in red
 p.addParameter('plotEvents', true, @islogical);
-p.addParameter('figVisible', 'on', @isstr);
+p.addParameter('figVisible', 'off', @isstr);
 p.addParameter('eegname', EEG.setname, @isstr);
 p.addParameter('paperwh', [0 0], @isnumeric);
 p.addParameter('shadingLimits', [NaN NaN], @isnumeric); % in samples
@@ -89,18 +91,37 @@ switch ndims(EEG.data)
         Arg.secs(2) = min([Arg.secs(2) EEG.xmax]);
 end
 
-%get the data duration
+%get the data duration in samples
+if Arg.secs(1) <= 0 && Arg.secs(2) > 0
+    adj = 1;
+else
+    adj = 0;
+end
 dur = floor(min([EEG.srate * diff(Arg.secs),...
-                 size(eegdata, 2) - min(Arg.shadingLimits)]));
+                 size(eegdata, 2) - min(Arg.shadingLimits)]));% + adj;
 if dur == 0
     warning('plot_raw:duration_zero', 'Duration was 0 - no plot made')
     return
 end
 
-%Time in samples (set to integer, as EEG latencies are often double)
-Arg.startSample = int64(Arg.startSample + (Arg.secs(1) * EEG.srate));
+%Time in samples
+if Arg.secs(1) >= 0
+    Arg.startSample = min(Arg.startSample + (Arg.secs(1) * EEG.srate), EEG.pnts);
+else
+    Arg.startSample = max(Arg.startSample + (Arg.secs(1) * EEG.srate), 1);
+end
 LastSample = Arg.startSample + dur - 1;
-Arg.secs = single(round([Arg.startSample / EEG.srate, LastSample / EEG.srate]));
+if strcmp(Arg.timeResolution, 'sec')
+%     Arg.secs = single(round([Arg.startSample / EEG.srate, LastSample / EEG.srate]));
+    Arg.secs = single(round(Arg.secs));
+else
+    % for ms-resolution time windows (now think of Arg.secs as milliseconds)!!
+    Arg.secs = Arg.secs * 1000;
+end
+% set to integer, as EEG latencies are often double
+Arg.startSample = int64(Arg.startSample);
+LastSample = int64(LastSample);
+
 
 
 %% Setup Plot
@@ -171,7 +192,7 @@ xbds = double(get(gca, 'xlim'));
 ybds = double(get(gca, 'ylim'));
 top = ybds(2);
  
-%draw a y-axis scalebar at 10% of the total range of the y-axis
+%% draw a y-axis scalebar at 10% of the total range of the y-axis
 sbar = ybds(1) + (diff(ybds) / 10);
 sbr100 = ybds(1) + 100; %plus another one at 100 uV
 xw = xbds(1) + diff(xbds) * 1.02;
@@ -187,14 +208,18 @@ line([xbds(2) xw], [ybds(1) ybds(1)], 'color', 'b', 'clipping', 'off')
 line([xbds(2) xw], [sbar sbar], 'color', 'b', 'clipping', 'off')
 line([xbds(2) xw], [sbr100 sbr100], 'color', 'r', 'clipping', 'off')
 
-% make shaded area
+
+%% make shaded area
 set(figh, 'Color', 'w')
 if ~any(isnan(Arg.shadingLimits))
     x = xbds(1) + (Arg.shadingLimits(1) - Arg.startSample) / EEG.srate;
     y = ybds(1);
     w = (Arg.shadingLimits(2) - Arg.shadingLimits(1)) / EEG.srate;
     h = ybds(2) - ybds(1);
-    rectangle('Position', [x, y, w, h], 'EdgeColor', 'red', 'LineWidth', 2);
+    rectangle('Position', [x, y, w, h], 'EdgeColor', 'red', 'LineWidth', 1);
+%DEBUG:
+%     line([x x], [y y+h], 'color', 'b', 'clipping', 'off', 'LineStyle', '--')
+%     line([x+w x+w], [y y+h], 'color', 'm', 'clipping', 'off', 'LineStyle', ':', 'LineWidth', 3)
 end
 
 
@@ -214,7 +239,7 @@ if Arg.plotEvents && ~isempty(EEG.event)
             evplotlat = double([[evplot.latency] peek.latency]) ./ EEG.srate;
             for i = 1:numel(evplotlat)
                 line([evplotlat(i) evplotlat(i)], ybds...
-                        , 'color', 'k', 'LineWidth', 1, 'LineStyle', '--')
+                        , 'color', 'k', 'LineWidth', 0.5, 'LineStyle', '--')
                 t = text(evplotlat(i), double(max(ybds)), evplottyp{i}...
                         , 'BackgroundColor', 'none' ... %[0.9 0.9 0.9]...
                         , 'Rotation', -90 ...

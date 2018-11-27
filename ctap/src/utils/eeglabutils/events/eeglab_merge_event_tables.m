@@ -47,8 +47,9 @@ function [newevent, rejevent] = eeglab_merge_event_tables(event1, event2, timeSy
 %               latency values of the continuous time event table to match 
 %               those in the discontinuous one. This also rejects events 
 %               that overlap with boundary events. 
-%               Use 'ignoreDiscTime' if you want to merge the event tables
-%               without any modifications to latency values.
+%               Use 'ignoreDiscontinuousTime' if you want to merge the event
+%               tables without any modifications to latency values.
+%               The leading part of each string will also work.
 %
 % Outputs:
 %   newevent    struct, EEGLAB event table structure that contains the 
@@ -188,7 +189,7 @@ end
 
 
 %% Adjust continuous time latency values (if necessary)
-if strcmp(timeSyncMode, 'adjustDiscontinuousTime')
+if startsWith('adjustDiscontinuousTime', timeSyncMode, 'IgnoreCase', true)
     % NOTE: The code does not execute this far if both event tables contain
     % boundary values. Hence, we assume that only one of the event tables
     % or neither of them contains boundary values.
@@ -212,7 +213,7 @@ if strcmp(timeSyncMode, 'adjustDiscontinuousTime')
     else
         rejevent = struct([]);
     end
-else
+elseif startsWith('ignoreDiscontinuousTime', timeSyncMode, 'IgnoreCase', true)
     rejevent = struct([]);
     disp('merge_event_tables: ignoring discontinuous time...');
 end
