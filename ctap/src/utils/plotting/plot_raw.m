@@ -13,7 +13,10 @@ function [figh, startSamp] = plot_raw(EEG, varargin)
 % varargin:
 %   'dataname'      string, what to call data rows, default = 'Channels'
 %   'startSample'   integer, first sample to plot, default = NaN
-%   'secs'          integer, seconds to plot from min to max, default = [0 16]
+%   'secs'          integer, a window time to plot relative to the startSample,
+%                            given in seconds from min to max, default = [0 16]
+%   'epoch'         logical, plot frame if true, i.e. plot all given data (will
+%                   look very bad if not given a true frame), default = false
 %   'timeResolution'string, time resolution to plot, sec or ms, default = 'sec'
 %   'channels'      cell string array, labels, default = {EEG.chanlocs.labels}
 %   'markChannels'  cell string array, labels of bad channels, default = {}
@@ -45,6 +48,7 @@ p.addRequired('EEG', @isstruct);
 p.addParameter('dataname', 'Channels', @isstr); %what is data called?
 p.addParameter('startSample', 1, @isnumeric); %start of plotting in samples
 p.addParameter('secs', [0 16], @isnumeric); %how much to plot
+p.addParameter('epoch', false, @islogical); %plotting a frame or continuous
 p.addParameter('timeResolution', 'sec', @ischar); %time res to plot, sec or ms
 p.addParameter('channels', {EEG.chanlocs.labels}, @iscellstr); %channels to plot
 p.addParameter('markChannels', {}, @iscellstr); %channels to plot in red
@@ -58,7 +62,7 @@ p.parse(EEG, varargin{:});
 Arg = p.Results;
 
 
-%% Initialize
+%% Initialize CHANNELS
 % get rid of missing channels
 missingChannels = setdiff(Arg.channels, {EEG.chanlocs.labels});
 if ~isempty(missingChannels)
@@ -76,52 +80,61 @@ Arg.markChannels = intersect(CHANNELS, Arg.markChannels);
 [CHANIDX, si] = sort(CHANIDX);
 CHANNELS = CHANNELS(si);
 
-%Time in seconds
-if isscalar(Arg.secs), Arg.secs = [0 Arg.secs]; end
-Arg.secs = sort(Arg.secs);
 
-%Epoched or continuous?
-switch ndims(EEG.data)
-    case 3
-        [~, col, eps] = size(EEG.data);
-        eegdata = EEG.data(CHANIDX, 1:col * eps);
-        Arg.secs(2) = min([Arg.secs(2) (col * eps) / EEG.srate]);
-    case 2
-        eegdata = EEG.data(CHANIDX, :);
-        Arg.secs(2) = min([Arg.secs(2) EEG.xmax]);
-end
-
-%get the data duration in samples
-if Arg.secs(1) <= 0 && Arg.secs(2) > 0
-    adj = 1;
-else
-    adj = 0;
-end
-dur = floor(min([EEG.srate * diff(Arg.secs),...
-                 size(eegdata, 2) - min(Arg.shadingLimits)]));% + adj;
-if dur == 0
-    warning('plot_raw:duration_zero', 'Duration was 0 - no plot made')
-    return
-end
-
-%Time in samples
-if Arg.secs(1) >= 0
-    Arg.startSample = min(Arg.startSample + (Arg.secs(1) * EEG.srate), EEG.pnts);
-else
-    Arg.startSample = max(Arg.startSample + (Arg.secs(1) * EEG.srate), 1);
-end
-LastSample = Arg.startSample + dur - 1;
+%% Initialize TIME
 if strcmp(Arg.timeResolution, 'sec')
-%     Arg.secs = single(round([Arg.startSample / EEG.srate, LastSample / EEG.srate]));
-    Arg.secs = single(round(Arg.secs));
+    SECS = true;
+elseif strcmp(Arg.timeResolution, 'ms')
+    SECS = false;
 else
-    % for ms-resolution time windows (now think of Arg.secs as milliseconds)!!
-    Arg.secs = Arg.secs * 1000;
+    error('plot_raw:badparam'...
+        , 'Value of parameter ''timeResolution'' not recognised: %s'...
+        , Arg.timeResolution)
 end
-% set to integer, as EEG latencies are often double
-Arg.startSample = int64(Arg.startSample);
-LastSample = int64(LastSample);
+if Arg.epoch
+    Arg.startSample = 1;
+    LastSample = EEG.pnts;
+    dur = LastSample;
+    Arg.secs = [EEG.xmin EEG.xmax];
+    if ~SECS
+        Arg.secs = Arg.secs * 1000;
+    end
+    eegdata = EEG.data(CHANIDX, :);
+else
 
+    %Time in seconds
+    if isscalar(Arg.secs), Arg.secs = [0 Arg.secs]; end
+    Arg.secs = sort(Arg.secs);
+
+    %Epoched or continuous?
+    switch ndims(EEG.data)
+        case 3
+            [~, col, eps] = size(EEG.data);
+            eegdata = EEG.data(CHANIDX, 1:col * eps);
+            Arg.secs(2) = min([Arg.secs(2) (col * eps) / EEG.srate]);
+        case 2
+            eegdata = EEG.data(CHANIDX, :);
+            Arg.secs(2) = min([Arg.secs(2) EEG.xmax]);
+    end
+
+    %get the data duration in samples
+    dur = floor(min([EEG.srate * diff(Arg.secs) ...
+                     , EEG.pnts - min(Arg.shadingLimits)]));
+    if dur == 0
+        warning('plot_raw:duration_zero', 'Duration was 0 - no plot made')
+        return
+    end
+
+    %Time in samples, set to integer, as EEG latencies are often double
+    Arg.startSample = int64(max(Arg.startSample + (Arg.secs(1) * EEG.srate), 1));
+    LastSample = Arg.startSample + dur - 1;
+    if SECS
+        Arg.secs = single(round([Arg.startSample / EEG.srate, LastSample / EEG.srate]));
+    else
+        % for ms-resolution time windows (now think of Arg.secs as milliseconds)!!
+        Arg.secs = Arg.secs * 1000;
+    end
+end
 
 
 %% Setup Plot
@@ -150,8 +163,12 @@ if sum(Arg.paperwh) == 0
                   'Visible', Arg.figVisible);
 else
     %IF paper width or height is set as negative, estimate from data dimensions
+    t_width = diff(Arg.secs);
+    if ~SECS %if showing milliseconds, give 5x as much space as for secs
+        t_width = t_width / 200;
+    end
     if Arg.paperwh(1) < 0
-        Arg.paperwh(1) = ceil((log2(diff(Arg.secs)) + 1) .* 4);
+        Arg.paperwh(1) = ceil((log2(t_width) + 1) .* 4);
     end
     if Arg.paperwh(2) < 0
         Arg.paperwh(2) = numel(CHANNELS) * 0.8;
@@ -178,9 +195,11 @@ hold off;
 
 %% edit axes & prettify
 set(gca, 'YTick', mean(sig, 2), 'YTickLabel', CHANNELS)
-set(gca, 'XTick', Arg.secs(1):Arg.secs(2), 'XTickLabel', cellfun(@(x)...
-    sprintf('%d',x), num2cell(Arg.secs(1):Arg.secs(2)), 'UniformOutput', false)...
-    , 'XTickLabelRotation', 45)
+if SECS
+    set(gca, 'XTick', Arg.secs(1):Arg.secs(2), 'XTickLabel', cellfun(@(x)...
+        sprintf('%d',x), num2cell(Arg.secs(1):Arg.secs(2)), 'Un', false)...
+        , 'XTickLabelRotation', 45)
+end
 grid on
 if Arg.plotEvents && ~isempty(EEG.event)
     ylim([mi(1) 1.1*max(max(sig))])
@@ -266,7 +285,7 @@ title( sprintf('%s -\n raw %s', Arg.eegname, Arg.dataname),...
 %only need to fix font sizes if there is more than one channel to plot
 if length(CHANIDX) > 1
     %Determine y-axis-relative proportion & fix size of everything
-    fsz = 0.5 * (1 / Arg.paperwh(2));
+    fsz = 0.5 * (1 / figh.PaperPosition(4) - figh.PaperPosition(2));
     set(findall(figh, '-property', 'FontUnits'), 'FontUnits', 'normalized')
     set(findall(figh, '-property', 'FontSize'), 'FontSize', fsz)
 
@@ -280,9 +299,15 @@ end
 % yrule.FontSize = fsz;
 
 %AXIS LABELS
-xlabel( sprintf('Time\n[samples=%d:%d - seconds=%1.0f:%1.0f]'...
-    , Arg.startSample, LastSample...
-    , Arg.startSample / EEG.srate, LastSample / EEG.srate) )
+if SECS
+    xlabel( sprintf('Time\n[samples=%d:%d - seconds=%1.0:%1.0f]'...
+        , Arg.startSample, LastSample...
+        , Arg.secs(1) / EEG.srate, LastSample / EEG.srate) )
+else
+    xlabel( sprintf('Time\n[samples=%d:%d - milliseconds=%d:%d]'...
+        , Arg.startSample, LastSample...
+        , Arg.secs(1), Arg.secs(2)) )
+end
 ylabel(Arg.dataname)
 
 
