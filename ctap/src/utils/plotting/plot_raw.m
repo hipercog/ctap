@@ -231,9 +231,13 @@ line([xbds(2) xw], [sbr100 sbr100], 'color', 'r', 'clipping', 'off')
 %% make shaded area
 set(figh, 'Color', 'w')
 if ~any(isnan(Arg.shadingLimits))
-    x = xbds(1) + (Arg.shadingLimits(1) - Arg.startSample) / EEG.srate;
+    tr = 1;
+    if ~SECS
+        tr = 1000;
+    end
+    x = xbds(1) + (Arg.shadingLimits(1) - Arg.startSample) / EEG.srate * tr;
     y = ybds(1);
-    w = (Arg.shadingLimits(2) - Arg.shadingLimits(1)) / EEG.srate;
+    w = (Arg.shadingLimits(2) - Arg.shadingLimits(1)) / EEG.srate * tr;
     h = ybds(2) - ybds(1);
     rectangle('Position', [x, y, w, h], 'EdgeColor', 'red', 'LineWidth', 1);
 %DEBUG:
