@@ -109,6 +109,11 @@ switch Arg.type
             'Scale', 1.0,...
             'ChannelLabels', {{EEG.chanlocs(get_eeg_inds(EEG, 'EEG')).labels}});
         
+        % Make a name suitable for CBRU mul-plugin
+        %TODO: export_name_root is hacked into Cfg in the pipebatch script
+        %specific to NeuroEnhance project - make sure it is provided in
+        %other contexts, or find a more general solution here?
+        Arg.name = [Cfg.MC.export_name_root regexprep(Arg.name, '\D', '')];
         savename = fullfile(Arg.outdir, [Arg.name '_' Arg.locking_event '.mul']);
         matrixToMul(savename, mul, Arg.locking_event)
         
