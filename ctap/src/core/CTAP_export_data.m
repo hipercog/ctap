@@ -90,8 +90,8 @@ switch Arg.type
                 error('CTAP_export_data:bad_event_name', ['Event name %s was'...
                     ' not found in the event structure: cannot export'])
             end
-            msg = myReport(['Exporting a mul-file ERP for averaged data ''' ...
-                '''time-locked to event ' Arg.lock_event], Cfg.env.logFile);
+            msg = myReport(['Exporting a mul-file ERP for averaged data ' ...
+                'time-locked to event ' Arg.lock_event], Cfg.env.logFile);
             %average data for lock_event event here
             %first 3 lines find epochs with wanted event - must be easier way?
             idx = squeeze(struct2cell(EEG.epoch));
