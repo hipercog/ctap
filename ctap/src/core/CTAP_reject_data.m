@@ -121,8 +121,7 @@ end
 
 %% Diagnostics: plots & logs
 if Arg.plot && detected.prc > 0
-    savepath = get_savepath(Cfg, mfilename, 'qc',...
-                            'suffix', Arg.method);                  
+    savepath = get_savepath(Cfg, mfilename, 'qc', 'suffix', Arg.method);                  
     savepath = fullfile(savepath, EEG.CTAP.measurement.casename);
     prepare_savepath(savepath)
 
@@ -134,18 +133,19 @@ if Arg.plot && detected.prc > 0
             sbf_plot_channel_rejections(EEG0, savepath)
             
         case 'badepochs'
-            sbf_plot_epoch_rejections(EEG0, savepath)
+            plotNsave_epoch(EEG0, badness, savepath, EEG0.setname...
+                        , 'ctapMethod', detected.src{1})
     
         case 'badcomps'
             sbf_plotNsave_bad_ICs(EEG0, savepath)
             
             if contains(strjoin(detected.src(:,1),'-'), 'blink') &&...
-                                    ismember('blink', unique({EEG0.event.type}))
+                                ismember('blink', unique({EEG0.event.type}))
                 sbf_plotNsave_blinkERP(EEG0, EEG, savepath)
             end
             
         case 'badsegev'
-            sbf_plot_bad_segments(EEG0, Cfg, savepath)
+            sbf_plot_bad_segments(EEG0, savepath)
             
     end
 end
@@ -252,48 +252,27 @@ function sbf_plot_channel_rejections(EEG0, savepath)
 end %sbf_plot_channel_rejections()
 
 
-%% sbf_plot_epoch_rejections
-% Visualize epoch rejections
-function sbf_plot_epoch_rejections(EEG0, savepath)
-    
-    plotNsave_epoch(EEG0, badness, savepath, EEG0.setname)
-%     inds = get_eeg_inds(EEG0, 'EEG');
-%     for ix = 1:numel(badness)
-%         pleeg = EEG0;
-%         pleeg.data = pleeg.data(:, :, badness(ix));
-%         figH = plot_raw(pleeg, ...
-%             'channels', {EEG0.chanlocs(inds).labels},...
-%             'epoch', true,...
-%             'timeResolution', 'ms',...
-%             'paperwh', [-1 -1],...
-%             'figVisible', 'off');
-%         % Saves images as separate pngs to save time
-%         saveas(figH, fullfile(savepath, sprintf('Badepoch_%d.png', ix) ), 'png')
-%         close(figH);
-%     end
-    
-end %sbf_plot_epoch_rejections
-
 %% sbf_plot_bad_segments
 % Visualize segment rejections
-function sbf_plot_bad_segments(EEG0, Cfg, savepath)
+function sbf_plot_bad_segments(EEG0, savepath)
     
     evMatch = ismember({EEG0.event.type}, EEG0.CTAP.badsegev.quantileTh.evidstr);
     ev = EEG0.event(evMatch);
-    extraWinSec = 2;
-    myReport(sprintf('Plotting diagnostics to ''%s''...\n', savepath)...
-        , Cfg.env.logFile);
     inds = get_eeg_inds(EEG0, 'EEG');
     %save a bunch of pngs to a unique subdirectory.
     for i = 1:numel(ev)
-        lat = ev(i).latency;
-        dur = ev(i).duration;
-        padlen = EEG0.srate / 10;
+        timeres = 'sec';
+        if ev(i).duration < EEG0.srate
+            timeres = 'ms';
+        end
+        extraWinSec = min(max(ev(i).duration / EEG0.srate, 1), 3);
+        %use our excellent homemade raw data plotter
         figH = plot_raw(EEG0, ...
             'channels', {EEG0.chanlocs(inds).labels},...
-            'startSample', max(1, lat - extraWinSec * EEG0.srate),...
-            'secs', dur / EEG0.srate + 2 * extraWinSec,...
-            'shadingLimits', [lat - padlen, lat + dur + padlen],...
+            'startSample', max(1, ev(i).latency - extraWinSec * EEG0.srate),...
+            'secs', ev(i).duration / EEG0.srate + 2 * extraWinSec,...
+            'shadingLimits', [ev(i).latency, ev(i).latency + ev(i).duration],...
+            'timeResolution', timeres,...
             'paperwh', [-1 -1],...
             'figVisible', 'off');
         % Saves images as separate pngs to save time

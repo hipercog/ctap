@@ -15,6 +15,8 @@ function [EEG, Cfg] = CTAP_export_data(EEG, Cfg)
 %   .type       string, file type to save as, NO Default:
 %                      - 'set', 'gdf','edf','bdf','cfwb','cnt', 'leda', 'mul'
 %   .write_evts logical, write events to separate text file, default = false
+%   .lock_event string, name of event type to time-lock an ERP average when
+%                       exporting a .mul file
 %
 % Outputs:
 %   EEG         struct, EEGLAB structure modified by this function
@@ -84,17 +86,18 @@ switch Arg.type
 
     case 'mul'
         if ~ismatrix(EEG.data)
-            if ~ismember({EEG.event.type}, Arg.locking_event)
+            if ~ismember({EEG.event.type}, Arg.lock_event)
                 error('CTAP_export_data:bad_event_name', ['Event name %s was'...
                     ' not found in the event structure: cannot export'])
             end
             msg = myReport(['Exporting a mul-file ERP for averaged data ''' ...
-                '''time-locked to event ' Arg.locking_event], Cfg.env.logFile);
-            %average data for locking_event event here
+                '''time-locked to event ' Arg.lock_event], Cfg.env.logFile);
+            %average data for lock_event event here
             %first 3 lines find epochs with wanted event - must be easier way?
             idx = squeeze(struct2cell(EEG.epoch));
             idx = squeeze(idx(ismember(fieldnames(EEG.epoch), 'eventtype'), :));
-            idx = cell2mat(cellfun(@(x) any(strcmpi(x, Arg.locking_event)), idx, 'Un', 0));
+            idx = cell2mat(cellfun(@(x) any(strcmpi(x, Arg.lock_event)), idx...
+                                                                    , 'Un', 0));
             epx = EEG.data(get_eeg_inds(EEG, 'EEG'), :, idx);
             eegdata = mean(epx, 3)';
         else
@@ -109,15 +112,20 @@ switch Arg.type
             'Scale', 1.0,...
             'ChannelLabels', {{EEG.chanlocs(get_eeg_inds(EEG, 'EEG')).labels}});
         
-        savename = fullfile(Arg.outdir, [Arg.name '_' Arg.locking_event '.mul']);
-        matrixToMul(savename, mul, Arg.locking_event)
+        % Make a name suitable for CBRU mul-plugin
+        %TODO: export_name_root is hacked into Cfg in the pipebatch script
+        %specific to NeuroEnhance project - make sure it is provided in
+        %other contexts, or find a more general solution here?
+        Arg.name = [Cfg.MC.export_name_root regexprep(Arg.name, '\D', '')];
+        savename = fullfile(Arg.outdir, [Arg.name '_' Arg.lock_event '.mul']);
+        matrixToMul(savename, mul, Arg.lock_event)
         
         if Arg.write_evts
             % Write out separate event file: currently only supports a few
             % paradigms: CBRU's AV, multiMMN, and switching task
             %TODO : write general version of this, include in ctap/src/utils/IO!
             evtfname = fullfile(Arg.outdir...
-                        , [Arg.name '_' Arg.locking_event '-recoded.evt']);
+                        , [Arg.name '_' Arg.lock_event '-recoded.evt']);
             if isfield(EEG.CTAP.err, 'preslog_evt') && ~EEG.CTAP.err.preslog_evt
                 evtfname = [evtfname '-recoded_missingTriggers.evt'];
             end

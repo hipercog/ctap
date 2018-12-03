@@ -93,7 +93,7 @@ faster_vars = {'ampRange' 'variance' 'chanDev'};
 % Subset to required channels for:
 % faster, recufast, eegthresh, rejspec
 if ~ismember(Arg.method, {'hasEvent','hasEventProperty'})
-    EEGtmp = pop_select(EEG, 'channel', Arg.channels);
+    EEGtmp = pop_select(remove_ica(EEG), 'channel', Arg.channels);
     Arg.channels = get_eeg_inds(EEGtmp, 'EEG');
 else
     EEGtmp = EEG;
@@ -273,12 +273,6 @@ varargout{2} = result;
             error('ctapeeg_detect_bad_epochs:bad_param', ...
                 'It is necessary to define the chosen ''method'': see help')
         end
-        
-        % If desired, the default values can be changed here:
-        try Arg.channels = get_eeg_inds(EEG, vargs.channels);
-        catch
-            Arg.channels = get_eeg_inds(EEG, 'EEG');
-        end
 
         switch Arg.method
             case 'recufast'
@@ -321,6 +315,12 @@ varargout{2} = result;
         
         % Arg fields are canonical, vargs values are canonical: intersect-join
         Arg = intersect_struct(Arg, vargs);
+
+        % If desired, the default values can be changed here:
+        try Arg.channels = get_eeg_inds(EEG, vargs.channels);
+        catch
+            Arg.channels = get_eeg_inds(EEG, 'EEG');
+        end
     end
 
 end % ctapeeg_detect_bad_epochs()
