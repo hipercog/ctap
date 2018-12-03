@@ -134,7 +134,8 @@ if Arg.plot && detected.prc > 0
             sbf_plot_channel_rejections(EEG0, savepath)
             
         case 'badepochs'
-            plotNsave_epoch(EEG0, badness, savepath, EEG0.setname)
+            plotNsave_epoch(...
+                EEG0, badness, savepath, EEG0.setname, detected.src{1})
     
         case 'badcomps'
             sbf_plotNsave_bad_ICs(EEG0, savepath)

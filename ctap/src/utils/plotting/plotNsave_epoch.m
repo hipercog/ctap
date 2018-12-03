@@ -8,22 +8,29 @@ function plotNsave_epoch(EEG, IDX, savepath, plotname, varargin)
 %   plotNsave_epoch(EEG, IDX, savepath, plotname, varargin)
 % 
 % Input:
-%   'EEG'       struct, EEGLAB structured data
-%   'IDX'       vector, index of epochs to plot, e.g. bad epochs
-%   'savepath'  string, path to directory for plot png to save
-%   'plotname'  string, basis part of output image name - epoch-wise plots will
-%                       be given unique suffixes to prevent overwriting
+%   EEG         struct, EEGLAB structured data
+%   IDX         vector, index of epochs to plot, e.g. bad epochs
+%   savepath    string, path to directory for plot png to save
+%   plotname    string, basis part of output image name - epoch-wise plots
+%                       are given unique suffixes to prevent overwriting
+%   ctapMethod  string, method used in CTAP_detect_bad_epochs, and field in
+%                       EEG.CTAP.badepochs with info on channels to mark red
 % 
 % varargin:
-%   'dataname'      string, what to call data rows, default = 'Channels'
+%   'dataname'      string, what to call data rows, 
+%                           default = 'Channels'
+%   'chunksize'     scalar, number of channels per figure,
+%                           default = 32
 %   'channels'      cell string array, labels, 
-%                   default = {EEG.chanlocs.labels}
+%                           default = {EEG.chanlocs.labels}
 %   'markChannels'  cell string array, labels of bad channels, 
-%                   default = {}
+%                           default = {}
 %   'plotEvents'    boolean, plot event labels & vertical marker lines,
-%                   default = true
-%   'figVisible'    on|off, 
-%                   default = off
+%                           default = true
+%   'figVisible'    string, sets figure visibility on|off, 
+%                           default = off
+%   'paperwh'       vector 2x1, sets figure paper [width, height] in cm
+%                           default = [-1 -1] (base size on data)
 % 
 %
 % See also: plot_raw, struct2varargin
@@ -89,6 +96,9 @@ for ix = 1:numel(IDX)
         pleeg.data = pleeg.data(:, :, IDX(ix));
         figh = plot_raw(pleeg, ...
             'channels', CHANNELS(chchunks(i):chchunks(i + 1) - 1),...
+            'markChannels',...
+                EEG.CTAP.badepochs.(ctapMethod).scores.Properties.RowNames(...
+                EEG.CTAP.badepochs.(ctapMethod).scores{:, IDX(ix)} == 1),...
             'epoch', true,...
             'timeResolution', 'ms',...
             'paperwh', Arg.paperwh,...
