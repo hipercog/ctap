@@ -47,7 +47,6 @@ p.addParameter('dataname', 'channels', @isstr); %what is data called?
 p.addParameter('chunksize', 32, @isnumeric); %a handy # channels per figure
 p.addParameter('channels', {EEG.chanlocs(get_eeg_inds(EEG, 'EEG')).labels}...
                                             , @iscellstr); %channels to plot
-p.addParameter('markChannels', {}, @iscellstr); %channels to plot in red
 p.addParameter('plotEvents', true, @islogical); 
 p.addParameter('figVisible', 'off', @ischar);
 p.addParameter('paperwh', [-1 -1], @isnumeric); %paper [width, height] in cm
@@ -60,7 +59,7 @@ CHANNELS = Arg.channels;
 %% Set up chunks
 nchan = length(CHANNELS);
 if Arg.chunksize > numel(Arg.channels)
-%     nchunks = 1;
+    nchunks = 1;
     chchunks = [1, nchan + 1];
 else
     nchunks = Arg.chunksize;
@@ -79,23 +78,27 @@ end
 
 %% Plot
 % Remove fields not applicable to plot_raw (or otherwise misleading)
-Arg = rmfield(Arg,{'EEG', 'IDX', 'savepath', 'plotname', 'chunksize', 'channels'});
+Arg = rmfield(Arg, {'EEG', 'channels'});
 plotVarargin = struct2varargin(Arg);
 if ~exist(savepath, 'dir'), mkdir(savepath); end
 
 for ix = 1:numel(IDX)
     for i = 1:(length(chchunks) - 1)
-        pleeg = EEG;
-        pleeg.data = pleeg.data(:, :, IDX(ix));
-        figh = plot_raw(pleeg, ...
-            'channels', CHANNELS(chchunks(i):chchunks(i + 1) - 1),...
-            'epoch', true,...
-            'timeResolution', 'ms',...
-            'paperwh', Arg.paperwh,...
-                plotVarargin{:});
+        figh = plot_raw(pop_select(EEG, 'trial', IDX(ix))...
+            , 'channels', CHANNELS(chchunks(i):chchunks(i + 1) - 1)...
+            , 'epoch', IDX(ix) ...
+            , 'timeResolution', 'ms' ...
+            , 'paperwh', Arg.paperwh ...
+            , 'markChannels', ...
+                EEG.CTAP.badepochs.eegthresh.scores.Properties.RowNames(...
+                    EEG.CTAP.badepochs.eegthresh.scores{:, IDX(ix)} == 1) ...
+            , plotVarargin{:});
         % savename concats the file id with the channel information
-        savename = sprintf('%s-Badepoch_%d-chs%d-%d.png',...
-                           plotname, IDX(ix), chchunks(i), chchunks(i + 1) - 1);
+        chpart = '';
+        if nchunks == 1
+            chpart = sprintf('-chs%d-%d', chchunks(i), chchunks(i + 1) - 1);
+        end
+        savename = sprintf('%s-Badepoch_%d%s.png', plotname, IDX(ix), chpart);
         % save and close figure
         print(figh, '-dpng', fullfile(savepath, savename)); 
         close(figh);

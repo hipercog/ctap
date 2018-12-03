@@ -15,8 +15,8 @@ function [figh, startSamp] = plot_raw(EEG, varargin)
 %   'startSample'   integer, first sample to plot, default = NaN
 %   'secs'          integer, a window time to plot relative to the startSample,
 %                            given in seconds from min to max, default = [0 16]
-%   'epoch'         logical, plot frame if true, i.e. plot all given data (will
-%                   look very bad if not given a true frame), default = false
+%   'epoch'         numeric, if >0 then plot all given data as an epoch/frame,
+%                   NB! will look very bad if not given a true frame, default = 0
 %   'timeResolution'string, time resolution to plot, sec or ms, default = 'sec'
 %   'channels'      cell string array, labels, default = {EEG.chanlocs.labels}
 %   'markChannels'  cell string array, labels of bad channels, default = {}
@@ -43,12 +43,14 @@ function [figh, startSamp] = plot_raw(EEG, varargin)
 
 %% Parse input arguments and set varargin defaults
 p = inputParser;
+p.KeepUnmatched = true;
+
 p.addRequired('EEG', @isstruct);
 
 p.addParameter('dataname', 'Channels', @isstr); %what is data called?
 p.addParameter('startSample', 1, @isnumeric); %start of plotting in samples
 p.addParameter('secs', [0 16], @isnumeric); %how much to plot
-p.addParameter('epoch', false, @islogical); %plotting a frame or continuous
+p.addParameter('epoch', 0, @isnumeric); %plot the numbered frame; 0 = continuous
 p.addParameter('timeResolution', 'sec', @ischar); %time res to plot, sec or ms
 p.addParameter('channels', {EEG.chanlocs.labels}, @iscellstr); %channels to plot
 p.addParameter('markChannels', {}, @iscellstr); %channels to plot in red
@@ -236,7 +238,7 @@ if ~any(isnan(Arg.shadingLimits))
     w = (Arg.shadingLimits(2) - Arg.shadingLimits(1)) / EEG.srate;
     h = ybds(2) - ybds(1);
     rectangle('Position', [x, y, w, h], 'EdgeColor', 'red', 'LineWidth', 1);
-%DEBUG:
+%DEBUG - AREA FAILS WHEN DURATION OF BADNES IS < 1sec:
 %     line([x x], [y y+h], 'color', 'b', 'clipping', 'off', 'LineStyle', '--')
 %     line([x+w x+w], [y y+h], 'color', 'm', 'clipping', 'off', 'LineStyle', ':', 'LineWidth', 3)
 end
@@ -304,8 +306,10 @@ if SECS
         , Arg.startSample, LastSample...
         , Arg.secs(1) / EEG.srate, LastSample / EEG.srate) )
 else
-    xlabel( sprintf('Time\n[samples=%d:%d - milliseconds=%d:%d]'...
-        , Arg.startSample, LastSample...
+    ep = '';
+    if Arg.epoch, ep = sprintf('Epoch=%d - ', Arg.epoch); end
+    xlabel( sprintf('Time\n[%ssamples=%d:%d - milliseconds=%d:%d]'...
+        , ep, Arg.startSample, LastSample...
         , Arg.secs(1), Arg.secs(2)) )
 end
 ylabel(Arg.dataname)
