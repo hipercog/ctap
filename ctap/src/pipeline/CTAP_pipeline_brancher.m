@@ -429,9 +429,11 @@ for n = 1:numMC %over measurements
     Cfg = tmp_Cfg; %reassign original ctap
 
     suxes = {'successfully! :)' 'unsuccessfully :''('};
-    suxes = sprintf('\n================\nMeasurement ''%s'' analyzed %s\n',...
-        Cfg.measurement.casename, suxes{MCbad(n) + 1});
-    histfile = sprintf('%s_history.txt', Cfg.measurement.casename);
+    pssfl = {'PASS' 'FAIL'};
+    suxes = sprintf('\n================\nMeasurement ''%s'' analyzed %s\n'...
+                            , Cfg.measurement.casename, suxes{MCbad(n) + 1});
+    histfile = sprintf('%s_history-%s.txt'...
+                            , Cfg.measurement.casename, pssfl{MCbad(n) + 1});
     histdir = fullfile(Cfg.env.paths.logRoot, 'histories');
     if ~isfolder(histdir), mkdir(histdir); end
     myReport(suxes, Cfg.env.logFile);
