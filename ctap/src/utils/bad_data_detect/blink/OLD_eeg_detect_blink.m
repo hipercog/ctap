@@ -1,4 +1,4 @@
-function [peakLatArr, BlinkData] = eeg_detect_blink(veog, fs, varargin)
+function [peakLatArr, BlinkData] = OLD_eeg_detect_blink(veog, fs, varargin)
 %EEG_DETECT_BLINK - EEG blink detection using filtering, derivatives and a fancy metric
 %
 % Description:

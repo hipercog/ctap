@@ -42,15 +42,15 @@ function veog_signal = eeglab_extract_blinksignal(EEG, varargin)
 %% Parse input arguments and set varargin defaults
 p = inputParser;
 p.addRequired('EEG', @isstruct);
-p.addParamValue('veogUpChannelNames',...
+p.addParameter('veogUpChannelNames',...
                 {'VEOGU','VeogU','veogu','VeogY','EOG_Up','RightUp','LeftUp'},...
                 @iscellstr);
-p.addParamValue('veogDownChannelNames',...
+p.addParameter('veogDownChannelNames',...
                 {'VEOGD','VeogD','veogd','VeogA','EOG_Down','RightDown','LeftDown'},...
                 @iscellstr);
-p.addParamValue('blinkSignalType', 'channel-difference', @ischar);
-p.addParamValue('invertVeog', false, @islogical);
-p.addParamValue('filter', false, @islogical);
+p.addParameter('blinkSignalType', 'channel-difference', @ischar);
+p.addParameter('invertVeog', false, @islogical);
+p.addParameter('filter', false, @islogical);
 p.parse(EEG, varargin{:});
 Arg = p.Results;
 

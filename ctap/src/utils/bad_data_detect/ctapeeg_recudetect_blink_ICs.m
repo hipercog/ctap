@@ -77,15 +77,15 @@ comp_match = false(numel(th_arr), 1);
 %% Compute blink ERP for comparison to detected ICs
 EEGbl = pop_epoch(EEG, {'blink'}, [-els, els]);
 EEGbl = pop_rmbase(EEGbl, [-els * 1000, 0]);
-veogidx = ismember({EEGbl.chanlocs.labels}, Arg.veog);
+veogi = ismember({EEGbl.chanlocs.labels}, Arg.veog);
 blERPdf = create_dataframe(mean(EEGbl.data, 3),...
     {'channel', 'time'},...
     {{EEGbl.chanlocs.labels}, EEGbl.times});
 
 %test if detected IC removal gives clean blink ERP
-blinkERP = [quantile(squeeze(EEGbl.data(veogidx, :, :))', 0.025);...
-            blERPdf.data(veogidx, :);...
-            quantile(squeeze(EEGbl.data(veogidx, :, :))', 1 - 0.025)];
+veogd = squeeze(EEGbl.data(veogi, :, :));
+blinkERP = ...
+ [quantile(veogd', 0.025); blERPdf.data(veogi, :); quantile(veogd', 1 - 0.025)];
 [~, test_idx] = sort(th_arr); %ascending sort: lower is better
 for i = 1:ceil(numel(th_arr) * Arg.test_pc / 100) %consider only first X% of ICs.
     comp_match(test_idx(i)) = sbf_test_IC_removal(test_idx(i));
