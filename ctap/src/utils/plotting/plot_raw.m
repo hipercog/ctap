@@ -242,9 +242,6 @@ if ~any(isnan(Arg.shadingLimits))
     w = (Arg.shadingLimits(2) - Arg.shadingLimits(1)) / EEG.srate * tr;
     h = ybds(2) - ybds(1);
     rectangle('Position', [x, y, w, h], 'EdgeColor', 'red', 'LineWidth', 1);
-%DEBUG - AREA FAILS WHEN DURATION OF BADNES IS < 1sec:
-%     line([x x], [y y+h], 'color', 'b', 'clipping', 'off', 'LineStyle', '--')
-%     line([x+w x+w], [y y+h], 'color', 'm', 'clipping', 'off', 'LineStyle', ':', 'LineWidth', 3)
 end
 
 
@@ -252,31 +249,34 @@ end
 if Arg.plotEvents && ~isempty(EEG.event) 
     evlat = int64(cell2mat({EEG.event.latency}));
     evlatidx = (evlat >= Arg.startSample) & ...
-               (evlat < LastSample);
+               (evlat <= LastSample);
 
     if any(evlatidx) %note: to plot, we need events in range to plot
         evplot = EEG.event(evlatidx);
-        peek = evplot(find(ismember({evplot.type}, 'ctapeeks'), 1));
         
-        if numel(peek) > 0 %we need 'ctapeek' events to plot
-            evplot = evplot(~ismember({evplot.type}, 'ctapeeks'));
-            evplottyp = {evplot.type peek.label};
-            evplotlat = double([[evplot.latency] peek.latency]) ./ EEG.srate;
-            for i = 1:numel(evplotlat)
-                line([evplotlat(i) evplotlat(i)], ybds...
-                        , 'color', 'k', 'LineWidth', 0.5, 'LineStyle', '--')
-                t = text(evplotlat(i), double(max(ybds)), evplottyp{i}...
-                        , 'BackgroundColor', 'none' ... %[0.9 0.9 0.9]...
-                        , 'Rotation', -90 ...
-                        , 'Interpreter', 'none'...
-                        , 'VerticalAlignment', 'bottom'...
-                        , 'HorizontalAlignment', 'left');
-            end
-            top = t.Extent;
-            top = top(2) + top(4);
+        peekidx = ismember({evplot.type}, 'ctapeeks');
+        blinkidx = ismember({evplot.type}, 'blink');
+        
+        % plot original events
+        if any(~(peekidx | blinkidx))
+            evs = evplot(~(peekidx | blinkidx));
+            t = sbf_plotevt([evs.latency], {evs.type}, [0.5 0.5 0.5]);
         end
+        % plot detected blinks
+        if any(blinkidx)
+            blinks = evplot(blinkidx);
+            sbf_plotevt([blinks.latency], {blinks.type}, 'r', [0.9 0.9 0.9 0.5])
+        end
+        % plot any peeks
+        if any(peekidx)
+            pk = evplot(peekidx);
+            t = sbf_plotevt([pk.latency], {pk.label}, 'g', [0.9 0.9 0.9 0.5]);
+        end
+        top = t.Extent;
+        top = top(2) + top(4);
     end
 end
+%return output value
 startSamp = Arg.startSample;
 
 
@@ -318,5 +318,23 @@ else
 end
 ylabel(Arg.dataname)
 
+
+    function txt = sbf_plotevt(evlats, evplottyp, lnclr, bgclr)
+        if nargin < 4, bgclr = 'none'; end
+        if nargin < 3, lnclr = 'k'; end
+        
+        evplotlat = double(evlats) ./ EEG.srate;
+        
+        for idx = 1:numel(evplotlat)
+            line([evplotlat(idx) evplotlat(idx)], ybds...
+                , 'color', lnclr, 'LineWidth', 0.5, 'LineStyle', '--')
+            txt = text(evplotlat(idx), double(max(ybds)), evplottyp{idx}...
+                , 'BackgroundColor', bgclr...
+                , 'Rotation', -90 ...
+                , 'Interpreter', 'none'...
+                , 'VerticalAlignment', 'bottom'...
+                , 'HorizontalAlignment', 'left');
+        end
+    end
 
 end % plot_raw()

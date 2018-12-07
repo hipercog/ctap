@@ -52,7 +52,7 @@ p.addParameter('secs', [0 16], @isnumeric); %how much time to plot
 p.addParameter('channels', {EEG.chanlocs.labels}, @iscellstr); %channels to plot
 p.addParameter('markChannels', {}, @iscellstr); %channels to plot in red
 p.addParameter('plotEvents', true, @islogical); 
-p.addParameter('figVisible', 'off', @ischar);
+p.addParameter('figVisible', 'on', @ischar);
 p.addParameter('paperwh', [-1 -1], @isnumeric); %paper [width, height] in cm
 
 p.parse(EEG, savepath, plotname, varargin{:});
