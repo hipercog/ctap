@@ -48,8 +48,8 @@ filenames = cellfun(@(x, y) [x y], filenames, exts, 'Un', 0);
 
 %Extract the interesting part of the fullpaths: SUB-STRING X
 if ~isempty(prestr)
-    prestr = cellfun(@(x) x(1:strfind(x, prestr) + length(prestr)), subx...
-                                                                , 'Un', 0);
+    ps = [prestr(1:end - 1) strrep(prestr(end), filesep, '')];
+    prestr = cellfun(@(x) x(1:strfind(x, ps) + length(ps)), subx, 'Un', 0);
     subx = cellfun(@(x, y) strrep(x, y, ''), subx, prestr, 'Un', 0);
 end
 
