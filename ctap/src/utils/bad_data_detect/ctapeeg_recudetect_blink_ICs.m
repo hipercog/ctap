@@ -126,7 +126,7 @@ method_data.blinkERP = blERPdf;
 
         %numerically compare ERPs
         [erqdiff, h, ~, ~] = sbf_compare_erp_quantiles(blinkERP, cleanERP);
-        if h
+        if ~isnan(h) && h
             worked = true;
         end
         %MAYBEDO - other criteria for classifying blink ICs might relate to

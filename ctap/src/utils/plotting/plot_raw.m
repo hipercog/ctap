@@ -265,7 +265,7 @@ if Arg.plotEvents && ~isempty(EEG.event)
         % plot detected blinks
         if any(blinkidx)
             blinks = evplot(blinkidx);
-            sbf_plotevt([blinks.latency], {blinks.type}, 'r', [0.9 0.9 0.9 0.5])
+            sbf_plotevt([blinks.latency], {blinks.type}, 'r', [0.9 0.9 0.9 0.5]);
         end
         % plot any peeks
         if any(peekidx)
