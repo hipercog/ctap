@@ -90,8 +90,15 @@ for s = 1:numel(treeStats(1).pipe)
 
     for ldx = 1:numel(lvl)
         rni = contains(treeStats(lvl(ldx)).name, rowname);
-        if ~any(rni), continue; end
+        if ~any(rni)
+            continue; 
+        elseif sum(rni) > 2
+            error('ctap_compare_branchstats:xs_stats', ...
+                'Too many stats files for %s in pipe %s - clean old outputs?', ...
+                rowname, treeStats(lvl(ldx)))
+        end
 % TODO: NAME-INDEXES ARE SPECIFIC TO NEURO-ENHANCE PROJECT, GENERALISE!!
+% tmp = rowname(indices_of_subjnum); str2double(tmp(regexp(tmp, '\d')))
         treeStats(lvl(ldx)).pipe(rni).subj = rowname(1:5);
         treeStats(lvl(ldx)).pipe(rni).subj_num = str2double(rowname(3:5));
         treeStats(lvl(ldx)).pipe(rni).group = grpname;

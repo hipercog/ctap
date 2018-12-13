@@ -1,4 +1,4 @@
-function [treeStats, peek_stat_files] = ctap_get_peek_stats(ind, oud, filt, anew)
+function [treeStats, peek_stat_files] = ctap_get_peek_stats(ind, oud, varargin)
 %CTAP_GET_PEEK_STATS performs recurvise search of a CTAP output tree to
 %find *_stats.dat files produced by CTAP_peek_data
 % 
@@ -6,16 +6,19 @@ function [treeStats, peek_stat_files] = ctap_get_peek_stats(ind, oud, filt, anew
 % and an output path to save the gathered stats file locations and contents
 % 
 % Syntax:
-%       [peek_stat_files, treeStats] = ctap_get_peek_stats(ind, oud, filt, anew)
+%       [peek_stat_files, treeStats] = ctap_get_peek_stats(ind, oud, Arg.filt, anew)
 % 
 % Input:
 %   ind     string, path to root of CTAP tree, ideally the parent dir of the
 %                   first named pipe
 %   oud     string, path to directory where to save findings
+% Varargin:
 %   filt    string, terms required to be in filenames, e.g. conditions or
-%                   groups, which can be separated by * wildcards, default = ''
+%                   groups, which can be separated by * wildcards, 
+%                   default = ''
 %   anew    logical, if true then perform search from scratch and ignore
-%                   existing saved results files, default = false
+%                   existing saved results files, 
+%                   default = false
 % 
 %
 % Version History:
@@ -29,32 +32,36 @@ function [treeStats, peek_stat_files] = ctap_get_peek_stats(ind, oud, filt, anew
 % Please see the file LICENSE for details.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-if nargin < 4
-    anew = false;
+p = inputParser;
+p.addRequired('ind', @ischar)
+p.addRequired('oud', @ischar)
+p.addParameter('filt', '', @ischar)
+p.addParameter('anew', false, @islogical)
+
+p.parse(ind, oud, varargin{:});
+Arg = p.Results;
+
+if ~isempty(Arg.filt)
+    Arg.filt = ['*' Arg.filt];
 end
-if nargin < 3
-    filt = '';
-else
-    filt = ['*' filt];
-end
-pkfiles = ['peek_stat_files' strrep(filt, '*', '_') '.mat'];
-pkstats = ['peek_stats' strrep(filt, '*', '_') '.mat'];
+pkfiles = ['peek_stat_files' strrep(Arg.filt, '*', '_') '.mat'];
+pkstats = ['peek_stats' strrep(Arg.filt, '*', '_') '.mat'];
 if ~isfolder(oud), mkdir(oud); end
 
 
 %% FIND PEEK STAT FILES 
-if ~anew && exist(fullfile(oud, pkfiles), 'file') == 2
+if ~Arg.anew && exist(fullfile(oud, pkfiles), 'file') == 2
     tmp = load(fullfile(oud, pkfiles));
     peek_stat_files = tmp.peek_stat_files;
 else
     % WARNING: This can take a long time!!!
-    peek_stat_files = subdir(fullfile(ind, [filt '*_stats.dat']));
+    peek_stat_files = subdir(fullfile(ind, [Arg.filt '*_stats.dat']));
     save(fullfile(oud, pkfiles), 'peek_stat_files')
 end
 
 
 %% READ IN PEEK STAT FILES 
-if ~anew && exist(fullfile(oud, pkstats), 'file') == 2
+if ~Arg.anew && exist(fullfile(oud, pkstats), 'file') == 2
     tmp = load(fullfile(oud, pkstats));
     treeStats = tmp.treeStats;
 else
