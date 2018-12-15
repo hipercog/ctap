@@ -60,6 +60,9 @@ for lix = lvl
     vars = fieldnames(treeRej(root).pipe);
     rootpc = vars{contains(vars, '_pc')};
     for s = {treeRej(lix).pipe.subj}
+%TODO: INDEXING HERE BY SUBJ-FIELD AND PROTO-FIELD IS SUITABLE FOR THE
+%NEURO-ENHANCE PROJECT, BUT NOT NECESSARILY GENERAL. FIND A WAY TO INCLUDE
+%grps PARAMETER IN THE INDEXING...
         for p = cnds
             sidx = ismember({treeRej(lix).pipe.subj}, s) &...
                    ismember({treeRej(lix).pipe.proto}, p);

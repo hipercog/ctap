@@ -13,13 +13,16 @@ function [treeRej, rej_files] = ctap_get_rejections(ind, oud, varargin)
 %                   first named pipe
 %   oud     string, path to directory where to save findings
 % Varargin:
-%   filt    string, terms required to be in filenames, e.g. conditions or
-%                   groups, which can be separated by * wildcards, 
-%                   default = ''
+%   filt    cell string array, terms required to be in row names of 
+%                   all_rejections.txt files, e.g. condition or group
+%                   default = {''}, i.e. filter nothing
 %   anew    logical, if true then perform search from scratch and ignore
 %                   existing saved results files, 
 %                   default = false
 %
+% Outputs:
+%   treeRej     struct, 
+%   rej_files   struct, output of subdir(ind)
 %
 % Version History:
 % 08.12.2018 Created (Benjamin Cowley, UoH)
@@ -35,20 +38,15 @@ function [treeRej, rej_files] = ctap_get_rejections(ind, oud, varargin)
 p = inputParser;
 p.addRequired('ind', @ischar)
 p.addRequired('oud', @ischar)
-p.addParameter('filt', '', @ischar)
+p.addParameter('filt', {''}, @iscellstr)
 p.addParameter('anew', false, @islogical)
 
 p.parse(ind, oud, varargin{:});
 Arg = p.Results;
 
-% if ~isempty(Arg.filt)
-%     Arg.filt = ['*' Arg.filt];
-% end
-% rjfiles = ['rej_files' strrep(Arg.filt, '*', '_') '.mat'];
-% rjstats = ['rej_stats' strrep(Arg.filt, '*', '_') '.mat'];
 if ~isfolder(oud), mkdir(oud); end
 
-
+    
 %% FIND REJECTION TEXT FILES
 if ~Arg.anew && exist(fullfile(oud, 'rej_files.mat'), 'file') == 2
     tmp = load(fullfile(oud, 'rej_files.mat'));
@@ -68,14 +66,13 @@ else
     %get pipenames from sbudir structure
     treeRej = subdir_parse(rej_files, ind, 'this/logs/all_rejections.txt', 'pipename');
     %load rejection data text files to structure
-%TODO : currently defines format as three columns, i.e. 1 type of rejection 
-%       per pipe. Generalise this somehow when readtable() does not
-%       deal well with autoformatting when data has whitespace
     for tidx = 1:numel(treeRej)
         for stix = 1:numel(treeRej(tidx).name)
-            treeRej(tidx).pipe = table2struct(readtable(...
+            T = ctap_read_rejections(...
                 fullfile(treeRej(tidx).path, treeRej(tidx).name{stix})...
-                , 'Delimiter', ',', 'Format', '%s%s%s'));
+                , Arg.filt);
+            treeRej(tidx).pipe = table2struct(T);
+            [treeRej(tidx).pipe.casename] = T.Properties.RowNames{:};
         end
     end
     save(fullfile(oud, 'rej_stats.mat'), 'treeRej')

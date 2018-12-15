@@ -39,7 +39,7 @@ for p = 1:size(treeRej)
     pc = vars{contains(vars, 'pc')};
     % massage the rows to clean and prep the data
     for r = 1:size(treeRej(p).pipe)
-        rowname = treeRej(p).pipe(r).Row;
+        rowname = treeRej(p).pipe(r).casename;
         treeRej(p).pipe(r).subj = rowname(1:5);
         treeRej(p).pipe(r).group =...
             grps{cellfun(@(x) contains(rowname, x, 'Ig', 0), grps)};
