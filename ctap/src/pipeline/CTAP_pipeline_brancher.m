@@ -47,6 +47,11 @@ p.addParameter('ovw', false, @islogical)
 
 p.parse(Cfg, pipeArr, varargin{:});
 Arg = p.Results;
+if ~Arg.dbg
+    dbclear if error
+else
+    dbstop if error
+end
 
 
 %% Set up to run pipes

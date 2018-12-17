@@ -56,7 +56,7 @@ Arg.timelim = Arg.timelim./1000; %to seconds
 switch Arg.method
     case 'epoch'
         % check if event type is defined
-        if ~isempty(Arg.evtype)
+        if ~all(cellfun(@isempty, Arg.evtype))
             [EEG, event] = pop_epoch(EEG, Arg.evtype, Arg.timelim,...
                 'valuelim', Arg.valulim,...
                 'verbose', Arg.verbose,...
@@ -141,7 +141,7 @@ varargout{2} = event;
 
         switch Arg.method
             case 'epoch'
-                Arg.evtype = {};
+                Arg.evtype = {''};
                 Arg.indices = [];
                 Arg.verbose = 'no';
                 Arg.epevents = 'yes';

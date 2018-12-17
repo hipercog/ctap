@@ -40,23 +40,28 @@ function treeRej = ctap_compare_branch_rejs(treeRej, grps, cnds, plvls)
 lvl = [];
 lvl_nms = {};
 plvlcombo = allcomb(plvls{:});
+bases = [];
 for pidx = 1:size(plvlcombo)
     pli = plvlcombo(pidx, :);
     branchidx = true(1, numel(treeRej));
     for i = 1:numel(pli)
         branchidx = branchidx & contains({treeRej.pipename}, pli{i});
     end
-    lvl(end + 1) = find(branchidx);
-    lvl_nms{end + 1} = ['rej_p' [pli{:}]];  %#ok<*AGROW,*SAGROW>
+    if any(branchidx)
+        lvl(end + 1) = find(branchidx, 1);
+        lvl_nms{end + 1} = ['rej_p' [pli{:}]];  %#ok<*AGROW,*SAGROW>
+        bases(end + 1) = find(contains({treeRej.pipename}...
+                , fileparts(treeRej(lvl(end)).pipename(1:end - 1))), 1);
+    end
 end
 
 
 %% COMPARING
-bases = setdiff(1:6, lvl);
-for lix = lvl
+for ix = 1:numel(lvl)
+    lix = lvl(ix);
+    root = bases(ix);
     vars = fieldnames(treeRej(lix).pipe);
     badpc = vars{contains(vars, '_pc')};
-    root = bases(round(lix ./ 3));
     vars = fieldnames(treeRej(root).pipe);
     rootpc = vars{contains(vars, '_pc')};
     for s = {treeRej(lix).pipe.subj}
@@ -84,8 +89,8 @@ treeRej(end +1).pipename = 'rank_pipes';
 for idx = 1:numel(treeRej(lvl(1)).pipe)
     clear testvec
     for lix = lvl
-        if isfield(treeRej(lix).pipe(idx), 'total_badpc')
-%                     ~isempty([treeRej(lix).pipe(idx).total_badpc])
+        if isfield(treeRej(lix).pipe(idx), 'total_badpc')...
+                   && ~isempty([treeRej(lix).pipe(idx).total_badpc])
             testvec(lvl == lix) = [treeRej(lix).pipe(idx).total_badpc];
         end
     end

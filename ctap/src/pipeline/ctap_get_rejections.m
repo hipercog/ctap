@@ -60,7 +60,7 @@ end
 
 %% READ REJECTION TEXT FILES TO TABLES
 if ~Arg.anew && exist(fullfile(oud, 'rej_stats.mat'), 'file') == 2
-    tmp = load(fullfile(oud, pkstats));
+    tmp = load(fullfile(oud, 'rej_stats.mat'));
     treeRej = tmp.treeRej;
 else
     %get pipenames from sbudir structure
