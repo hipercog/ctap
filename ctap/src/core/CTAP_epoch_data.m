@@ -56,7 +56,10 @@ switch Arg.match
         evidx = endsWith({EEG.event.type}, Arg.evtype);
         
     case 'exact'
-        evidx = strcmp({EEG.event.type}, Arg.evtype);
+        evidx = cellfun(@(x) any(strcmp(Arg.evtype, x)), {EEG.event.type});
+end
+if ~any(evidx)
+    myReport(['FAIL evtype not found: ' Arg.evtype], Cfg.env.logFile);
 end
 Arg.evtype = unique({EEG.event(evidx).type});
 

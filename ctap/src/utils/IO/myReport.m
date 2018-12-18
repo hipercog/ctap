@@ -21,7 +21,7 @@ function repstr = myReport( repstr, logfile, delim )
 % Outputs:
 %   'repstr'    string, formatted version of input
 %
-% See also:    unpackCell, myToString
+% See also:    unpackCellStr, myToString
 %
 % Version History:
 % 12.11.2014 Created (Benjamin Cowley, FIOH)
@@ -41,7 +41,7 @@ function repstr = myReport( repstr, logfile, delim )
     if iscell(repstr)
         str = '';
         if any(cellfun(@iscell, repstr))
-            repstr = unpackCell(repstr);
+            repstr = unpackCellStr(repstr);
         end
         for i = 1:numel(repstr)
             str = [str myToString(repstr{i}) delim]; %#ok<*AGROW>
@@ -67,19 +67,5 @@ function repstr = myReport( repstr, logfile, delim )
         fid = fopen(logfile, 'a');
         fprintf(fid, '%s\n', repstr);
         fclose(fid);
-    end
-end
-% obtain a non-nested cell array of strings (char arrays)
-function strarr = unpackCell(input)
-    test = cellfun(@iscell, input);
-    strarr = [];
-    if any(test)
-        for i = 1:numel(test)
-            if test(i), strarr = [strarr unpackCell(input{i})];
-            else        strarr = [strarr input{i}];
-            end
-        end
-    else
-        strarr = input;
     end
 end
