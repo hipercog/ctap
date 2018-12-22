@@ -45,23 +45,12 @@ end
 
 
 %% ASSIST
-switch Arg.match
-    case 'contains'
-        evidx = contains({EEG.event.type}, Arg.evtype);
-        
-    case 'starts'
-        evidx = startsWith({EEG.event.type}, Arg.evtype);
-        
-    case 'ends'
-        evidx = endsWith({EEG.event.type}, Arg.evtype);
-        
-    case 'exact'
-        evidx = cellfun(@(x) any(strcmp(Arg.evtype, x)), {EEG.event.type});
-end
-if ~any(evidx)
+evlist = eeglab_validate_evlist(EEG, Arg.evtype, Arg.match);
+if isempty(evlist)
     myReport(['FAIL evtype not found: ' Arg.evtype], Cfg.env.logFile);
+else
+    Arg.evtype = evlist;
 end
-Arg.evtype = unique({EEG.event(evidx).type});
 
 
 %% CORE

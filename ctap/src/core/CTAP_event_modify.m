@@ -85,13 +85,6 @@ if isfield(Cfg.ctap, 'event_modify')
 end
 
 
-%% ASSIST Perform any initialisation, helping or checking functionality.
-%   Functionality can be set to happen automatically, or only if pipeline
-%   flag is set
-if isfield(Cfg.ctap, 'ASSIST')
-end
-
-
 %% CORE Call the desired core function. The default is hard-coded, but if
 %   the author wants, he can set the wrapper to listen for a core function
 %   defined in the pipeline as a handle alongside the function parameters
@@ -115,20 +108,13 @@ else
                            Arg.modTargetNoResp); 
     
 end
-%handle(Arg);
-%handle(result);
 
 
 %% ERROR/REPORT
-%... the complete parameter set from the function call ...
 Cfg.ctap.event_modify = Arg;
-%log outcome to console and to log file
+
 msg = myReport(sprintf('ERP plotted for measurement %s.',...
     EEG.CTAP.measurement.casename), Cfg.env.logFile);
-%create an entry to the history struct, with 
-%   1. informative message, 
-%   2. function filename
-%   3. %the complete parameter set from the function call, for reference
+
 EEG.CTAP.history(end+1) = create_CTAP_history_entry(msg, mfilename, Arg);
 
-%% MISC Miscellaneous additional actions following core function success

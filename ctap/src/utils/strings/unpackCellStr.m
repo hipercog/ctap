@@ -4,7 +4,7 @@ function strarr = unpackCellStr(input)
     strarr = [];
     if any(test)
         for i = 1:numel(test)
-            if test(i), strarr = [strarr unpackCellStr(input{i})];
+            if test(i), strarr = [strarr unpackCellStr(input{i}(:)')];
             else        strarr = [strarr input{i}];
             end
         end

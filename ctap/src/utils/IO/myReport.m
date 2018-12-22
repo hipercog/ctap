@@ -52,7 +52,7 @@ function repstr = myReport( repstr, logfile, delim )
     flag = upper(repstr(1:min(numel(repstr),4)));
     switch flag
         case 'SHSH'
-            repstr = strrep(repstr, 'SHSH', '');
+            repstr = repstr(5:end);
         case 'FAIL'
             error(repstr(5:end))
         case 'WARN'
