@@ -45,7 +45,7 @@ end
 [INFO, SEGMENT] = gather_measurement_metadata(Cfg.subject, Cfg.measurement); %#ok<*ASGLU>
 
 savepath = fullfile(Cfg.env.paths.featuresRoot, 'elapsed');
-if ~isdir(savepath), mkdir(savepath); end
+if ~isfolder(savepath), mkdir(savepath); end
 savename = sprintf('%s_elapsed.mat', Cfg.measurement.casename);
 save(fullfile(savepath, savename), 'INFO', 'SEGMENT', 'elapsed');
 
