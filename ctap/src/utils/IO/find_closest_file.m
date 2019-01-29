@@ -1,6 +1,10 @@
 function [match, num_match] = find_closest_file(srch_name, srch_dir, exts)
 
-    if nargin < 3, exts = ''; end
+    if nargin < 3
+        exts = ''; 
+    else
+        exts = unique(exts);
+    end
 
     if ~isempty(exts) && ~iscell(exts) && ischar(exts)
         exts = {exts};
@@ -10,7 +14,7 @@ function [match, num_match] = find_closest_file(srch_name, srch_dir, exts)
     if isempty(exts)
         fs = dir(srch_dir);
     else
-        fs = cellfun(@dir, fullfile(srch_dir, strcat('*', unique(exts))), 'un', 0);
+        fs = cellfun(@dir, fullfile(srch_dir, strcat('*', exts)), 'un', 0);
     end
     
     % concat all matching files to vertical struct array, with non-empty rows
@@ -34,7 +38,7 @@ function [match, num_match] = find_closest_file(srch_name, srch_dir, exts)
     end
     
     % return the first found, and the quantity found
-    match = fs(find(closest, 1)).name;
+    match = fullfile(fs(find(closest, 1)).folder, fs(find(closest, 1)).name);
     num_match = sum(closest);
     
 end

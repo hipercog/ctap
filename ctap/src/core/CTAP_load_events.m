@@ -57,10 +57,13 @@ errmsg = 'Log file is needed to load events';
 if ~isfield(Arg, 'src')
     error('CTAP_load_events:no_log', '%s :: No source given', errmsg)
 elseif isfolder(Arg.src)
-    % Find events from directory = filename closest matching to EEG filename
     exts = {'log', 'txt', Arg.src_ext};
-    log = find_closest_file(Cfg.measurement.physiodata, Arg.src, exts);
-    Arg.src = fullfile(Arg.src, log);
+    % Find events from directory = filename containing subject number
+    Arg.src = find_filematch_bynum(Cfg.measurement.subject, Arg.src, exts);
+    % If numeric matching failed = filename closest matching to EEG filename
+    if isempty(Arg.src)
+        Arg.src = find_closest_file(Cfg.measurement.physiodata, Arg.src, exts);
+    end
 elseif ischar(Arg.src) && ~exist(Arg.src, 'file') == 2
     error('CTAP_load_events:no_log', '%s :: Bad filename or not a file', errmsg)
 end
