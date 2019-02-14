@@ -17,10 +17,10 @@ function [strucut, in_sort] = subdir_parse(strucin, prestr, pststr, subname)
 %                       the requested varying segment of filenames
 % 
 % Output:
-%   strucut     struct, contains the filenames, and file paths, plus the 
+%   strucut     struct, contains the filenames, and file paths, plus any 
 %                       requested varying segment of full filenames
 %   in_sort     struct, the input structure sorted according to the order
-%                       of the requested varying segment of filenames
+%                       of any requested varying segment of filenames
 % 
 
 
