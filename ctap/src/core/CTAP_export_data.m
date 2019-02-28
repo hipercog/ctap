@@ -81,6 +81,7 @@ switch Arg.type
                            EEG.CTAP.ERP.id);
         h5file = fullfile(Arg.outdir, savename);
         eeglab_writeh5_erp(h5file, EEG);
+        msg = myReport('Exporting EEG data to HDF5', Cfg.env.logFile);
         
     case 'leda'
         data = eeglab2leda(EEG);
