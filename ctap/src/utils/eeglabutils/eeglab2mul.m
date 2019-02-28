@@ -43,10 +43,7 @@ if ~ismatrix(EEG.data)
             ' not found in the event structure: cannot export'], lock_event)
     end
     %average data for lock_event event here
-    %TODO: first 3 lines find epochs with wanted event - must be easier way?
-    idx = squeeze(struct2cell(EEG.epoch));
-    idx = squeeze(idx(ismember(fieldnames(EEG.epoch), 'eventtype'), :));
-    idx = cell2mat(cellfun(@(x) any(strcmpi(x, Arg.lock_event)), idx, 'Un', 0));
+    idx = get_event_epochIdx(EEG, Arg.lock_event);
     epx = EEG.data(get_eeg_inds(EEG, 'EEG'), :, idx);
     eegdata = mean(epx, 3)';
 else
