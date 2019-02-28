@@ -20,8 +20,8 @@ function [EEG, Cfg] = CTAP_plot_ERP(EEG, Cfg)
 %
 % See also: eeglab_writeh5_erp  
 %
-% Copyright(c) 2016 FIOH:
-% Benjamin Cowley (Benjamin.Cowley@ttl.fi), Jussi Korpela (jussi.korpela@ttl.fi)
+% Copyright(c) 2016:
+% Benjamin Cowley (Ben.Cowley@helsinki.fi), Jussi Korpela (jussi.korpela@ttl.fi)
 %
 % This code is released under the MIT License
 % http://opensource.org/licenses/mit-license.php
@@ -38,75 +38,58 @@ if isfield(Cfg.ctap, 'plot_ERP')
 end
 
 
-%% ASSIST Perform any initialisation, helping or checking functionality.
-%   Functionality can be set to happen automatically, or only if pipeline
-%   flag is set
-if isfield(Cfg.ctap, 'ASSIST')
-end
+%% ASSIST
+outdir = get_savepath(Cfg, mfilename, 'fig');
 
 
-%% CORE Call the desired core function. The default is hard-coded, but if
-%   the author wants, he can set the wrapper to listen for a core function
-%   defined in the pipeline as a handle alongside the function parameters
-%   which will replace the default. Thus users can choose to use the
-%   wrapper layer but not the core layer (not recommended, unstable).
-if isfield(Arg, 'coreFunc')
-    funHandle = Arg.coreFunc;
-    fun_varargs = rmfield(Arg, 'coreFunc');
-    [EEG, Arg, ~] = funHandle(EEG, fun_varargs);
-    
-else
-    
-    outdir = get_savepath(Cfg, mfilename, 'fig');
-    
-    %% Plot ERP
-    figH = plot_epoched_EEG({EEG},...
-                'channels', Arg.channels,...
-                'ylim', Arg.ylim,...
-                'visible', 'off');
-    savename = sprintf('%s_%s_ERP.png', EEG.CTAP.measurement.casename,...
-                       EEG.CTAP.ERP.id);
-    savefile = fullfile(outdir, savename);
-    print(figH, '-dpng', savefile);
-    close(figH);
-    
- 
-    %% Export ERP data to HDF5 (single trial and raw)
-    savename = sprintf('%s_%s_ERPdata.h5', EEG.CTAP.measurement.casename,...
-                       EEG.CTAP.ERP.id);
-    h5file = fullfile(outdir, savename);
-    eeglab_writeh5_erp(h5file, EEG);
-    
-    
-    %% Export some statistics to function data database
-    dbid = sbf_fundb_open(Cfg.env.funDataDB);
-    stpf = sprintf('set%d_fun%d',...
-                    Cfg.pipe.current.set,...
-                    Cfg.pipe.current.funAtSet);
-    sqlq = sprintf('INSERT OR REPLACE INTO ctap_plot_erp (casename,erpid,stepsetfun,variable,value) VALUES (''%s'',''%s'',''%s'',''%s'',%f)',...
-                   EEG.CTAP.measurement.casename, EEG.CTAP.ERP.id, stpf,...
-                   'ntrials', size(EEG.data,3));
-    mksqlite(dbid, sqlq);
-    mksqlite(dbid, 'close');
-    % mksqlite('select * from ctap_plot_erp')
-    
-    
-    %% Export average ERP in HDF5 format - old style, here for old R code to work...
-    %{
-    savename = sprintf('%s_%s_ERPdata.h5', EEG.CTAP.measurement.casename,...
-                       EEG.CTAP.ERP.id);
-    h5file = fullfile(outdir, savename);
-    if exist(h5file, 'file') ~= 0
-        delete(h5file);
-    end
-    
-    h5create(h5file, '/ERP', fliplr([size(EEG.data, 1), size(EEG.data, 2)])); %Note: dimensions need to be flipped
-    h5write(h5file, '/ERP', mean(EEG.data, 3)'); %Note: dimensions need to be transposed
-    h5writeatt(h5file,'/ERP','d1ID', strjoin({EEG.chanlocs.labels}, ';'));
-    h5writeatt(h5file,'/ERP','d2ID', EEG.times);
-    %}
-    
+%% CORE
+% Plot ERP
+figH = plot_epoched_EEG({EEG},...
+            'channels', Arg.channels,...
+            'ylim', Arg.ylim,...
+            'visible', 'off');
+savename = sprintf('%s_%s_ERP.png', EEG.CTAP.measurement.casename,...
+                   EEG.CTAP.ERP.id);
+savefile = fullfile(outdir, savename);
+print(figH, '-dpng', savefile);
+close(figH);
+
+
+%% Export ERP data to HDF5 (single trial and raw)
+savename = sprintf('%s_%s_ERPdata.h5', EEG.CTAP.measurement.casename,...
+                   EEG.CTAP.ERP.id);
+h5file = fullfile(outdir, savename);
+eeglab_writeh5_erp(h5file, EEG);
+
+
+%% Export some statistics to function data database
+dbid = sbf_fundb_open(Cfg.env.funDataDB);
+stpf = sprintf('set%d_fun%d',...
+                Cfg.pipe.current.set,...
+                Cfg.pipe.current.funAtSet);
+sqlq = sprintf('INSERT OR REPLACE INTO ctap_plot_erp (casename,erpid,stepsetfun,variable,value) VALUES (''%s'',''%s'',''%s'',''%s'',%f)',...
+               EEG.CTAP.measurement.casename, EEG.CTAP.ERP.id, stpf,...
+               'ntrials', size(EEG.data,3));
+mksqlite(dbid, sqlq);
+mksqlite(dbid, 'close');
+% mksqlite('select * from ctap_plot_erp')
+
+
+%% Export average ERP in HDF5 format - old style, here for old R code to work...
+%{
+savename = sprintf('%s_%s_ERPdata.h5', EEG.CTAP.measurement.casename,...
+                   EEG.CTAP.ERP.id);
+h5file = fullfile(outdir, savename);
+if exist(h5file, 'file') ~= 0
+    delete(h5file);
 end
+
+h5create(h5file, '/ERP', fliplr([size(EEG.data, 1), size(EEG.data, 2)])); %Note: dimensions need to be flipped
+h5write(h5file, '/ERP', mean(EEG.data, 3)'); %Note: dimensions need to be transposed
+h5writeatt(h5file,'/ERP','d1ID', strjoin({EEG.chanlocs.labels}, ';'));
+h5writeatt(h5file,'/ERP','d2ID', EEG.times);
+%}
+    
 %handle(Arg);
 %handle(result);
 
@@ -117,13 +100,8 @@ Cfg.ctap.plot_ERP = Arg;
 %log outcome to console and to log file
 msg = myReport(sprintf('ERP plotted for measurement %s.',...
     EEG.CTAP.measurement.casename), Cfg.env.logFile);
-%create an entry to the history struct, with 
-%   1. informative message, 
-%   2. function filename
-%   3. %the complete parameter set from the function call, for reference
+%create an entry to the history struct
 EEG.CTAP.history(end+1) = create_CTAP_history_entry(msg, mfilename, Arg);
-
-%% MISC Miscellaneous additional actions following core function success
 
 
 

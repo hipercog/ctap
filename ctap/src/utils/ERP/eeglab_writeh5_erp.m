@@ -21,7 +21,7 @@ function eeglab_writeh5_erp(h5file, EEG)
 % See also: 
 %
 % Copyright(c) 2016 FIOH:
-% Benjamin Cowley (Benjamin.Cowley@ttl.fi), Jussi Korpela (jussi.korpela@ttl.fi)
+% Benjamin Cowley (Ben.Cowley@helsinki.fi), Jussi Korpela (jussi.korpela@ttl.fi)
 %
 % This code is released under the MIT License
 % http://opensource.org/licenses/mit-license.php
@@ -59,8 +59,8 @@ h5create(h5file, h5p_erpavg,...
 
     
 %% Write ERP average
-% Note: dimensions need to be flipped
-h5write(h5file, h5p_erpavg, mean(EEG.data, 3)'); %Note: dimensions need to be transposed
+%Note: dimensions need to be transposed
+h5write(h5file, h5p_erpavg, mean(EEG.data, 3)');
 h5writeatt(h5file, h5p_erpavg, 'd1ID', strjoin({EEG.chanlocs.labels}, ';'));
 h5writeatt(h5file, h5p_erpavg, 'd2ID', EEG.times);
 
