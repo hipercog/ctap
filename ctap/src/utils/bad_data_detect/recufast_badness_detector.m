@@ -98,7 +98,7 @@ p.addRequired('recuLim', @isscalar);
 p.addRequired('datatype', @ischar);
 
 p.addParameter('indexby', @all, @(f) isa(f, 'function_handle'));
-p.addParameter('epchans', get_eeg_inds(ineeg, {'EEG'}), @isvector);
+p.addParameter('epchans', get_eeg_inds(ineeg, 'EEG'), @isvector);
 p.addParameter('outdir', '', @ischar);
 p.addParameter('report', false, @islogical);
 p.addParameter('blinks', true, @islogical);
@@ -189,7 +189,7 @@ switch cecidx
         
     case 3
         EOG = [];
-        if blinks, EOG = get_eeg_inds(EEG, {'EOG'}); end
+        if blinks, EOG = get_eeg_inds(EEG, 'EOG'); end
         badness = component_properties(EEG, EOG, 1, index);
         
 end

@@ -3,8 +3,9 @@ function inmat = center_scale(inmat, varargin)
 %% Parse input arguments and set varargin defaults
 p = inputParser;
 p.addRequired('inmat', @isnumeric);
-p.addParamValue('center', true, @islogical);
-p.addParamValue('scale', true, @islogical);
+p.addParameter('center', true, @islogical);
+p.addParameter('scale', true, @islogical);
+p.addParameter('scalebound', NaN, @isnumeric);
 
 p.parse(inmat, varargin{:});
 Arg = p.Results;
@@ -18,7 +19,12 @@ end
 
 %% Scale columns
 if Arg.scale
-    sdArr = std(inmat, 0, 1);
-    sdMat = repmat(sdArr, size(inmat, 1), 1);
-    inmat = inmat ./ sdMat;
+    switch Arg.scalebound
+        case -121
+            scaler = max(abs(inmat));
+        otherwise
+            scaler = std(inmat, 0, 1);
+    end
+    scaleMat = repmat(scaler, size(inmat, 1), 1);
+    inmat = inmat ./ scaleMat;
 end

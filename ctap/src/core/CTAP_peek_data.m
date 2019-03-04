@@ -1,9 +1,12 @@
 function [EEG, Cfg] = CTAP_peek_data(EEG, Cfg)
-%CTAP_peek_data - Take a peek at the data and save it as an image
+%CTAP_peek_data - Take a 'peek' at the data: make one or more windows of time
+% to examine raw and IC data, in stats and visuals, and save output
 %
 % Description:
-%   Generate EEG data stats. Make a histogram thereof. Make eegplot of a random
-%   (or user-specified) window of raw EEG data, and raw IC data. 
+%   To enable easier human evaluation of data quality and denoising success,
+%   look at some fixed timepoints that can be compared at different stages.
+%   Make plot of a random (or user-specified) window of raw EEG data, and raw 
+%   IC data. Also for all EEG-data, generate stats and make histograms. 
 %   Save stats in tables, and figures to disk for later viewing.
 %
 % Syntax:
@@ -13,27 +16,31 @@ function [EEG, Cfg] = CTAP_peek_data(EEG, Cfg)
 %   EEG         struct, EEGLAB structure
 %   Cfg         struct, CTAP configuration structure
 %   Cfg.ctap.peek_data:
+%       .channels       cellstring array, chanlocs labels or type, default: 'EEG'
+%       .overwrite      logical, wipe existing output from prior peek_data runs
+%       .logStats       logical, compute stats for whole data, default: true
 %       .plotEEGHist    logical, Plot EEG histogram?, default: Cfg.grfx.on
+%       .hists          scalar, square number histograms per figure, default: 16
+% 
+%       .makePeeks      logical, make individual peeks at all? Default: true
 %       .plotEEG        logical, Plot EEG data?, default: Cfg.grfx.on
 %       .plotICA        logical, Plot ICA components?, default: Cfg.grfx.on
 %       .plotAllPeeks   logical, Plot all peeks or 1 random one?, default: true
 %       .savePeekData   logical, Save EEG data from each peek, default: false
 %       .savePeekICA    logical, Save IC values from each peek, default: false
-%       .logStats       logical, compute stats for whole data, default: true
 %       .peekStats      logical, compute stats for each peek, default: false
+%       .numpeeks       numeric, number of randomly generated peeks, default=10
 %       .secs           numeric, seconds to plot from min to max, default: 0 16
 %       .peekevent      cellstring array, event name(s) to base peek windows on
 %       .peekindex      vector, index of such events to use, default (only if 
 %                       .peekevent is defined): uniform distribution of 10
-%       .hists          scalar, square number histograms per figure, default: 16
-%       .channels       cellstring array, chanlocs labels or type, default: 'EEG'
-%       .overwrite      logical, wipe existing output from prior peek_data runs
 %
 % Outputs:
 %   EEG         struct, EEGLAB structure modified by this function
 %   Cfg         struct, Cfg struct is updated by parameters,values actually used
 %
 % Notes: 
+%   Plotting depends on global flag Cfg.grfx.on, unless specified by user!
 %   To check raw EEG latencies, we create new peeks, options are:
 %   1. explicitly user guided by choosing some existing events
 %   2. use the events user has defined for selecting data (because we know
@@ -52,20 +59,22 @@ function [EEG, Cfg] = CTAP_peek_data(EEG, Cfg)
 
 
 %% Set optional arguments
-% plot settings follow the global flag, unless specified by user!
+% First some global settings
+Arg.channels = 'EEG';
+Arg.overwrite = true;
+Arg.logStats = true;
 Arg.plotEEGHist = Cfg.grfx.on;
+Arg.hists = 16;
+% Then settings related to individual peeks
+Arg.makePeeks = true;
 Arg.plotEEG = Cfg.grfx.on;
 Arg.plotICA = Cfg.grfx.on;
 Arg.plotAllPeeks = true;
 Arg.savePeekData = false;
 Arg.savePeekICA = false;
-Arg.logStats = true;
 Arg.peekStats = false;
 Arg.numpeeks = 10;
 Arg.secs = [0 16];
-Arg.hists = 16; %number of histograms per figure, should be a square number
-Arg.channels = 'EEG';
-Arg.overwrite = true;
 
 % Override defaults with user parameters...
 if isfield(Cfg.ctap, 'peek_data')
@@ -82,7 +91,7 @@ if ~isscalar(dur) || (dur < 1)
 end
 %...and we treat only EEG channels
 if ismember('EEG', Arg.channels)
-    chidx = get_eeg_inds(EEG, {'EEG'});
+    chidx = get_eeg_inds(EEG, 'EEG');
 else
     chidx = find(ismember({EEG.chanlocs.labels}, Arg.channels));
 end
@@ -112,19 +121,26 @@ end
 %% make and save stats to log file
 if Arg.logStats
     % get stats of each channel in the file, build a matrix of stats
+    %TODO: Matlab tables are very slow: optimise for speed??
     [~, ~, statab] = ctapeeg_stats_table(EEG, 'channels', chidx...
         , 'outdir', savepath, 'id', 'peekall');
     
+    % plot the stats as histograms
+    fh = ctap_stat_hists(statab);
+    print(fh, '-dpng', fullfile(savepath, 'EEG_allchan_stats.png'))
+    close(fh)
+
     % Write the stats for each peek for each subject to 1 log file
-    stalog = fullfile(Cfg.env.paths.logRoot, 'peek_stats_log.xlsx');
-    rptname = strrep(EEG.CTAP.measurement.casename, '_session_meas', '');
-    rptname = sprintf('%s_set%d_fun%d'...
-        , rptname(1:min(17, length(rptname)))...
+    tabs_dir = fullfile(Cfg.env.paths.logRoot, 'log_stats');
+    if ~isfolder(tabs_dir), mkdir(tabs_dir); end
+    rptname = sprintf('%s_set%d_fun%d_stats.dat'...
+        , strrep(EEG.CTAP.measurement.casename, '_session_meas', '')...
         , Cfg.pipe.current.set...
         , Cfg.pipe.current.funAtSet);
+    stalog = fullfile(tabs_dir, rptname);
     myReport(sprintf('Writing channel-wise peek statistics for %s to %s.'...
         , rptname, stalog), Cfg.env.logFile);
-    writetable(statab, stalog, 'WriteRowNames', true, 'Sheet', rptname)
+    writetable(statab, stalog, 'WriteRowNames', true, 'Delimiter', 'tab')
 
 end
 
@@ -138,8 +154,8 @@ if Arg.plotEEGHist
             , 'chans', chidx(i:min(i+fx-1, nchan)));
         %named after channels shown
         savename = sprintf('EEGHIST_chan%d-%d.png', i, min(i+fx-1, nchan));
-        print(fh, '-dpng', fullfile(savepath, savename));
-        close(fh);
+        print(fh, '-dpng', fullfile(savepath, savename))
+        close(fh)
     end
 end
 
@@ -241,16 +257,17 @@ if Arg.peekStats
 end
 
 
-%% Plot raw data from channels
-% for either all peeks, or just one (if plotting all would be a mountain)
+%% Subselect only peek 1...
+% if plotting all peeks would give a fig mountain, e.g. many channel data
 if ~Arg.plotAllPeeks
     pkidx = 1;
     starts = starts(pkidx);
     labels = labels(pkidx);
 end
 
-if Arg.plotEEG
 
+%% Plot raw data from channels
+if Arg.plotEEG
     % set channels to plot in red
     if isfield(EEG.CTAP, 'badchans') &&...
        isfield(EEG.CTAP.badchans, 'detect')

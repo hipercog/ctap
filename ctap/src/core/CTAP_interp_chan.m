@@ -15,6 +15,13 @@ function [EEG, Cfg] = CTAP_interp_chan(EEG, Cfg)
 %   Cfg.ctap.interp_chan:
 %   .method     string, Method to use, see eeg_interp() for details,
 %               default: spherical
+%   .select     string, how to select channels to interpolate, can be:
+%               'given' exactly as given in 'channels' argument
+%               'missing' check current channels against originals
+%               'bad' use the record of detected bad channels in EEG.CTAP
+%               default = 'missing'
+%   .miss_types cellstring, channel types to find in urchanlocs if select = 
+%               'missing', default = {'EEG','EOG','REF'}
 %   .channels   struct OR cell string array OR vector, chanlocs structure OR 
 %               names OR indices of channels to interpolate
 %               default: if present, CTAP_interp_chan uses original chanlocs 
@@ -42,33 +49,49 @@ function [EEG, Cfg] = CTAP_interp_chan(EEG, Cfg)
 %% Set optional arguments
 Arg.method = 'spherical';
 Arg.channels = [];
-
-%check if urchanlocs exists, use as chanlocs struct
-if isfield( EEG, 'urchanlocs' )
-    eeg_chan_match = ismember({EEG.urchanlocs.type}, {'EEG','EOG','REF'});
-    Arg.channels = EEG.urchanlocs(eeg_chan_match);
-    
-elseif isfield(EEG.CTAP, 'badchans')
-    if isfield(EEG.CTAP.badchans, 'detect')
-        Arg.channels = get_eeg_inds(EEG, EEG.CTAP.badchans.detect.chans);
-
-    else %find results of all detection methods used
-        fns = fieldnames(EEG.CTAP.badchans);
-        for i = 1:numel(fns)
-            Arg.channels = union(Arg.channels...
-                , get_eeg_inds(EEG, EEG.CTAP.badchans.(fns{i}).chans));
-        end
-    end
-end
+Arg.select = 'missing';
+Arg.missing_types = {'EEG','EOG','REF'};
 
 % Override defaults with user parameters
 if isfield(Cfg.ctap, 'interp_chan')
     Arg = joinstruct(Arg, Cfg.ctap.interp_chan);
 end
 
+%check if urchanlocs exists, use as chanlocs struct
+if strcmp(Arg.select, 'given')
+    if ~isempty(Arg.channels) && iscellstr(Arg.channels)
+        Arg.channels = get_eeg_inds(EEG, Arg.channels);
+    end
+    
+elseif strcmp(Arg.select, 'missing')
+    if isfield(EEG, 'urchanlocs')
+        eeg_chan_match = ismember({EEG.urchanlocs.type}, Arg.missing_types);
+        Arg.channels = EEG.urchanlocs(eeg_chan_match);
+    end
+    
+elseif strcmp(Arg.select, 'bad') && isfield(EEG.CTAP, 'badchans')
+    if isfield(EEG.CTAP.badchans, 'detect')%detected bad channels not rejected
+        Arg.channels = get_eeg_inds(EEG, EEG.CTAP.badchans.detect.chans);
+
+    else%detected bad channels rejected - interpolate against missing channels
+        fns = fieldnames(EEG.CTAP.badchans);
+        chs = [];
+        for i = 1:numel(fns)
+            chs = union(chs, find(ismember(...
+                {EEG.urchanlocs.labels}, EEG.CTAP.badchans.(fns{i}).chans)));
+        end
+        if isfield(EEG, 'urchanlocs')
+            ix = ismember({EEG.urchanlocs.type}, unique({EEG.urchanlocs(chs).type}));
+            Arg.channels = EEG.urchanlocs(ix);
+        end
+        
+    end
+end
+
 if isempty(Arg.channels)
-   error('ctapeeg_interp_chan:urchanlocsNotFound',...
-       'Lack of channel information, cannot interpolate.');
+   warning('ctapeeg_interp_chan:reqdInterpChansNotFound',...
+       'Lack of channel information, cannot interpolate.')
+   return
 end
 
 

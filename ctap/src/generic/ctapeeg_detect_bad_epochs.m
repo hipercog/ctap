@@ -18,6 +18,9 @@ function [EEG, varargout] = ctapeeg_detect_bad_epochs(EEG, varargin)
 %   FOR 'faster' = plain FASTER
 %   'bounds'    : sigma thresholds for bad epoch detection.
 %                 Default=[-2 2]
+%   'match_measures' choice of measures to use, default all from the list:
+%               	 'ampRange', 'variance', 'chanDev'
+%                    Partial string matches (down to 1 letter) will also work
 %
 %   FOR 'recufast' recursive FASTER method
 %   'bounds'    : sigma thresholds for bad epoch detection with 'recufast'.
@@ -90,8 +93,8 @@ faster_vars = {'ampRange' 'variance' 'chanDev'};
 % Subset to required channels for:
 % faster, recufast, eegthresh, rejspec
 if ~ismember(Arg.method, {'hasEvent','hasEventProperty'})
-    EEGtmp = pop_select(EEG, 'channel', Arg.channels);
-    Arg.channels = get_eeg_inds(EEGtmp, {'EEG'});
+    EEGtmp = pop_select(remove_ica(EEG), 'channel', Arg.channels);
+    Arg.channels = get_eeg_inds(EEGtmp, 'EEG');
 else
     EEGtmp = EEG;
 end
@@ -113,7 +116,7 @@ switch Arg.method
         
         % Choose which properties to match on
         if iscell(Arg.match_measures)
-            match_measures = ismember(faster_vars, Arg.match_measures);
+            match_measures = startsWith(faster_vars, Arg.match_measures);
         end
         if isscalar(Arg.bounds)
             Arg.bounds = [(abs(Arg.bounds) * -1) abs(Arg.bounds)];
@@ -270,12 +273,6 @@ varargout{2} = result;
             error('ctapeeg_detect_bad_epochs:bad_param', ...
                 'It is necessary to define the chosen ''method'': see help')
         end
-        
-        % If desired, the default values can be changed here:
-        try Arg.channels = vargs.channels;
-        catch
-            Arg.channels = get_eeg_inds(EEG, {'EEG'});
-        end
 
         switch Arg.method
             case 'recufast'
@@ -318,6 +315,12 @@ varargout{2} = result;
         
         % Arg fields are canonical, vargs values are canonical: intersect-join
         Arg = intersect_struct(Arg, vargs);
+
+        % If desired, the default values can be changed here:
+        try Arg.channels = get_eeg_inds(EEG, vargs.channels);
+        catch
+            Arg.channels = get_eeg_inds(EEG, 'EEG');
+        end
     end
 
 end % ctapeeg_detect_bad_epochs()

@@ -1,4 +1,4 @@
-function y = nanmedian(x,dim)
+function y = nansumedian(x,dim)
 % FORMAT: Y = NANMEDIAN(X,DIM)
 % 
 %    Median ignoring NaNs
@@ -17,7 +17,7 @@ function y = nanmedian(x,dim)
 %    See also MEDIAN
 
 % -------------------------------------------------------------------------
-%    author:      Jan Gläscher
+%    author:      Jan Glï¿½scher
 %    affiliation: Neuroimage Nord, University of Hamburg, Germany
 %    email:       glaescher@uke.uni-hamburg.de
 %    
@@ -29,7 +29,7 @@ if isempty(x)
 end
 
 if nargin < 2
-	dim = min(find(size(x)~=1));
+	dim = find(size(x)~=1, 1);
 	if isempty(dim)
 		dim = 1;
 	end

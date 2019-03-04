@@ -8,7 +8,7 @@ function [EEG, varargout] = ctapeeg_load_chanlocs(EEG, varargin)
 %   'EEG'       eeglab data struct to process
 % 
 % VARARGIN
-%   'locs'          string, filename pointing to a channel locations file
+%   'file'          string, filename pointing to a channel locations file
 %                   Default = ''
 %   'filetype'      string, type of chanlocs file
 %                   Default = ''

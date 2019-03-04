@@ -62,12 +62,18 @@ els = Arg.epoch_len_secs;
 
 
 %% measure IC similarity to blink template
-% Add blinks if missing
-if ( ~ismember('blink',unique({EEG.event.type})) )
+%Are blinks there? Fail if missing
+if ( ~ismember('blink', unique({EEG.event.type})) )
     error('ctapeeg_recudetect_blink_ICs:noBlinkEvents',...
         ['No events of type ''blink'' found. Cannot proceed with'...
         ' blink template matching. Run CTAP_blink2event() to fix.'])
 end
+
+veogidx = ismember({EEG.chanlocs.labels}, Arg.veog);
+if sum(veogidx) > 2
+    error('ctapeeg_recudetect_blink_ICs:tooManyVeogChans',...
+        '%d channels match the given VEOG info: can''t proceed.', sum(veogidx))
+end    
 
 % Detect components
 [~, th_arr] = eeglab_detect_icacomps_blinktemplate(EEG, 'leqThreshold', 0);
@@ -77,22 +83,29 @@ comp_match = false(numel(th_arr), 1);
 %% Compute blink ERP for comparison to detected ICs
 EEGbl = pop_epoch(EEG, {'blink'}, [-els, els]);
 EEGbl = pop_rmbase(EEGbl, [-els * 1000, 0]);
-veogidx = ismember({EEGbl.chanlocs.labels}, Arg.veog);
 blERPdf = create_dataframe(mean(EEGbl.data, 3),...
     {'channel', 'time'},...
     {{EEGbl.chanlocs.labels}, EEGbl.times});
 
+%get VEOG vector from one or more VEOG channels, create blink ERP + bands
+if sum(veogidx) == 2
+    blinkERP = diff(blERPdf.data(veogidx, :));
+    veogdat = squeeze(diff(EEGbl.data(veogidx, :, :)));
+else
+    blinkERP = blERPdf.data(veogidx, :);
+    veogdat = squeeze(EEGbl.data(veogidx, :, :));
+end
+blinkERP = sbf_make_ERPband(blinkERP, veogdat, 0.025);
+
 %test if detected IC removal gives clean blink ERP
-blinkERP = [quantile(squeeze(EEGbl.data(veogidx, :, :))', 0.025);...
-            blERPdf.data(veogidx, :);...
-            quantile(squeeze(EEGbl.data(veogidx, :, :))', 1 - 0.025)];
 [~, test_idx] = sort(th_arr); %ascending sort: lower is better
-for i = 1:ceil(numel(th_arr) * Arg.test_pc / 100) %consider only first X% of ICs.
+for i = 1:ceil(numel(th_arr) * Arg.test_pc / 100)%consider only first X% ICs.
     comp_match(test_idx(i)) = sbf_test_IC_removal(test_idx(i));
 end
 
 method_data.thArr = th_arr;
 method_data.blinkERP = blERPdf;
+
 
     %% Subfunctions
     % test blinkIC against given blink template IC
@@ -103,15 +116,17 @@ method_data.blinkERP = blERPdf;
         %Compute blinkIC-subtracted ERP for comparison
         EEGcl = pop_subcomp(EEG, blinkIC);
         EEGcl = pop_select(EEGcl, 'channel', Arg.veog);
+        if sum(veogidx) == 2
+            EEGcl.data = diff(EEGcl.data);
+        end
         EEGcl = pop_epoch(EEGcl, {'blink'}, [-els, els]);
         EEGcl = pop_rmbase(EEGcl, [-els * 1000, 0]);
-        cleanERP = [quantile(squeeze(EEGcl.data)', 0.025);...
-                    mean(EEGcl.data, 3);...
-                    quantile(squeeze(EEGcl.data)', 1 - 0.025)];
+        cleanERP = ...
+            sbf_make_ERPband(mean(EEGcl.data, 3), squeeze(EEGcl.data), 0.025);
 
         %numerically compare ERPs
         [erqdiff, h, ~, ~] = sbf_compare_erp_quantiles(blinkERP, cleanERP);
-        if h
+        if ~isnan(h) && h
             worked = true;
         end
         %MAYBEDO - other criteria for classifying blink ICs might relate to
@@ -130,6 +145,19 @@ method_data.blinkERP = blERPdf;
         [h, p, ci] = ttest(erqdiff, 0, 'Alpha', 0.00005);
         %MAYBEDO - USE A TEST THAT ACCOMMODATES THE AUTOCORRELATION OF THIS
         %HIGHLY NON-INDEPENDENT SET OF OBSERVATIONS.
+    end
+
+    function ERP = sbf_make_ERPband(ERPdata, qdata, qpc)
+        ERPdata = ERPdata(:)';
+        cols = size(ERPdata, 2);
+        [r, c] = size(qdata);
+        if ~any(cols == [r c])
+            error('sbf_make_ERPband:dimension_mismatch', 'Sthg terribly wrong!')
+        end
+        dim = find(cols ~= [r c]);
+        q1 = quantile(qdata, qpc, dim);
+        q2 = quantile(qdata, 1 - qpc, dim);
+        ERP = [q1(:)'; ERPdata; q2(:)'];
     end
     
 end %ctapeeg_recudetect_blink_ICs()

@@ -1,4 +1,4 @@
-function eeglab_writeh5_erp(h5file, EEG)
+function eeglab_writeh5_erp_testi(h5file, EEG)
 % todo: test that the data storing goes right: read data into R/Python and
 % plot
 

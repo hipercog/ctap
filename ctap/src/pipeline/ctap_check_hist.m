@@ -61,5 +61,5 @@ fun = {eeg.CTAP.history.fun};
 args = {eeg.CTAP.history.args};
 for i=1:numel(msg)
     arg = evalc('disp(args{i})');
-    tmp = myReport({fun{i} msg{i} arg}, outdir, sprintf('\n')); %#ok<NASGU>
+    tmp = myReport({fun{i} msg{i} arg}, outdir, newline); %#ok<NASGU>
 end

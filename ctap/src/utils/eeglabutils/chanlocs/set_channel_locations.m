@@ -120,6 +120,9 @@ for i = 1:numel(EEG.chanlocs)
             if isscalar(find(dst == min(dst)))
                 [~, flip] = min(dst);
                 index(setdiff(1:numel(index), flip)) = 0;
+            else
+                %if we can't find a single closest match, give up
+                index(index) = 0;
             end
         end
     end
@@ -130,6 +133,9 @@ for i = 1:numel(EEG.chanlocs)
         if isscalar(find(dst == min(dst)))
             [~, flip] = min(dst);
             index(flip) = 1;
+        else
+            %if we can't find a single closest match, give up
+            index(index) = 0;
         end
     end
     

@@ -19,7 +19,7 @@ function CTAP_pipeline_looper(Cfg, varargin)
 %   'overwrite' boolean, if false, checks each stepSet for existing .set file -
 %               will skip a stepSet instead of overwriting older file.
 %               default = false
-%   'trackfail' boolean, if true, will save data from a failed stepSet, with 
+%   'trackfail' boolean, if true, will save data from a failed stepSet, with
 %               file-suffix '_BAD_FILE', for later examination. Such files are
 %               deleted on subsequent *successful* passes of this stepSet
 %               default = false
@@ -32,9 +32,9 @@ function CTAP_pipeline_looper(Cfg, varargin)
 %
 % Example:
 %
-% Notes: 
+% Notes:
 %
-% See also: 
+% See also:
 %
 % Version History:
 % 1.06.2014 Created (Jussi Korpela, FIOH)
@@ -88,8 +88,12 @@ end
 
 %% Load and subset measurement config data
 badFlag = {'_BAD_FILE'};
-if runSets(1) > 1
-    % Find loadable files at source directory
+if runSets(1) == 1
+    %At the start of the pipe, user-defined measurements are all processed
+    strucFilt.casename = Cfg.pipe.runMeasurements;
+else
+    %After 1+ steps, some measurements may have failed.
+    %Use source directory to find loadable files
     srcSubDir = sbf_get_src_subdir(Cfg, runSets(1));
     Filt = dir(fullfile(srcSubDir, '*.set'));
     if numel(Filt) == 0
@@ -100,17 +104,25 @@ if runSets(1) > 1
     Filt = {Filt(cellfun(@isempty, strfind({Filt.name}, badFlag{1}))).name};
     [~, Filt, ~] = cellfun(@fileparts, Filt, 'UniformOutput', false);
     strucFilt.casename = intersect(Cfg.pipe.runMeasurements, Filt);
-else
-    strucFilt.casename = Cfg.pipe.runMeasurements;
+    
+    % check that a dataset was found
+    if numel(strucFilt.casename) == 0
+       warning('CTAP_pipeline_looper:inputError',...
+        'Source directory ''%s'' does not contain data for casename ''%s''. Please check.',...
+        srcSrcDir, Cfg.pipe.runMeasurements{1});
+    end
+    
 end
+%Now initialise stuff for managing measurement indexing
 MCSub = Cfg.MC;
 MCSub.measurement = struct_filter(Cfg.MC.measurement, strucFilt);
 numMC = numel(MCSub.measurement);
 MCbad = false(numMC, 1);
-if numMC == 0
-   disp('No measurements matching the filter: ')
-   disp(strucFilt)
-   disp('WHY DON''T YOU TRY: specifying a different set of measurements.')
+if numMC == 0 && ~isempty(strucFilt)
+    msg = sprintf('\nNo measurements matching the filter: %s. %s',...
+                catcellstr({strucFilt.casename}, 'sep',', '),...
+                'WHY DON''T YOU TRY: specifying a different set of measurements.');
+    myReport(msg, Cfg.env.logFile);
 end
 % get the index of the start stepSet - i.e. where the first data was loaded
 % using this approach, runSets can jump around, jump around
@@ -174,21 +186,20 @@ for n = 1:numMC %over measurements
             end
         end
         i_ctap_hist_sz = 0;
-        
-        
+
+
         %% Load source data for current step set
         try
             % Load source dataset
-            if (i ~= idx_start_sets)
+            if (i == idx_start_sets)
+                % assuming step1,func1 is CTAP_load_data() and
+                % loading based on MC.measurement.physiodata
+                i_EEG = struct();
+            else
                 % middle of pipe, load from previous step set
                 i_EEG = pop_loadset(...
                     'filepath', sbf_get_src_subdir(Cfg, i),...
                     'filename', [Cfg.measurement.casename, '.set']);
-            else
-                % start of pipe: data comes from raw EEG file
-                % assuming step1,func1 is CTAP_load_data() and
-                % loading based on MC.measurement.physiodata
-                i_EEG = struct();
             end
         catch ME,
             funStr = 'intermediate_data_load';
@@ -234,10 +245,12 @@ for n = 1:numMC %over measurements
                 end
             end
             % Diff the Cfg and i_Cfg_tmp structs to find changes
+            %{
             [i_diff, diff_sz] = struct_field_diff(Cfg, i_Cfg_tmp);
             if ~isempty(fieldnames(i_diff)) && diff_sz > 0
                 fun_args = i_diff;
             end
+            %}
             % Overwrite Cfg with any changes to i_Cfg_tmp
             Cfg = joinstruct(Cfg, i_Cfg_tmp);
             % Create CTAP history entry, if wrapper hasn't already done it
@@ -252,9 +265,9 @@ for n = 1:numMC %over measurements
         end
         %actions to take whatever happened during ananlysis steps
         i_sv = fullfile(Cfg.env.paths.analysisRoot, Cfg.pipe.stepSets(i).id);
-        if ~isdir(i_sv), mkdir(i_sv); end %make stepSet directory 
+        if ~isdir(i_sv), mkdir(i_sv); end %make stepSet directory
         EEG = i_EEG; %store EEG state to write out history after loops
-        
+
         % if stepSet loop didn't complete, measurement is no longer processed.
         if MCbad(n)
             if Arg.trackfail%if requested then save the unfinished EEG file
@@ -347,11 +360,14 @@ end
 %% EMBEDDED FUNCTIONS
 
 % A function to report errors
+% todo: make this function shared between all loopers and save the errors
+% also into a table which can be easily analyzed. The current version
+% produces a very large number of small text files which is impractical.
 function sbf_report_error(ME)
     % Error handling
     logfile = fullfile(Cfg.env.paths.crashLogRoot,...
                 sprintf('crashlog_%s.txt', datestr(now(),30)) );
-    
+
     myReport(sprintf([...
         'WARN\n~~~~/#~~~~/#~~~~/#~~~~/#~~~~/#~~~~'...
         '\nProcessing failed on %s \nbecause: %s \n@ %s : %s'...

@@ -5,19 +5,25 @@ function plot_histogram(data, varargin)
 
 %% Parse input arguments and set varargin defaults
 p = inputParser;
-p.addRequired('data', @isnumeric);
-p.addParameter('title', 'Histogram & Gaussian fit', @isstr);
-p.addParameter('xlabel', 'data value', @isstr);
-p.addParameter('ylabel', 'Count / PDF value', @isstr);
-p.addParameter('plotTitle',  true, @islogical);
-p.addParameter('plotLabels',  true, @islogical);
-p.addParameter('plotYLabels', true, @islogical);
-p.addParameter('tailPrc',  0.05, @isnumeric);
-p.addParameter('xlim', [NaN, NaN], @isnumeric);
-p.addParameter('ylim', [NaN, NaN], @isnumeric);
-p.addParameter('plotLegend', false, @islogical);
+p.addRequired('data', @isnumeric)
+p.addParameter('title', 'Histogram & Gaussian fit', @isstr)
+p.addParameter('xlabel', 'data value', @isstr)
+p.addParameter('ylabel', 'Count / PDF value', @isstr)
+p.addParameter('xlim', [NaN, NaN], @isnumeric)
+p.addParameter('ylim', [NaN, NaN], @isnumeric)
+p.addParameter('plotTitle',  true, @islogical)
+p.addParameter('plotBox',  true, @islogical)
+p.addParameter('plotLabels',  true, @islogical)
+p.addParameter('plotXLabels', true, @islogical)
+p.addParameter('plotYLabels', true, @islogical)
+p.addParameter('plotXTickLabels', true, @islogical)
+p.addParameter('plotYTickLabels', true, @islogical)
+p.addParameter('tailPrc',  0.05, @isnumeric)
+p.addParameter('plotLegend', false, @islogical)
+p.addParameter('plotPDFs', true, @islogical)
+p.addParameter('BarFaceColor', [180, 180, 220], @isnumeric)
 
-p.parse(data, varargin{:});
+p.parse(data, varargin{:})
 Arg = p.Results;
 
 
@@ -54,7 +60,7 @@ tSD = std(data(tndx)); % trimmed SD
 %dx=binpos(2)-binpos(1); % bin width
 h = histogram(data, nbins,...
               'EdgeColor', 'none', ...
-              'FaceColor', [180, 180, 220]/255);
+              'FaceColor', Arg.BarFaceColor/255);
 binpos = h.BinEdges(1:end-1);
 dx = h.BinWidth;
 if ~isscalar(dx)
@@ -72,6 +78,9 @@ tdatafit = tdatafit * pnts * dx;
 
 
 %% Plot histogram
+if ~Arg.plotBox
+    box off
+end
 if any(isnan(Arg.xlim))
     Arg.xlim = get(gca, 'XLim');
 end
@@ -95,21 +104,38 @@ if any(isnan(Arg.ylim))
     end
 end
 
-if Arg.plotTitle, title(Arg.title); end
-if Arg.plotLabels
-    xlabel(Arg.xlabel);
-    if Arg.plotYLabels
-        ylabel(Arg.ylabel);
-    end
+if Arg.plotTitle
+    title(Arg.title); 
+end
+%turn off both axis labels
+if ~Arg.plotLabels
+    Arg.plotXLabels = false;
+    Arg.plotYLabels = false;
+end
+%plot axis labels if requested
+if Arg.plotXLabels
+    xlabel(Arg.xlabel)
+end
+if Arg.plotYLabels
+    ylabel(Arg.ylabel)
+end
+%remove axis tick mark labels if requested
+if ~Arg.plotXTickLabels
+    xticklabels({''})
+end
+if ~Arg.plotYTickLabels
+    yticklabels({''})
 end
 
-% Overplotting a normal distribution using sd (in red)
 hold on;
-h1 = plot(binpos, datafit, 'r', 'LineWidth', 1);
-set(gca, 'XLim', Arg.xlim)
+if Arg.plotPDFs
+    % Overplotting a normal distribution using sd (in red)
+    h1 = plot(binpos, datafit, 'r', 'LineWidth', 1);
+    set(gca, 'XLim', Arg.xlim)
 
-% Overplotting a normal distribution using trimmed sd (in black)
-h2 = plot(binpos, tdatafit, 'k');
+    % Overplotting a normal distribution using trimmed sd (in black)
+    h2 = plot(binpos, tdatafit, 'k');
+end
 
 if zlo > Arg.xlim(1)
     plot([zlo zlo], [0 Arg.ylim(2)/2], 'k', 'LineWidth', 1) % low  percentile
@@ -131,9 +157,14 @@ set(gca, 'XMinorTick', 'on', 'XLim', Arg.xlim);
 
 if Arg.plotLegend
     tmp = get(gca, 'Position');
-    H = [h1 h2 h3];
-    l = legend(H, 'gaussian fit', 'trimmed g. fit', 'mean',...
-        'Location', 'southoutside', 'Orientation', 'horizontal');
+    if Arg.plotPDFs
+        H = [h1 h2 h3];
+        L = {'gaussian fit', 'trimmed g. fit', 'mean'};
+    else
+        H = h3;
+        L = {'mean'};
+    end
+    l = legend(H, L, 'Location', 'southoutside', 'Orientation', 'horizontal');
     set(l, 'FontSize', 12)
     legend boxoff
     set(gca, 'Position', tmp)

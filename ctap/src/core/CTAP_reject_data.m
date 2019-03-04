@@ -1,4 +1,3 @@
-
 function [EEG, Cfg] = CTAP_reject_data(EEG, Cfg)
 %CTAPEEG_reject_data - Rejects detected bad channels, epochs, components or segments
 %
@@ -34,7 +33,8 @@ function [EEG, Cfg] = CTAP_reject_data(EEG, Cfg)
 %           'badcomps' - clean ICA comps marked in EEG.CTAP.badcomps.detect
 %
 %           The 'detect' field is removed after cleaning, so that a
-%           given set of badness will only be cleaned once.
+%           given set of badness will only be cleaned once. Thus, normal
+%           usage is to call pairs of CTAP_detect_*, CTAP_reject_data
 %
 % See also: ctapeeg_reject_data()
 %
@@ -90,7 +90,7 @@ end
 try
     detected = EEG.CTAP.(Arg.method).detect;
     [badness, scores] = ctap_read_detections(EEG, Arg.method);
-catch ME,
+catch ME
     error('CTAP_reject_data:noDetectField',...
         '%s : %s results not defined...', ME.message, Arg.method);
 end
@@ -121,25 +121,31 @@ end
 
 %% Diagnostics: plots & logs
 if Arg.plot && detected.prc > 0
-    savepath = get_savepath(Cfg, mfilename, 'qc',...
-                            'suffix', Arg.method);                  
+    savepath = get_savepath(Cfg, mfilename, 'qc', 'suffix', Arg.method);                  
     savepath = fullfile(savepath, EEG.CTAP.measurement.casename);
-    prepare_savepath(savepath);
+    prepare_savepath(savepath)
+
+    myReport(sprintf('Plotting diagnostics to ''%s''...\n', savepath)...
+        , Cfg.env.logFile);
                         
     switch Arg.method
         case 'badchans'
-            sbf_plot_channel_rejections(EEG0, savepath);
+            sbf_plot_channel_rejections(EEG0, savepath)
+            
+        case 'badepochs'
+            plotNsave_epoch(EEG0, badness, savepath, EEG0.setname...
+                        , 'ctapMethod', detected.src{1})
     
         case 'badcomps'
-            sbf_plotNsave_bad_ICs(EEG0, savepath);
+            sbf_plotNsave_bad_ICs(EEG0, savepath)
             
-            if ~isempty(strfind(strjoin(detected.src(:,1),'-'), 'blink')) &&...
-                ismember('blink', unique({EEG0.event.type}))
-                sbf_plotNsave_blinkERP(EEG0, EEG, savepath);
+            if contains(strjoin(detected.src(:,1),'-'), 'blink') &&...
+                                ismember('blink', unique({EEG0.event.type}))
+                sbf_plotNsave_blinkERP(EEG0, EEG, savepath)
             end
             
         case 'badsegev'
-            sbf_plot_bad_segments(EEG0, Cfg, savepath)
+            sbf_plot_bad_segments(EEG0, savepath)
             
     end
 end
@@ -208,11 +214,8 @@ end %of sbf_plotNsave_blinkERP()
 function sbf_plotNsave_bad_ICs(EEG0, savepath)
     %get bad IC indices
     comps = badness;
-    chans = get_eeg_inds(EEG0, {'EEG'});
+    chans = get_eeg_inds(EEG0, 'EEG');
     %make output dir path
-
-    myReport(sprintf('Plotting diagnostics to ''%s''...\n', savepath)...
-        , Cfg.env.logFile);
     
     for i = 1:numel(comps)
         
@@ -235,7 +238,7 @@ end %sbf_plotNsave_bad_ICs()
 %% sbf_plot_channel_rejections
 % Visualize channel rejections
 function sbf_plot_channel_rejections(EEG0, savepath)
-    chs = {EEG0.chanlocs(get_eeg_inds(EEG0, {'EEG'})).labels};
+    chs = {EEG0.chanlocs(get_eeg_inds(EEG0, 'EEG')).labels};
     plotNsave_raw(EEG0, savepath, EEG0.setname,...
                   'channels', chs,...
                   'markChannels', badness)
@@ -251,21 +254,25 @@ end %sbf_plot_channel_rejections()
 
 %% sbf_plot_bad_segments
 % Visualize segment rejections
-function sbf_plot_bad_segments(EEG0, Cfg, savepath)
+function sbf_plot_bad_segments(EEG0, savepath)
     
     evMatch = ismember({EEG0.event.type}, EEG0.CTAP.badsegev.quantileTh.evidstr);
     ev = EEG0.event(evMatch);
-    extraWinSec = 2;
-    myReport(sprintf('Plotting diagnostics to ''%s''...\n', savepath)...
-        , Cfg.env.logFile);
+    inds = get_eeg_inds(EEG0, 'EEG');
     %save a bunch of pngs to a unique subdirectory.
     for i = 1:numel(ev)
-        inds = get_eeg_inds(EEG0, {'EEG'});
+        timeres = 'sec';
+        if ev(i).duration < EEG0.srate
+            timeres = 'ms';
+        end
+        extraWinSec = min(max(ev(i).duration / EEG0.srate, 1), 3);
+        %use our excellent homemade raw data plotter
         figH = plot_raw(EEG0, ...
             'channels', {EEG0.chanlocs(inds).labels},...
             'startSample', max(1, ev(i).latency - extraWinSec * EEG0.srate),...
             'secs', ev(i).duration / EEG0.srate + 2 * extraWinSec,...
             'shadingLimits', [ev(i).latency, ev(i).latency + ev(i).duration],...
+            'timeResolution', timeres,...
             'paperwh', [-1 -1],...
             'figVisible', 'off');
         % Saves images as separate pngs to save time
@@ -283,7 +290,7 @@ function sbf_report_bad_data
     func = sprintf('s%df%d', Cfg.pipe.current.set, Cfg.pipe.current.funAtSet);
     if isempty(badness)
         bdstr = 'none'; %a placeholder to keep the variable type consistent
-    elseif ~iscellstr(badness)
+    elseif ~iscellstr(badness) %#ok<ISCLSTR>
             bdstr = num2str(badness, 3);
     else
             bdstr = strjoin(badness);

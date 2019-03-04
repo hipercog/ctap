@@ -47,22 +47,28 @@ end
 
 %% ASSIST
 if ~isfield(Arg, 'channels')
-    Arg.channels = get_eeg_inds(EEG, {Arg.channelType});
+    chidx = get_eeg_inds(EEG, Arg.channelType);
+    Arg.channels = {EEG.chanlocs(chidx).labels};
+elseif isnumeric(Arg.channels)
+    chidx = Arg.channels;
+    Arg.channels = {EEG.chanlocs(chidx).labels};
+else
+    chidx = get_eeg_inds(EEG, Arg.channels);
 end
-% Don't pay attention to any bad channels
-if isfield(EEG.CTAP, 'badchans')
-    if isfield(EEG.CTAP.badchans, 'detect')
-        Arg.channels(ismember(Arg.channels, find(...
-            ismember({EEG.chanlocs.labels}, EEG.CTAP.badchans.detect.chans))))...
-            = [];
-    end
-end
+
 % Check that given channels are EEG channels
-if isempty(Arg.channels) ||...
-        sum(strcmp('EEG', {EEG.chanlocs.type})) < length(Arg.channels)
-    myReport(['WARN CTAP_detect_bad_epochs:: '...
+if isempty(Arg.channels) || ~all(ismember({EEG.chanlocs(chidx).type}, 'EEG'))
+    myReport(['WARN ' mfilename ':: '...
         'EEG channel type has not been well defined,'...
         ' or given channels are not all EEG!'], Cfg.env.logFile);
+end
+
+% Don't pay attention to any bad or deliberately-excluded channels
+if isfield(Arg, 'badchannels')
+    Arg.channels = setdiff(Arg.channels, Arg.badchannels);
+end
+if isfield(EEG.CTAP, 'badchans') && isfield(EEG.CTAP.badchans, 'detect')
+    Arg.channels = setdiff(Arg.channels, EEG.CTAP.badchans.detect.chans);
 end
 
 
@@ -123,6 +129,8 @@ EEG.CTAP.badepochs.detect.prc = prcbad;
 
 
 %% ERROR/REPORT
+% TODO - PLOT BAD EPOCHS, WITH RED LINES FOR CHANNELS CAUSING BADNESS?
+
 Cfg.ctap.detect_bad_epochs = params;
 
 msg = myReport({repstr1 repstr2 repstr3}, Cfg.env.logFile);

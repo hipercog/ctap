@@ -108,7 +108,7 @@ if Arg.plot
     %% Plot scalp maps of all components for reference
     titleStr = sprintf('%s--independent components', EEG.setname);
     comps = 1:size(EEG.icawinv, 2);
-    chans = get_eeg_inds(EEG, {'EEG'});
+    chans = get_eeg_inds(EEG, 'EEG');
 
     figH = ctap_ic_topoplot(EEG, comps...
         , 'savepath', get_savepath(Cfg, mfilename, 'qc')...

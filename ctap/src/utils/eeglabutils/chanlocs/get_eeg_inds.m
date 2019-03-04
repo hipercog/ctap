@@ -32,8 +32,12 @@ function chinds = get_eeg_inds(EEG, chloc_cellstr)
 %% Parse input arguments and set varargin defaults
 p = inputParser;
 p.addRequired('EEG', @isstruct);
-p.addRequired('chloc_cellstr', @iscellstr);
+p.addRequired('chloc_cellstr', @(x) iscellstr(x) || ischar(x)); %#ok<ISCLSTR>
 p.parse(EEG, chloc_cellstr);
+
+if ischar(chloc_cellstr)
+    chloc_cellstr = {chloc_cellstr};
+end
 
 %safety init the output argument
 chinds = [];

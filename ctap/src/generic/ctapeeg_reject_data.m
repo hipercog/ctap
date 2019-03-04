@@ -43,6 +43,8 @@ function [EEG, varargout] = ctapeeg_reject_data(EEG, varargin)
 % Please see the file LICENSE for details.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+Arg = struct;
+
 sbf_check_input() % parse the varargin, set defaults
 
 varargout{2} = '';

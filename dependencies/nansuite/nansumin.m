@@ -1,4 +1,4 @@
-function [y,idx] = nanmin(a,dim,b)
+function [y,idx] = nansumin(a,dim,b)
 % FORMAT: [Y,IDX] = NANMIN(A,DIM,[B])
 % 
 %    Minimum ignoring NaNs
@@ -28,7 +28,7 @@ function [y,idx] = nanmin(a,dim,b)
 %    See also MIN
 
 % -------------------------------------------------------------------------
-%    author:      Jan Gläscher
+%    author:      Jan Glï¿½scher
 %    affiliation: Neuroimage Nord, University of Hamburg, Germany
 %    email:       glaescher@uke.uni-hamburg.de
 %    

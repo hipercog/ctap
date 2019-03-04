@@ -45,7 +45,7 @@ if ischar(Arg.ref) || iscell(Arg.ref)
     ref_inds = get_refchan_inds(EEG, Arg.ref);
 elseif isnumeric(Arg.ref)
     ref_inds = Arg.ref;
-    Arg.ref = unique({EEG.chanlocs(ref_inds).type});
+    Arg.ref = unique({EEG.chanlocs(ref_inds).labels});
 end
 if isempty(ref_inds)
     ref_inds = myReport({'SHSH' Arg.ref});
@@ -54,7 +54,7 @@ if isempty(ref_inds)
 end
 
 EEG = pop_reref(EEG, ref_inds, 'keepref','on');
-% EEG.ref = {EEG.chanlocs(ref_inds).labels}; %this fails for, e.g cellstr arrays
+EEG.ref = Arg.ref; %this fails for, e.g cellstr arrays
 
 varargout{2} = ref_inds;
 

@@ -47,6 +47,11 @@ p.addParameter('ovw', false, @islogical)
 
 p.parse(Cfg, pipeArr, varargin{:});
 Arg = p.Results;
+if ~Arg.dbg
+    dbclear if error
+else
+    dbstop if error
+end
 
 
 %% Set up to run pipes
@@ -70,6 +75,7 @@ end
 for i = Arg.runPipes
     % Set Cfg
     [i_Cfg, i_ctap_args] = pipeArr{i}(Cfg);
+    if ~iscell(i_Cfg.srcid), i_Cfg.srcid = {i_Cfg.srcid}; end
     Cfg.pipe.totalSets = sbf_get_total_sets(i_Cfg);
     myReport(sprintf('Begin analysis run at %s with pipe:%s ''%s'''...
         , datestr(now), newline, i_Cfg.id));
@@ -186,24 +192,29 @@ end
 fnames = fieldnames(Cfg.env.paths);
 fnames(~cellfun(@ischar, struct2cell(Cfg.env.paths))) = [];
 for fn = 1:numel(fnames)
-    if ~isdir(Cfg.env.paths.(fnames{fn})) && ...
+    if ~isfolder(Cfg.env.paths.(fnames{fn})) && ...
        ~isempty(Cfg.env.paths.(fnames{fn}))
         mkdir(Cfg.env.paths.(fnames{fn}));
     end
 end
 
-myReport(sprintf('Pipe analysis has stepSets:%s %s %s',...
-    newline, char(Cfg.pipe.runSets)', newline), Cfg.env.logFile);
-EEG = struct;
 
-
-%% Run step sets
+%% Check what we will Run
 % Find indices of sets to run
-if strcmp(Cfg.pipe.runSets{1},'all')
+if strcmp(Cfg.pipe.runSets{1}, 'all')
     runSets = 1:numel(Cfg.pipe.stepSets);
 else
     runSets = find(ismember({Cfg.pipe.stepSets.id}, Cfg.pipe.runSets));
 end
+
+if isempty(Cfg.pipe.runMeasurements) || isempty(runSets)
+    myReport('runMeasurements or runSets undefined: aborting', Cfg.env.logFile);
+    return
+end
+
+myReport(sprintf('Pipe analysis has stepSets:\n\t%s\n', char(Cfg.pipe.runSets)')...
+    , Cfg.env.logFile);
+EEG = struct;
 
 
 %% Load and subset measurement config data
@@ -249,10 +260,14 @@ MCSub = Cfg.MC;
 MCSub.measurement = struct_filter(Cfg.MC.measurement, strucFilt);
 numMC = numel(MCSub.measurement);
 MCbad = false(numMC, 1);
-if numMC == 0 && ~isempty(strucFilt)
-    msg = sprintf('\nNo measurements matching the filter: %s. %s',...
-                catcellstr({strucFilt.casename}, 'sep',', '),...
-                'WHY DON''T YOU TRY: specifying a different set of measurements.');
+if numMC == 0
+    if ~all(cellfun(@isempty, struct2cell(strucFilt)))
+        strucFilt = strjoin(strucFilt.casename, ',\t');
+    else
+        strucFilt = strjoin(Cfg.pipe.runMeasurements, ',\t');
+    end
+    msg = sprintf('FAIL\nNo measurements match your filter: %s. \n%s',...
+            strucFilt, 'NOW TRY to specify a different set of measurements.');
     myReport(msg, Cfg.env.logFile);
 end
 
@@ -273,25 +288,29 @@ for n = 1:numMC %over measurements
 
         %respect prior run of this stepSet - don't overwrite...
         if ~Arg.overwrite
+            cont = false;
             %...if save is true...
             if Cfg.pipe.stepSets(i).save
-                thisfile = fullfile(Cfg.env.paths.analysisRoot...
+                testifile = fullfile(Cfg.env.paths.analysisRoot...
                  , Cfg.pipe.stepSets(i).id, [Cfg.measurement.casename, '.set']);
-                if exist(thisfile, 'file')
-                    myReport(sprintf('Overwrite is OFF and %s exists already.%s',...
-                        thisfile, ' Skipping this STEP SET'), Cfg.env.logFile);
-                    continue
+                if exist(testifile, 'file') == 2
+                    cont = true;
                 end
             %...OR, if stepSet calls peek_data ONLY, and it has been done before
-            elseif ismember(cellfun(@func2str...
-                   , Cfg.pipe.stepSets(i).funH, 'Un', 0), 'CTAP_peek_data')
-               testi = fullfile(Cfg.env.paths.qualityControlRoot...
+            elseif ismember(cellfun(@func2str, Cfg.pipe.stepSets(i).funH...
+                                                , 'Un', 0), 'CTAP_peek_data')
+               testifile = fullfile(Cfg.env.paths.qualityControlRoot...
                    , 'CTAP_peek_data', sprintf('set%d_fun1'...
                    , i + Cfg.pipe.totalSets - numel(runSets))...
                    , Cfg.measurement.casename);
-               if isdir(testi) && ~isempty(dirflt(testi))
-                   continue
+               if isfolder(testifile) && ~isempty(dirflt(testifile))
+                   cont = true;
                end
+            end
+            if cont
+                myReport(sprintf('Overwrite is OFF and %s exists already.%s',...
+                    testifile, ' Skipping this STEP SET'), Cfg.env.logFile);
+                continue
             end
         end
         i_ctap_hist_sz = 0;
@@ -310,7 +329,7 @@ for n = 1:numMC %over measurements
                     'filepath', sbf_get_src_subdir(Cfg, i),...
                     'filename', [Cfg.measurement.casename, '.set']);
             end
-        catch ME,
+        catch ME
             funStr = 'intermediate_data_load';
             sbf_report_error(ME);
             break;
@@ -348,7 +367,7 @@ for n = 1:numMC %over measurements
             else
                 try
                     i_Cfg_tmp = sbf_execute_pipefun;
-                catch ME,
+                catch ME
                     sbf_report_error(ME);
                     if isfield(i_EEG, 'CTAP')
                         i_EEG.CTAP.history(end+1) = create_CTAP_history_entry(...
@@ -379,7 +398,7 @@ for n = 1:numMC %over measurements
         end
         %actions to take whatever happened during ananlysis steps
         i_sv = fullfile(Cfg.env.paths.analysisRoot, Cfg.pipe.stepSets(i).id);
-        if ~isdir(i_sv), mkdir(i_sv); end %make stepSet directory
+        if ~isfolder(i_sv), mkdir(i_sv); end %make stepSet directory
         EEG = i_EEG; %store EEG state to write out history after loops
 
         % if stepSet loop didn't complete, measurement is no longer processed.
@@ -415,12 +434,16 @@ for n = 1:numMC %over measurements
     Cfg = tmp_Cfg; %reassign original ctap
 
     suxes = {'successfully! :)' 'unsuccessfully :''('};
-    suxes = sprintf('\n================\nMeasurement ''%s'' analyzed %s\n',...
-        Cfg.measurement.casename, suxes{MCbad(n) + 1});
-    histfile = sprintf('%s_history.txt', Cfg.measurement.casename);
+    pssfl = {'PASS' 'FAIL'};
+    suxes = sprintf('\n================\nMeasurement ''%s'' analyzed %s\n'...
+                            , Cfg.measurement.casename, suxes{MCbad(n) + 1});
+    histfile = sprintf('%s_history-%s.txt'...
+                            , Cfg.measurement.casename, pssfl{MCbad(n) + 1});
+    histdir = fullfile(Cfg.env.paths.logRoot, 'histories');
+    if ~isfolder(histdir), mkdir(histdir); end
     myReport(suxes, Cfg.env.logFile);
-    myReport(suxes, fullfile(Cfg.env.paths.logRoot, histfile));
-    ctap_check_hist(EEG, fullfile(Cfg.env.paths.logRoot, histfile));
+    myReport(suxes, fullfile(histdir, histfile));
+    ctap_check_hist(EEG, fullfile(histdir, histfile));
 
 end %over measurements
 
@@ -430,7 +453,7 @@ myReport(sprintf('\nAnalysis run ended at %s.\n', datestr(now, 30)),...
     Cfg.env.logFile);
 if any(MCbad)
     myReport({'Analysis failed for: ' MCSub.measurement(MCbad).casename},...
-        Cfg.env.logFile, sprintf('\n'));
+        Cfg.env.logFile, newline);
 else
     myReport('All Analysis Successful!', Cfg.env.logFile);
 end
@@ -456,7 +479,7 @@ if ismember('CTAP_reject_data', cellfun(@func2str...
 %TODO(feature-request)(BEN) join tables with non-matching rownames, use missing values
             try
                 rejtab = join(rejtab, tmp.rejtab, 'Keys', 'RowNames');
-            catch ME,
+            catch ME
                 fprintf('%s::%s misses rows, can''t join\n', ME.message, nxt)
             end
         end
@@ -550,4 +573,4 @@ function src_subdir = sbf_get_src_subdir(Cfg, idx)
     end
 end
 
-end% CTAP_pipeline_looper()
+end% CTAP_branchedpipe_looper()

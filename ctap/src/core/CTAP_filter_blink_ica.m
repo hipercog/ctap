@@ -45,7 +45,7 @@ end
 
 %% ASSIST
 detected = EEG.CTAP.badcomps.detect;
-blink_detects = ~cellfun(@isempty, strfind(detected.src(:,1), 'blink'));
+blink_detects = contains(detected.src(:,1), 'blink');
 if any(~blink_detects)
     % Get badness for only the blink detection methods used
     EEGtmp = EEG;
@@ -117,7 +117,7 @@ hold off;
 
 %% Plot blink related ICs
 if Cfg.grfx.on
-    chans = get_eeg_inds(EEG0, {'EEG'});
+    chans = get_eeg_inds(EEG0, 'EEG');
 
     for i = 1:numel(cmpidx)
 

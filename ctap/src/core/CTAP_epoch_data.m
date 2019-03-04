@@ -1,8 +1,7 @@
 function [EEG, Cfg] = CTAP_epoch_data(EEG, Cfg)
-%CTAP_epoch_data - Create epochs as events in the dataset
+%CTAP_epoch_data - Create epochs from events in the dataset
 %
 % Description:
-%
 %
 % Syntax:
 %   [EEG, Cfg] = CTAP_epoch_data(EEG, Cfg);
@@ -11,7 +10,12 @@ function [EEG, Cfg] = CTAP_epoch_data(EEG, Cfg)
 %   EEG         struct, EEGLAB structure
 %   Cfg         struct, CTAP configuration structure
 %   Cfg.ctap.epoch_data:
-%       Fields and their content should match the varargins of
+%       .match  string, controls how to match 'evtype' strings to EEG events:
+%                       'exact' (default) match complete string
+%                       'starts' match if evtype begins the event label
+%                       'contains' match if evtype occurs anywhere in event
+%                       'ends' match if evtype ends the event label
+%       Other fields and their content should match the varargins of
 %       ctapeeg_epoch_data().
 %
 % Outputs:
@@ -32,11 +36,20 @@ function [EEG, Cfg] = CTAP_epoch_data(EEG, Cfg)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% Set optional arguments
-Arg = struct;
+Arg.match = 'exact';
 
 % Override defaults with user parameters
 if isfield(Cfg.ctap, 'epoch_data')
     Arg = joinstruct(Arg, Cfg.ctap.epoch_data); %override with user params
+end
+
+
+%% ASSIST
+evlist = eeglab_validate_evlist(EEG, Arg.evtype, Arg.match);
+if isempty(evlist)
+    myReport(['FAIL evtype not found: ' Arg.evtype], Cfg.env.logFile);
+else
+    Arg.evtype = evlist;
 end
 
 

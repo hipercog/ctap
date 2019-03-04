@@ -1,4 +1,4 @@
-function [y,idx] = nanmax(a,dim,b)
+function [y,idx] = nansumax(a,dim,b)
 % FORMAT: [Y,IDX] = NANMAX(A,DIM,[B])
 % 
 %    Maximum ignoring NaNs
@@ -28,7 +28,7 @@ function [y,idx] = nanmax(a,dim,b)
 %    See also MAX
 
 % -------------------------------------------------------------------------
-%    author:      Jan Gläscher
+%    author:      Jan Glï¿½scher
 %    affiliation: Neuroimage Nord, University of Hamburg, Germany
 %    email:       glaescher@uke.uni-hamburg.de
 %    

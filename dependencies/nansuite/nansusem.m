@@ -1,4 +1,4 @@
-function y = nansem(x,dim)
+function y = nansusem(x,dim)
 % FORMAT: Y = NANSEM(X,DIM)
 % 
 %    Standard error of the mean ignoring NaNs
@@ -13,7 +13,7 @@ function y = nansem(x,dim)
 %    NANSUM which are all part of the NaN-suite.
 
 % -------------------------------------------------------------------------
-%    author:      Jan Gläscher
+%    author:      Jan Glï¿½scher
 %    affiliation: Neuroimage Nord, University of Hamburg, Germany
 %    email:       glaescher@uke.uni-hamburg.de
 %    
@@ -25,7 +25,7 @@ if isempty(x)
 end
 
 if nargin < 2
-	dim = min(find(size(x)~=1));
+	dim = find(size(x)~=1, 1);
 	if isempty(dim)
 		dim = 1; 
 	end	  
@@ -42,7 +42,7 @@ count = size(x,dim) - sum(nans,dim);
 i = find(count==0);
 count(i) = 1;
 
-y = nanstd(x,dim)./sqrt(count);
+y = nansustd(x, dim) ./ sqrt(count);
 
 y(i) = i + NaN;
 
