@@ -21,7 +21,7 @@
 % On first run, create synthetic data:
 overwrite_syndata = true;
 % On subsequent runs, skip creation:
-overwrite_syndata = false;
+% overwrite_syndata = false;
 
 % Runtime options for CTAP:
 STOP_ON_ERROR = true;
@@ -30,7 +30,7 @@ OVERWRITE_OLD_RESULTS = true;
 
 %% Setup
 project_dir = fullfile(cd(), 'sccn-clean-20min');
-if ~isdir(project_dir), mkdir(project_dir); end;
+if ~isdir(project_dir), mkdir(project_dir); end
 
 % Define step sets and their parameters
 [Cfg, ctap_args] = cfg_manu(project_dir);
