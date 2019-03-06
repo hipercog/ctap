@@ -78,10 +78,10 @@ switch Arg.type
         
     case 'hdf5'
         idx = get_event_epochIdx(EEG, Arg.lock_event);
-        EEGev = pop_select(EEG, idx);
-        savename = sprintf('%s_%s_ERPdata.h5', EEG.CTAP.measurement.casename,...
-                           Arg.lock_event);
-        eeglab_writeh5_erp(fullfile(Arg.outdir, savename), EEGev);
+        EEGev = pop_select(EEG, 'trial', find(idx));
+        savename = fullfile(Arg.outdir, sprintf('%s_%s_ERPdata.h5'...
+                            , EEG.CTAP.measurement.casename, Arg.lock_event));
+        eeglab_writeh5_erp(savename, EEGev);
         msg = myReport('Exporting EEG data to HDF5', Cfg.env.logFile);
         
     case 'leda'
