@@ -47,7 +47,7 @@ function [peakLatArr, BlinkData] = eeg_detect_blink(veog, fs, varargin)
 %% Parse input arguments and set varargin defaults
 p = inputParser;
 p.addRequired('veog', @isnumeric);
-
+p.KeepUnmatched = true;
 %p.addParameter('classMethod', 'emgauss_asymmetric', @ischar);
 p.addParameter('classMethod', 'kmeans', @ischar);
 p.addParameter('FIRLength', floor(0.3*fs), @isinteger);

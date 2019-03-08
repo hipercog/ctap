@@ -58,9 +58,9 @@ Cfg = get_meas_cfg_MC(Cfg, data_dir, 'eeg_ext', '*.set', 'sbj_filt', sbj_filt);
 % cfg_manu.m sets pipe.runSets by default but the lines below can be used
 % to override the default behavior.
 % Any stepSet subset can be indexed numerically or logically.
-%Cfg.pipe.runSets = {'all'}; %this is the default
+Cfg.pipe.runSets = {'all'}; %this is the default
 %Cfg.pipe.runSets = {Cfg.pipe.stepSets([2,5]).id}; %by position index
-Cfg.pipe.runSets = {Cfg.pipe.stepSets(8).id};
+% Cfg.pipe.runSets = {Cfg.pipe.stepSets(8).id};
 
 
 %% Assign arguments to the selected functions, perform various checks

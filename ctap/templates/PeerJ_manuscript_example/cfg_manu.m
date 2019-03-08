@@ -229,7 +229,7 @@ out.peek_data = struct(...
 %}
 
 %% Store to Cfg
-Cfg.pipe.runSets = {'all'}; % step sets to run, the whole thing by default
+Cfg.pipe.runSets = {stepSet(1:7).id}; % step sets to run, the whole thing by default
 Cfg.pipe.stepSets = stepSet; % record of all step sets
 
 
