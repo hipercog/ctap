@@ -286,7 +286,7 @@ end %sbf_plot_bad_segments()
 %% sbf_report_bad_data
 function sbf_report_bad_data
 
-    badname = Arg.method;
+    badname = [Arg.method '_' EEG.CTAP.measurement.casename];
     func = sprintf('s%df%d', Cfg.pipe.current.set, Cfg.pipe.current.funAtSet);
     if isempty(badness)
         bdstr = 'none'; %a placeholder to keep the variable type consistent
