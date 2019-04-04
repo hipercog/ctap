@@ -3,6 +3,11 @@
 Listing of external dependencies other than EEGLAB
 All dependencies are included in this folder for convenience, licenced within their own folders. The CTAP licence does not apply.
 
+## firfilt
+* from github: https://github.com/widmann/firfilt
+* licence unknown
+* used by: CTAP_fir_filter, CTAP_filter_blink_ica
+* status: should be loaded as an EEGLAB plugin: will not be mounted directly in CTAP as it is under regular maintenance.
 
 ## ctap/dependencies/nansuite:
 * from FileExchange: http://www.mathworks.com/matlabcentral/fileexchange/6837-nan-suite
@@ -25,7 +30,7 @@ All dependencies are included in this folder for convenience, licenced within th
 * status: might not be required
 
 ## ctap/dependencies/importvpd:
-* from Ben?
+* from: adapted by Ben Cowley from Ledalab
 * license MIT
 * used by: ../ctap/src/generic/ctapeeg_load_data.m
 * status: yet another input data type

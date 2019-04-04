@@ -1,4 +1,6 @@
-# Computational Testing for Automated Preprocessing (CTAP)
+![](https://upload.wikimedia.org/wikipedia/commons/thumb/3/34/Red_star.svg/200px-Red_star.svg.png)
+
+# Computational Testing for Automated Preprocessing (CTAP ★)
 CTAP is a set of tools running in [Matlab](https://se.mathworks.com/products/matlab.html) that facilitate workflow creation, automated quality control and feature export for the [EEGLAB](https://sccn.ucsd.edu/eeglab/index.php)  EEG processing framework.
 
 ## What is CTAP? ##

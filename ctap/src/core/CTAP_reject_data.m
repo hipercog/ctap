@@ -276,8 +276,10 @@ function sbf_plot_bad_segments(EEG0, savepath)
             'paperwh', [-1 -1],...
             'figVisible', 'off');
         % Saves images as separate pngs to save time
-        saveas(figH, fullfile(savepath, sprintf('Badseg_%d.png', i) ), 'png')
-        close(figH);
+        if ~isempty(figH)
+            saveas(figH, fullfile(savepath, sprintf('Badseg_%d.png', i) ), 'png')
+            close(figH);
+        end
     end
     
 end %sbf_plot_bad_segments()
@@ -286,7 +288,7 @@ end %sbf_plot_bad_segments()
 %% sbf_report_bad_data
 function sbf_report_bad_data
 
-    badname = Arg.method;
+    badname = [Arg.method '_' EEG.CTAP.measurement.casename];
     func = sprintf('s%df%d', Cfg.pipe.current.set, Cfg.pipe.current.funAtSet);
     if isempty(badness)
         bdstr = 'none'; %a placeholder to keep the variable type consistent

@@ -40,6 +40,10 @@ function [figh, startSamp] = plot_raw(EEG, varargin)
 % Please see the file LICENSE for details.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+% Set dummy outputs
+figh = [];
+startSamp = -1;
+
 
 %% Parse input arguments and set varargin defaults
 p = inputParser;
