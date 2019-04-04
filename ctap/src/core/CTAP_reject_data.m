@@ -276,8 +276,10 @@ function sbf_plot_bad_segments(EEG0, savepath)
             'paperwh', [-1 -1],...
             'figVisible', 'off');
         % Saves images as separate pngs to save time
-        saveas(figH, fullfile(savepath, sprintf('Badseg_%d.png', i) ), 'png')
-        close(figH);
+        if ~isempty(figH)
+            saveas(figH, fullfile(savepath, sprintf('Badseg_%d.png', i) ), 'png')
+            close(figH);
+        end
     end
     
 end %sbf_plot_bad_segments()

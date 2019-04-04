@@ -89,14 +89,17 @@ plotVarargin = struct2varargin(Arg);
 if ~exist(savepath, 'dir'), mkdir(savepath); end
 
 for i = 1:(length(chchunks) - 1)
+    % savename concats the file id with the channel information
+    savename = sprintf('%s-chs%d-%d.png',...
+                       plotname, chchunks(i), chchunks(i + 1) - 1);
+    % create the figure
     figh = plot_raw(EEG,...
             'paperwh', Arg.paperwh,... %original [-1, -1]
             'channels', CHANNELS(chchunks(i):chchunks(i + 1) - 1),...
             plotVarargin{:});
-    % savename concats the file id with the channel information
-    savename = sprintf('%s-chs%d-%d.png',...
-                       plotname, chchunks(i), chchunks(i + 1) - 1);
     % save and close figure
-    print(figh, '-dpng', fullfile(savepath, savename)); 
-    close(figh);
+    if ~isempty(figh)
+        print(figh, '-dpng', fullfile(savepath, savename)); 
+        close(figh);
+    end
 end
