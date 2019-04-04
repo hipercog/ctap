@@ -65,6 +65,9 @@ function repstr = myReport( repstr, logfile, delim )
     % add to log file if output directory is given
     if ~isempty(logfile)% && exist(logfile,'file')
         fid = fopen(logfile, 'a');
+        if fid < 3
+            disp('SOMETHING HAS GONE TERRIBLY WRONG!!')
+        end
         fprintf(fid, '%s\n', repstr);
         fclose(fid);
     end
