@@ -66,7 +66,8 @@ function repstr = myReport( repstr, logfile, delim )
     if ~isempty(logfile)% && exist(logfile,'file')
         fid = fopen(logfile, 'a');
         if fid < 3
-            disp('SOMETHING HAS GONE TERRIBLY WRONG!!')
+            disp(['SOMETHING HAS GONE TERRIBLY WRONG!! -- fid:' num2str(fid)])
+            disp(logfile)
         end
         fprintf(fid, '%s\n', repstr);
         fclose(fid);
