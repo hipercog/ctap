@@ -288,7 +288,7 @@ end %sbf_plot_bad_segments()
 %% sbf_report_bad_data
 function sbf_report_bad_data
 
-    badname = [Arg.method '_' EEG.CTAP.measurement.casename];
+    badname = [Arg.method '_' EEG.CTAP.subject.subject];
     func = sprintf('s%df%d', Cfg.pipe.current.set, Cfg.pipe.current.funAtSet);
     if isempty(badness)
         bdstr = 'none'; %a placeholder to keep the variable type consistent
@@ -306,7 +306,7 @@ function sbf_report_bad_data
 
         %assign into appropriate columns/rows
         rejtab = upsert2table(  rejtab,...
-                                sprintf('%s_%s', func, badname),...
+                                sprintf('%s_%s', func, Arg.method),...
                                 EEG.CTAP.measurement.casename,...
                                 bdstr);
         
