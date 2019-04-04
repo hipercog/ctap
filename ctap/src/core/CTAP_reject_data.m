@@ -319,7 +319,7 @@ function sbf_report_bad_data
         %create table from scratch
         rejtab = table({bdstr}, {detected.prc},...
             'RowNames', {EEG.CTAP.measurement.casename},...
-            'VariableNames', {[func '_' badname], [func '_pc']}); %#ok<*NASGU>
+            'VariableNames', {[func '_' Arg.method], [func '_pc']}); %#ok<*NASGU>
     end
 
     save(rejfile, 'rejtab');
