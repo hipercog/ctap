@@ -469,21 +469,11 @@ end
 % Concatenate all the bad data tables and write as a single text file
 if ismember('CTAP_reject_data', cellfun(@func2str...
         , [Cfg.pipe.stepSets(runSets).funH], 'UniformOutput', false))
-    rejfiles = dir(fullfile(Cfg.env.paths.qualityControlRoot, '*rejections.mat'));
-    if ~isempty(rejfiles)
-        tmp = load(fullfile(Cfg.env.paths.qualityControlRoot, rejfiles(1).name));
-        rejtab = tmp.rejtab;
-        for rt = 2:numel(rejfiles)
-            nxt = fullfile(Cfg.env.paths.qualityControlRoot, rejfiles(rt).name);
-            tmp = load(nxt);
-%TODO(feature-request)(BEN) join tables with non-matching rownames, use missing values
-            try
-                rejtab = join(rejtab, tmp.rejtab, 'Keys', 'RowNames');
-            catch ME
-                fprintf('%s::%s misses rows, can''t join\n', ME.message, nxt)
-            end
-        end
-        writetable(rejtab, fullfile(Cfg.env.paths.logRoot, 'all_rejections.txt')...
+
+    rejtab = sbf_agg_rejections(Cfg);
+    if ~isempty(rejtab)
+        writetable(rejtab...
+            , fullfile(Cfg.env.paths.logRoot, 'all_rejections.txt')...
             ,  'WriteRowNames', true);
     end
 end
@@ -569,6 +559,49 @@ function src_subdir = sbf_get_src_subdir(Cfg, idx)
             end
         else
             src_subdir = fullfile(Cfg.env.paths.analysisRoot, Cfg.pipe.stepSets(idx).id);
+        end
+    end
+end
+
+% Get all per-subject bad data rejection tables for this pipe
+function MrT = sbf_agg_rejections(Cfg)
+    
+    MrT = [];
+    pth = Cfg.env.paths.qualityControlRoot;
+    rejfiles = dir(fullfile(pth, '*rejections.mat'));
+    rejmethods = {'badchans', 'badepochs', 'badsegev', 'badcomps'};
+
+    if ~isempty(rejfiles)
+        % Sub-divide into classes of rejctions
+        for rmi = rejmethods
+            idx = startsWith({rejfiles.name}, rmi);
+            if any(idx)
+                idx = find(idx);
+                tmp = load(fullfile(pth, rejfiles(idx(1)).name));
+                T = tmp.rejtab;
+                for rix = 2:numel(idx)
+                    nxt = fullfile(pth, rejfiles(idx(rix)).name);
+                    tmp = load(nxt);
+                    % Combine vertically by rows
+                    try
+                        T = [T; tmp.rejtab]; %#ok<AGROW>
+                    catch err
+                        fprintf('%s::%s has incompatible cols, can''t append\n'...
+                            , err.message, nxt)
+                    end
+                end
+                % Combine horizontally by columns
+                if isempty(MrT)
+                    MrT = T;
+                else
+                    try
+                        MrT = join(MrT, T, 'Keys', 'RowNames');
+                    catch err
+                        fprintf('%s::%s misses rows, can''t join\n'...
+                            , err.message, nxt)
+                    end
+                end
+            end
         end
     end
 end
