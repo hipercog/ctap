@@ -35,11 +35,11 @@
 
 %% Setup MAIN parameters
 % set the input directory where your data is stored
-data_dir = '/home/ben/Benslab/CTAP/CTAPIIdata/testing';
+data_dir = '/home/local/bcowley/Benslab/CTAP/CTAPIIdata/testing';
 % specify the file type of your data
 data_type = '*.bdf';
 % use sbj_filt to select all (or a subset) of available recordings
-sbj_filt = setdiff(1:12, [3 7]);
+sbj_filt = 1; %setdiff(1:12, [3 7]);
 % use ctapID to uniquely name the base folder of the output directory tree
 ctapID = 'sccn-basic-pipe';
 % use keyword 'all' to select all stepSets, or use some index
@@ -109,7 +109,7 @@ Cfg.env.paths.ctapRoot = fullfile(Cfg.env.paths.projectRoot, Cfg.id);
 % CTAP output goes into analysisRoot dir, here can be same as CTAP root
 Cfg.env.paths.analysisRoot = Cfg.env.paths.ctapRoot;
 % Channel location directory
-Cfg.eeg.chanlocs = Cfg.env.paths.projectRoot;
+Cfg.eeg.chanlocs = fullfile(Cfg.env.paths.projectRoot;
 
 
 %% Define other important stuff

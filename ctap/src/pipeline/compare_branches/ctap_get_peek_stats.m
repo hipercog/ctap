@@ -6,19 +6,23 @@ function [treeStats, peek_stat_files] = ctap_get_peek_stats(ind, oud, varargin)
 % and an output path to save the gathered stats file locations and contents
 % 
 % Syntax:
-%       [peek_stat_files, treeStats] = ctap_get_peek_stats(ind, oud, Arg.filt, anew)
+%       [peek_stat_files, treeStats] = ctap_get_peek_stats(ind, oud, varargin)
 % 
 % Input:
-%   ind     string, path to root of CTAP tree, ideally the parent dir of the
-%                   first named pipe
-%   oud     string, path to directory where to save findings
+%   ind             string, path to root of CTAP tree, ideally the parent dir
+%                       of the first named pipe
+%   oud             string, path to directory where to save findings
 % Varargin:
-%   filt    string, terms required to be in filenames, e.g. conditions or
-%                   groups, which can be separated by * wildcards, 
-%                   default = ''
-%   anew    logical, if true then perform search from scratch and ignore
-%                   existing saved results files, 
-%                   default = false
+%   filt            string, terms required to be in filenames, e.g. conditions
+%                       or groups, which can be separated by * wildcards, 
+%                       default = ''
+%   anew            logical, if true then perform search from scratch and
+%                       ignore existing saved results files, 
+%                       default = false
+%   post_pipe_part  string, invariant part of path immediately following the
+%                       pipename, used to isolate pipenames from path strings:
+%                       Example: 'peekpipe/this/'
+%                       default = ''
 % 
 %
 % Version History:
@@ -37,6 +41,7 @@ p.addRequired('ind', @ischar)
 p.addRequired('oud', @ischar)
 p.addParameter('filt', '', @ischar)
 p.addParameter('anew', false, @islogical)
+p.addParameter('post_pipe_part', '', @ischar)
 
 p.parse(ind, oud, varargin{:});
 Arg = p.Results;
@@ -67,7 +72,8 @@ if ~Arg.anew && exist(fullfile(oud, pkstats), 'file') == 2
 else
     % This can take a long time! because 'readtable()' takes a LONG time.
     % Create & fill structure of peek stat tables per participant/recording
-    treeStats = subdir_parse(peek_stat_files, ind, 'peekpipe/this/', 'pipename');
+    treeStats = subdir_parse(peek_stat_files, ind, Arg.post_pipe_part...
+                                                                , 'pipename');
     for tidx = 1:numel(treeStats)
         for stix = 1:numel(treeStats(tidx).name)
             treeStats(tidx).pipe(stix).stat = readtable(...
