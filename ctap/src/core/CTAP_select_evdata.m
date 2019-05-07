@@ -19,10 +19,10 @@ function [EEG, Cfg] = CTAP_select_evdata(EEG, Cfg)
 %               'total' - select (1st evt + duration1) to (last evt + duration2)
 %               'longest' - find x=longest gap between events, select 1st-x to last+x
 %               'own' - use each event's own duration field, if exists
-%               'next' - set duration of events = offset from next event; select by durations
+%               'next' - set evt duration = offset from next event; select by durations
 %               'fixed' - use a fixed duration given by Arg.duration = [min max]
-%   .duration   [1,1] numeric, Fixed duration around selected events, default = 
-%                         min, max = minus/plus one second, i.e. -+1 * EEG.srate
+%   .duration   [1,1] numeric, Fixed duration around selected events,
+%                     default = min, max = minus/plus one second, i.e. -+1 * EEG.srate
 %
 % Outputs:
 %   EEG         struct, EEGLAB structure modified by this function
@@ -109,7 +109,7 @@ EEG = pop_select(EEG, 'point', event_lat);
 
 
 %% QUALITY CONTROL
-sbf_log_regions()
+sbf_log_regions(event_lat, EEG, Arg, Cfg)
 
 
 %% ERROR/REPORT
@@ -122,25 +122,26 @@ EEG.CTAP.history(end+1) = create_CTAP_history_entry(msg, mfilename, Arg);
 
 
     %% Subfunctions
-    function sbf_log_regions()
+    function sbf_log_regions(evlats, eeg, args, conf)
         %Write regions found
-        evdata = NaN(size(event_lat,1), 5);
-        header = {'#   ', 'start (s)   ', 'stop (s)    ',...
-            'duration (s)', 'duration (min)'};
+        evdata = NaN(size(evlats,1), 5);
+        header = {'#   ', 'start (s)   ', 'stop (s)    '...
+                        , 'duration (s)', 'duration (min)'};
 
-        evdata(:,2:3) = event_lat;
-        evdata(:,4) = event_lat(:,2)-event_lat(:,1); %duration in samp
-        evdata = evdata / EEG.srate; %all values to sec
+        evdata(:,2:3) = evlats;
+        evdata(:,4) = evlats(:,2) - evlats(:,1); %duration in samp
+        evdata = evdata / eeg.srate; %all values to sec
         evdata(:,5) = evdata(:,4)/60; %duration in minutes
         evdata = sortrows(evdata, 2); %just to make sure
         evdata(:,1) = 1:size(evdata,1);
 
-        qcf = fullfile(Cfg.env.paths.logRoot, sprintf('%s_times.txt', mfilename));
+        qcf = fullfile(conf.env.paths.logRoot...
+                        , sprintf('%s_times.txt', mfilename));
         myReport(sprintf('Selected (subject,event) : %s,%s'...
-            , EEG.CTAP.measurement.casename, Arg.evtype), qcf);
+                        , eeg.CTAP.measurement.casename, args.evtype), qcf);
         cell2txtfile(qcf, header, num2cell(evdata)...
-            , horzcat('%-4.0d', repmat({'%-12.1f'},1,4))...
-            , 'delimiter', ';', 'writemode', 'at');        
+                        , horzcat('%-4.0d', repmat({'%-12.1f'},1,4))...
+                        , 'delimiter', ';', 'writemode', 'at');        
     end
 
 
