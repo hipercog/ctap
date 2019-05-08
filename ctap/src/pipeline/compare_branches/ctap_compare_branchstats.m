@@ -67,6 +67,10 @@ for pidx = 1:size(plvlcombo)
         lvl_nms{end + 1} = ['p1_p' [pli{:}]];  %#ok<*AGROW,*SAGROW>
     end
 end
+if isempty(lvl)
+    error('ctap_compare_branchstats:bad_param'...
+        , 'Check that plvls is contained in your treeStat pipenames!')
+end
 
 
 %% COMPARE PEEK STATS
@@ -83,10 +87,10 @@ for s = 1:numel(treeStats(1).pipe)
     rowname = treeStats(1).name{s};
     rowname(regexp(treeStats(1).name{1}, ('_set[0-9]')):end) = [];
     if isempty(grpname)
-        grpname = grps{cellfun(@(x) contains(rowname, x, 'Ig', 0), grps)};
+        grpname = grps{cellfun(@(x) contains(rowname, x, 'Ig', 1), grps)};
     end
     if isempty(cndname)
-        cndname = cnds{cellfun(@(x) contains(rowname, x, 'Ig', 0), cnds)};
+        cndname = cnds{cellfun(@(x) contains(rowname, x, 'Ig', 1), cnds)};
     end
 
     for ldx = 1:numel(lvl)

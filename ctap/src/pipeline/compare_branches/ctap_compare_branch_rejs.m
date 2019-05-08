@@ -2,15 +2,15 @@ function treeRej = ctap_compare_branch_rejs(treeRej, grps, cnds, plvls)
 %CTAP_COMPARE_BRANCH_REJS analyses CTAP branches by their rejections
 % 
 % Description: takes a structure formed from all_rejections.txt files produced 
-% CTAP (i.e. aggregated output of CTAP_reject_data), and adds new struct rows
-% which calculate the difference between tree root (peek at first step) and
-% leaves (peeks at last steps)
+% by CTAP (i.e. aggregated output of CTAP_reject_data), and adds new struct
+% rows which calculate the difference between tree root (peek at first step)
+% and leaves (peeks at last steps)
 % 
 % Syntax:
 %       treeRej = ctap_compare_branch_rejs(treeRej, grps, cnds, plvls)
 % 
 % Input:
-%   treeRej     struct, output of ctap_get_peek_stats()
+%   treeRej     struct, output of ctap_get_rejections()
 %   grps        cell string array, components of recording names, e.g. groups
 %   cnds        cell string array, recording name components, e.g. conditions
 %   plvls       [n 1] cell array of cell string arrays, each array of strings
@@ -66,8 +66,8 @@ for ix = 1:numel(lvl)
     rootpc = vars{contains(vars, '_pc')};
     for s = {treeRej(lix).pipe.subj}
 %TODO: INDEXING HERE BY SUBJ-FIELD AND PROTO-FIELD IS SUITABLE FOR THE
-%NEURO-ENHANCE PROJECT, BUT NOT NECESSARILY GENERAL. FIND A WAY TO INCLUDE
-%grps PARAMETER IN THE INDEXING...
+%NEURO-ENHANCE PROJECT, BUT NOT NECESSARILY GENERAL. 
+%FIND A WAY TO INCLUDE grps PARAMETER IN THE INDEXING...
         for p = cnds
             sidx = ismember({treeRej(lix).pipe.subj}, s) &...
                    ismember({treeRej(lix).pipe.proto}, p);
