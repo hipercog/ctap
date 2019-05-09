@@ -77,28 +77,3 @@ for p = 1:size(treeRej)
         treeRej(p).pipe(r).badcount = numel(treeRej(p).pipe(r).(bad));
     end
 end
-% %% PARSE REJECTION TABLE DATA
-% %go through each pipe, group, protocol and subject to parse the data
-% for r = 1:numel(sort_rejtxt)
-%     vars = fieldnames(treeRej(r).pipe);
-%     bad = vars{contains(vars, 'bad')};
-%     for g = 1:numel(grps)
-%         tmp = table2array(sbjXgrp(:, grps{g}));
-%         tmp(isnan(tmp)) = [];
-%         for c = 1:numel(cnds)
-%             for s = 1:numel(tmp)
-%                 sid = startsWith({treeRej(r).pipe.Row}, num2str(tmp(s))) &...
-%                     contains({treeRej(r).pipe.Row}, cnds{c}, 'Ig', true);
-%                 if ~any(sid), continue; end
-%                 treeRej(r).pipe(sid).subj = tmp(s);
-%                 treeRej(r).pipe(sid).group = grps{g};
-%                 treeRej(r).pipe(sid).proto = cnds{c};
-%                 treeRej(r).pipe(sid).badness =...
-%                     str2double(strsplit(strrep(strrep(...
-%                     treeRej(r).pipe(sid).(bad), 'E', ''), 'none', '0')));
-%                 treeRej(r).pipe(sid).badcount =...
-%                     numel(treeRej(r).pipe(sid).([bad '_nums']));
-%             end
-%         end
-%     end
-% end

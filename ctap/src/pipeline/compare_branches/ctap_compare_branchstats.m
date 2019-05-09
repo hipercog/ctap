@@ -1,4 +1,4 @@
-function treeStats = ctap_compare_branchstats(treeStats, grps, cnds, plvls)
+function [treeStats, nups] = ctap_compare_branchstats(treeStats, grps, cnds, plvls, sbjIdx, snumIx)
 %CTAP_COMPARE_BRANCHSTATS analyses CTAP branches by their peek stat outputs
 % 
 % Description: takes a structure formed from all *_stats.dat files produced by 
@@ -16,6 +16,12 @@ function treeStats = ctap_compare_branchstats(treeStats, grps, cnds, plvls)
 %   plvls       [n 1] cell array of cell string arrays, each array of strings
 %               are unique parts of pipe names at a CTAP tree level: these will
 %               be combined to find the stats of individual branches
+%   sbjIdx      [1 n], [start:end] indices of the subject ID in casenames
+%   snumIx      [1 n], [start:end] indices of the subject number in casenames
+% 
+% Output:
+%   treeStats   struct, input with pipe-comparison & best-pipe info appended
+%   nups        vector, indices of new rows appended to treeStats
 % 
 % Usage:
 %   treeStats = ctap_compare_branchstats(...
@@ -35,20 +41,25 @@ function treeStats = ctap_compare_branchstats(treeStats, grps, cnds, plvls)
 % Please see the file LICENSE for details.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+
+
+%% INIT
+p = inputParser;
+p.addRequired('treeStats', @isstruct)
+p.addRequired('grps', @(x) iscellstr(x) || ischar(x))
+p.addRequired('cnds', @(x) iscellstr(x) || ischar(x))
+p.addRequired('plvls', @iscell)
+p.addRequired('sbjIdx', @isvector)
+p.addRequired('snumIx', @isvector)
+
+p.parse(treeStats, grps, cnds, plvls, sbjIdx, snumIx);
+
 % parse parameters
 if ischar(grps)
-    grpname = grps;
-elseif iscellstr(grps)
-    grpname = '';
-else
-    error('ctap_compare_branchstats:bad_param', 'Cannot use ''grps'' parameter')
+    grps = {grps};
 end
 if ischar(cnds)
-    cndname = cnds;
-elseif iscellstr(cnds)
-    cndname = '';
-else
-    error('ctap_compare_branchstats:bad_param', 'Cannot use ''cnds'' parameter')
+    cnds = {cnds};
 end
 
 
@@ -85,14 +96,10 @@ end
 
 for s = 1:numel(treeStats(1).pipe)
     rowname = treeStats(1).name{s};
-    rowname(regexp(treeStats(1).name{1}, ('_set[0-9]')):end) = [];
-    if isempty(grpname)
-        grpname = grps{cellfun(@(x) contains(rowname, x, 'Ig', 1), grps)};
-    end
-    if isempty(cndname)
-        cndname = cnds{cellfun(@(x) contains(rowname, x, 'Ig', 1), cnds)};
-    end
-
+    rowname(regexp(treeStats(1).name{s}, ('_set[0-9]')):end) = [];
+    grpname = grps{cellfun(@(x) contains(rowname, x, 'Ig', 1), grps)};
+    cndname = cnds{cellfun(@(x) contains(rowname, x, 'Ig', 1), cnds)};
+    
     for ldx = 1:numel(lvl)
         rni = contains(treeStats(lvl(ldx)).name, rowname);
         if ~any(rni)
@@ -104,13 +111,13 @@ for s = 1:numel(treeStats(1).pipe)
         end
 % TODO: NAME-INDEXES ARE SPECIFIC TO NEURO-ENHANCE PROJECT, GENERALISE!!
 % tmp = rowname(indices_of_subjnum); str2double(tmp(regexp(tmp, '\d')))
-        treeStats(lvl(ldx)).pipe(rni).subj = rowname(1:5);
-        treeStats(lvl(ldx)).pipe(rni).subj_num = str2double(rowname(3:5));
+        treeStats(lvl(ldx)).pipe(rni).subj = rowname(sbjIdx);
+        treeStats(lvl(ldx)).pipe(rni).subj_num = str2double(rowname(snumIx));
         treeStats(lvl(ldx)).pipe(rni).group = grpname;
         treeStats(lvl(ldx)).pipe(rni).proto = cndname;
 
-        treeStats(nups(ldx)).pipe(rni).subj = rowname(1:5);
-        treeStats(nups(ldx)).pipe(rni).subj_num = str2double(rowname(3:5));
+        treeStats(nups(ldx)).pipe(rni).subj = rowname(sbjIdx);
+        treeStats(nups(ldx)).pipe(rni).subj_num = str2double(rowname(snumIx));
         treeStats(nups(ldx)).pipe(rni).group = grpname;
         treeStats(nups(ldx)).pipe(rni).proto = cndname;
 
@@ -131,7 +138,7 @@ for s = 1:numel(treeStats(1).pipe)
     % make entry holding best pipe info
     if any(rni)
         treeStats(nups(end)).name{rni} = rowname;
-        treeStats(nups(end)).pipe(rni).subj = rowname(1:5);
+        treeStats(nups(end)).pipe(rni).subj = rowname(sbjIdx);
         treeStats(nups(end)).pipe(rni).group = grpname;
         treeStats(nups(end)).pipe(rni).proto = cndname;
         MATS = cellfun(@(x) x{:,:}, MATS, 'Un', 0);
