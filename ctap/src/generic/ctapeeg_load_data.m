@@ -58,8 +58,7 @@ function [EEG, varargout] = ctapeeg_load_data(filename, varargin )
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-Arg = struct();
-sbf_check_input() % parse the varargin, set defaults
+Arg = sbf_check_input(); % parse the varargin, set defaults
 
 % Check format and file existence
 file = file_loadable(filename, ctap_supported_eeg_types());

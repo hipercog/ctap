@@ -9,21 +9,28 @@ function [treeRej, rej_files] = ctap_get_rejections(ind, oud, varargin)
 %       [treeRej, rej_files] = ctap_get_rejections(ind, oud)
 % 
 % Input:
-%   ind     string, path to root of CTAP tree, ideally the parent dir of the
-%                   first named pipe
-%   oud     string, path to directory where to save findings
+%   ind             string, path to root of CTAP tree, ideally the parent dir
+%                       of the first named pipe
+%   oud             string, path to directory where to save findings
 % Varargin:
-%   filt    cell string array, terms required to be in row names of 
-%                   all_rejections.txt files, e.g. condition or group
-%                   default = {''}, i.e. filter nothing
-%   anew    logical, if true then perform search from scratch and ignore
-%                   existing saved results files, 
-%                   default = false
+%   filt            cell string array, terms required to be in row names of 
+%                       all_rejections.txt files, e.g. condition or group
+%                       default = {''}, i.e. filter nothing
+%   anew            logical, if true then perform search from scratch and
+%                       ignore existing saved results files, 
+%                       default = false
+%   post_pipe_part  string, invariant part of path immediately following the
+%                       pipename, used to isolate pipenames from path strings:
+%                       Example: 'this/logs/all_rejections.txt'
+%                       default = ''
 %
 % Outputs:
 %   treeRej     struct, 
 %   rej_files   struct, output of subdir(ind)
 %
+% See also:
+%   ctap_read_rejections()
+% 
 % Version History:
 % 08.12.2018 Created (Benjamin Cowley, UoH)
 %
@@ -40,6 +47,7 @@ p.addRequired('ind', @ischar)
 p.addRequired('oud', @ischar)
 p.addParameter('filt', {''}, @iscellstr)
 p.addParameter('anew', false, @islogical)
+p.addParameter('post_pipe_part', '', @ischar)
 
 p.parse(ind, oud, varargin{:});
 Arg = p.Results;
@@ -64,7 +72,7 @@ if ~Arg.anew && exist(fullfile(oud, 'rej_stats.mat'), 'file') == 2
     treeRej = tmp.treeRej;
 else
     %get pipenames from sbudir structure
-    treeRej = subdir_parse(rej_files, ind, 'this/logs/all_rejections.txt', 'pipename');
+    treeRej = subdir_parse(rej_files, ind, Arg.post_pipe_part, 'pipename');
     %load rejection data text files to structure
     for tidx = 1:numel(treeRej)
         for stix = 1:numel(treeRej(tidx).name)

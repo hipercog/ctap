@@ -154,7 +154,11 @@ method_data.blinkERP = blERPdf;
         if ~any(cols == [r c])
             error('sbf_make_ERPband:dimension_mismatch', 'Sthg terribly wrong!')
         end
-        dim = find(cols ~= [r c]);
+        if r == c
+            dim = 2;
+        else
+            dim = find(cols ~= [r c]);
+        end
         q1 = quantile(qdata, qpc, dim);
         q2 = quantile(qdata, 1 - qpc, dim);
         ERP = [q1(:)'; ERPdata; q2(:)'];

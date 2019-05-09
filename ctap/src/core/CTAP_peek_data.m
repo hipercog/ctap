@@ -180,19 +180,24 @@ else
         starts = [EEG.event(peekidx).latency];
         starts = starts(0 < starts); %remove possible negative values
 
+%TODO (BEN) - THIS IS A BUGGY APPROACH SINCE CTAP_select_evdata WAS UPDATED
+%SELECTION OF PEEKS THAT FALL INSIDE select_evdata SHOULD BE HANDLED CAREFULLY
     %create new peeks from data-selection events (as this data will not be cut!)
-    elseif isfield(Cfg.ctap, 'select_evdata') &&...
-            isfield(Cfg.ctap.select_evdata, 'evtype')
-        peekmatch = ismember({EEG.event.type}, Cfg.ctap.select_evdata.evtype);
-        starts = [EEG.event(peekmatch).latency] + 1;
+%     elseif isfield(Cfg.ctap, 'select_evdata') &&...
+%             isfield(Cfg.ctap.select_evdata, 'evtype')
+%         peekmatch = ismember({EEG.event.type}, Cfg.ctap.select_evdata.evtype);
+%         starts = [EEG.event(peekmatch).latency] + 1;
 
     %create new peeks at uniformly-distributed random times
     else
+%TODO - CHECK IF select_evdata EXISTS IN THE FUTURE PIPE?
+%TODO - IF SO, CHECK WHAT ITS COVERAGE IS? THEN CONSTRAIN PEEKS WITHIN THAT
+%
         %num peeks = as many as will fit with space at the end, < Arg.numpeeks
         npk = min(Arg.numpeeks, round((EEG.xmax * EEG.trials - Arg.secs(2)) / dur));
         % start latency of peeks is linear spread, randomly jittered
         starts = (linspace(1, EEG.xmax * EEG.trials - Arg.secs(2), npk) +...
-                                       [rand(1, npk - 1) .* dur 0]) * EEG.srate;
+                                   [rand(1, npk - 1) .* dur 0]) * EEG.srate;
     end
     
     % add peek positions as events

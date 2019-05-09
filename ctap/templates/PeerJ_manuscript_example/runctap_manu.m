@@ -8,12 +8,13 @@
 % To run this, you need:
 %   * Matlab R2016b or newer
 %   * EEGLAB, latest version,
-%     git clone https://adelorme@bitbucket.org/sccn_eeglab/eeglab.git
+%       git clone https://github.com/sccn/eeglab.git
 %   * CTAP
-
+%       git clone https://github.com/bwrc/ctap.git
+% 
 % Make sure your working directory is the CTAP root i.e. the folder with
 % 'ctap' and 'dependencies'.
-
+% 
 % Also make sure that EEGLAB and CTAP have been added to your Matlab path. 
 % For a script to do this see update_matlab_path_ctap.m at CTAP repository
 % root.

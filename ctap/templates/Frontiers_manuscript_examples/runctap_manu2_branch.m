@@ -10,7 +10,7 @@
 % Install / download:
 %   * Matlab R2016b or newer
 %   * EEGLAB, latest version,
-%       git clone https://adelorme@bitbucket.org/sccn_eeglab/eeglab.git
+%       git clone https://github.com/sccn/eeglab.git
 %   * CTAP,
 %       git clone https://github.com/bwrc/ctap.git
 %   * The 13 files of EEG data in .bdf format from the study 'Auditory Two-
