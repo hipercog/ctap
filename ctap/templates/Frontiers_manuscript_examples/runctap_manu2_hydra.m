@@ -39,7 +39,7 @@ data_dir_in = '/home/ben/Benslab/CTAP/CTAPIIdata/testing';
 % specify the file type of your data
 data_type = '*.bdf';
 % use sbj_filt to select all (or a subset) of available recordings
-sbj_filt = setdiff(1:12, [3 7]);
+sbj_filt = 1;%setdiff(1:12, [3 7]);
 % use ctapID to uniquely name the base folder of the output directory tree
 ctapID = 'sccn-hydra-pipe_test';
 % set the electrode for which to calculate and plot ERPs after preprocessing

@@ -58,7 +58,7 @@ Cfg.eeg.heogChannelNames = {'HEOG1','HEOG2'};
 % Appear in order of usage
 
 
-%% Load
+%% LOAD DATA + CHANLOCS AND REREF
 i = 1; %stepSet 1
 stepSet(i).funH = { @CTAP_load_data,...
                     @CTAP_load_chanlocs,...
@@ -82,7 +82,7 @@ out.tidy_chanlocs.types =...
 out.peek_data.peekevent = {'sa_blink'};
 
 
-%% Filter
+%% FIR FILTER FROM 2Hz -- 30Hz
 i = i+1;  %stepSet 2
 stepSet(i).funH = { @CTAP_fir_filter};
     %,... %makes amplitude hist narrower!
@@ -95,7 +95,7 @@ out.fir_filter = struct(...
     'hicutoff', 30);
 
 
-%% ICA
+%% PERFORM FAST ICA
 i = i+1;  %stepSet 3
 stepSet(i).funH = { @CTAP_run_ica};%,...
                     %@CTAP_peek_data};
@@ -108,7 +108,7 @@ out.run_ica = struct(...
 out.run_ica.channels = {'EEG' 'EOG'};
 
 
-%% IC correction
+%% DETECT AND CORRECT BAD ICs
 i = i+1;  %stepSet 4
 stepSet(i).funH = { @CTAP_detect_bad_comps,... %ADJUST
                     @CTAP_reject_data};%,...
@@ -116,7 +116,7 @@ stepSet(i).funH = { @CTAP_detect_bad_comps,... %ADJUST
 stepSet(i).id = [num2str(i) '_IC_correction'];
 
 
-%% Blink correction
+%% DETECT AND CORRECT BLINKS
 i = i+1;  %stepSet 5
 stepSet(i).funH = { @CTAP_detect_bad_comps,... %detect blink related ICs
                     @CTAP_filter_blink_ica}; %correct ICs using FIR filter
@@ -129,7 +129,7 @@ out.detect_bad_comps = struct(...
     'adjustarg', {'horiz' ''});
 
 
-%% Artifact correction
+%% DETECT AND CORRECT BAD CHANNELS AND SEGMENTS OUTSIDE +-75uV
 i = i+1;  %stepSet 6
 stepSet(i).funH = { @CTAP_detect_bad_channels,... %variance thresholds need adjustment!
                     @CTAP_reject_data,...
@@ -157,13 +157,13 @@ out.detect_bad_segments = struct(...
     'normalEEGAmpLimits', [-75, 75]); %in muV
 
 
-%% Clean ICA
+%% RERUN FAST ICA TO OBTAIN CLEAN ICs
 i = i+1; %stepSet 7
 stepSet(i).funH = { @CTAP_run_ica };
 stepSet(i).id = [num2str(i) '_clean_ICA'];
 
 
-%% PSD and features
+%% CALCULATE PSD AND FEATURES
 i = i+1; %stepSet 8
 stepSet(i).funH = { @CTAP_generate_cseg,...
                     @CTAP_compute_psd,...

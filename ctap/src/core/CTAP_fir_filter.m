@@ -50,11 +50,12 @@ function [EEG, Cfg] = CTAP_fir_filter(EEG, Cfg)
 % Default values as in pop_eegfiltnew()
 Arg.locutoff = [];
 Arg.hicutoff = [];
+
 Arg.filtorder = [];
 Arg.revfilt = 0;
 Arg.plotfreqz = 0;
 Arg.minphase = 0;
-
+Arg.usefftfilt = 0;
 
 % Override defaults with user parameters
 if isfield(Cfg.ctap, 'fir_filter')
@@ -75,9 +76,14 @@ end
 
 
 %% CORE
-[EEG, ~, b] = pop_eegfiltnew(EEG, Arg.locutoff, Arg.hicutoff, Arg.filtorder,...
-                               Arg.revfilt, 0, Arg.plotfreqz, Arg.minphase);
-
+[EEG, ~, b] = pop_eegfiltnew(EEG...
+                            , 'locutoff', Arg.locutoff...
+                            , 'hicutoff', Arg.hicutoff...
+                            , 'filtorder', Arg.filtorder...
+                            , 'revfilt', Arg.revfilt...
+                            , 'plotfreqz', Arg.plotfreqz...
+                            , 'minphase', Arg.minphase...
+                            , 'usefftfilt', Arg.usefftfilt);
 
 
 %% ERROR/REPORT

@@ -50,6 +50,7 @@ function EEG = ctapeeg_add_regular_events(EEG, evLength, evOverlap, evType, vara
 
 %% Parse input arguments and set varargin defaults
 p = inputParser;
+p.KeepUnmatched = true;
 
 p.addRequired('EEG', @isstruct);
 p.addRequired('evLength', @isnumeric);

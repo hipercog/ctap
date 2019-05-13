@@ -80,7 +80,7 @@ end
 
 
 %% FILTER
-if isempty(MC)
+if isempty(MC) || (isstruct(MC) && isempty(fieldnames(MC)))
     error('get_meas_cfg_MC:no_MC', 'No measurement configuration was found')
 end
 % Select measurements to process, matching to contents of Arg.sbj_filt

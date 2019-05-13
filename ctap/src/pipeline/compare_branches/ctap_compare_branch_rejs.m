@@ -36,6 +36,16 @@ function treeRej = ctap_compare_branch_rejs(treeRej, grps, cnds, plvls)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
+%% INIT
+p = inputParser;
+p.addRequired('treeRej', @isstruct)
+p.addRequired('grps', @(x) iscellstr(x) || ischar(x))
+p.addRequired('cnds', @(x) iscellstr(x) || ischar(x))
+p.addRequired('plvls', @iscell)
+
+p.parse(treeRej, grps, cnds, plvls);
+
+
 %% SET UP PIPE NAMING
 lvl = [];
 lvl_nms = {};

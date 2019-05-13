@@ -1,4 +1,4 @@
-function rejtab = ctap_read_rejections(fIn, filt)
+function rejtab = ctap_read_rejections(fIn, varargin)
 % CTAP_READ_REJECTIONS read the contents of 'all_rejections.txt' bad data logs
 % 
 % Description: 
@@ -15,8 +15,11 @@ function rejtab = ctap_read_rejections(fIn, filt)
 % 
 % Inputs:
 %   fIn     string, path to the all_rejections.txt file to parse
+% 
+% Varargin:
 %   filt    cell string array, terms required to be in row names of input
 %                              all_rejections.txt file, e.g. condition or group
+%           default = {''}
 % 
 % Outputs:
 %   rejtab  table, badness read from file
@@ -33,7 +36,14 @@ function rejtab = ctap_read_rejections(fIn, filt)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-if nargin < 2, filt = {''}; end
+%% INIT
+p = inputParser;
+p.addRequired('fIn', @ischar)
+
+p.addParameter('filt', {''}, @iscellstr)
+
+p.parse(fIn, varargin{:});
+Arg = p.Results;
 
 
 %% READ data
@@ -57,8 +67,8 @@ pcix = contains(cols, '_pc');
 rnms = data{1};
 data(1) = [];
 data = horzcat(data{:});
-if ~all(cellfun(@isempty, filt))
-    flti = ~contains(rnms, filt);
+if ~all(cellfun(@isempty, Arg.filt))
+    flti = ~contains(rnms, Arg.filt);
     rnms(flti) = [];
     data(flti, :) = [];
 end

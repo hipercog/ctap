@@ -42,6 +42,7 @@ function [treeRej, rej_files] = ctap_get_rejections(ind, oud, varargin)
 % Please see the file LICENSE for details.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+
 p = inputParser;
 p.addRequired('ind', @ischar)
 p.addRequired('oud', @ischar)

@@ -45,11 +45,10 @@ Arg.csegEvent = 'cseg'; %event type string
 if isfield(Cfg.ctap, 'generate_cseg')
     Arg = joinstruct(Arg, Cfg.ctap.generate_cseg);
 end
+vargs = struct2varargin(Arg);
 
 
 %% Add events
-vargs = rmfield(Arg, {'segmentLength','segmentOverlap','csegEvent','generate_cseg_params'});
-vargs = struct2varargin(vargs);
 EEG = ctapeeg_add_regular_events(EEG,...
                                 Arg.segmentLength,...
                                 Arg.segmentOverlap,...
