@@ -74,7 +74,7 @@ if isfield(Arg, 'type') && ~isempty(Arg.type)
     Arg = rmfield(Arg, 'type');
 end
 
-file.ext = strrep(file.ext, '.', '');
+file.ext = lower(strrep(file.ext, '.', ''));
 EEG = eeg_emptyset();
 res = struct;
 res.file = file;
