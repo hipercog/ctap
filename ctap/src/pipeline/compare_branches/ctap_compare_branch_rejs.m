@@ -94,14 +94,24 @@ end
 
 
 %% BUILD RANK PIPE
-treeRej(end +1).pipename = 'rank_pipes';
-%for each row, find lowest-scoring of four node pipes and copy
+treeRej(end + 1).pipename = 'rank_pipes';
+%for each row, find lowest-scoring of given node pipes, and copy
 for idx = 1:numel(treeRej(lvl(1)).pipe)
+    rowname = treeRej(lvl(1)).pipe(idx).casename;
+%     rowname(regexp(treeRej(1).name{s}, ('_set[0-9]')):end) = [];
     clear testvec
-    for lix = lvl
-        if isfield(treeRej(lix).pipe(idx), 'total_badpc')...
-                   && ~isempty([treeRej(lix).pipe(idx).total_badpc])
-            testvec(lvl == lix) = [treeRej(lix).pipe(idx).total_badpc];
+    for ldx = lvl
+        rni = contains({treeRej(ldx).pipe.casename}, rowname);
+        if ~any(rni)
+            continue; 
+        elseif sum(rni) > 2
+            error('ctap_compare_branch_rejs:xs_rows', ...
+                'Too many matching rows for %s in pipe %s - clean old outputs?', ...
+                rowname, treeRej(ldx).pipename)
+        end
+        if isfield(treeRej(ldx).pipe(rni), 'total_badpc') &&...
+                   ~isempty([treeRej(ldx).pipe(rni).total_badpc])
+            testvec(lvl == ldx) = [treeRej(ldx).pipe(rni).total_badpc];
         end
     end
     if exist('testvec', 'var') == 1
