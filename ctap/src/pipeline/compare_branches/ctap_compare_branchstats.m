@@ -147,7 +147,9 @@ for s = 1:numel(treeStats(1).pipe)
         MAT = reshape(cell2mat(MATS), nrow, nvar, numel(MATS));
         [treeStats(nups(end)).pipe(rni).stat, I] = max(MAT, [], 3);
         [~, sortn] = sort(hist(I(:), numel(unique(I))), 'descend');
-        bestn = mode(I, [1 2]);
+%TODO - NANSUMEAN(NANSUMEAN(...)) ONLY WORKS FOR 2D DATA! UPDATE TO R2018b+
+%         bestn = mode(I, [1 2]);
+        bestn = mode(mode(I));
         treeStats(nups(end)).pipe(rni).best = lvl_nms{bestn};
         treeStats(nups(end)).pipe(rni).bestn = bestn;
         treeStats(nups(end)).pipe(rni).best2wrst = sortn;
