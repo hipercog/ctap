@@ -125,7 +125,9 @@ for s = 1:numel(treeStats(1).pipe)
                                     treeStats(1).pipe(s).stat...
                                     , treeStats(lvl(ldx)).pipe(rni).stat);
         treeStats(nups(ldx)).pipe(rni).stat = MATS{ldx};
-        stmn(ldx) = mean((MATS{ldx}{:,:} + 1) * 50, 'all', 'omitnan') - 50;
+%TODO - NANSUMEAN(NANSUMEAN(...)) ONLY WORKS FOR 2D DATA! UPDATE TO R2018b+
+%         stmn(ldx) = mean((MATS{ldx}{:,:} + 1) * 50, 'all', 'omitnan') - 50;
+        stmn(ldx) = nansumean(nansumean((MATS{ldx}{:,:} + 1) * 50)) - 50;
         treeStats(nups(ldx)).pipe(rni).mean_stat = stmn(ldx);
 
 %         if plotnsave

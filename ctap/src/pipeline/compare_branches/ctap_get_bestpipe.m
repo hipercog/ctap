@@ -24,7 +24,7 @@ function bestpipe = ctap_get_bestpipe(treeStats, treeRej, oud, plvls, varargin)
 %   anew            logical, if true then perform search from scratch and
 %                       ignore existing saved results files, 
 %                       default = false
-%   plot            logical, plot histograms of competing pipes ... 
+% TODO - ADD VARARG plot logical, plot histograms of competing pipes ... 
 %                       default = false
 %
 % Outputs:
