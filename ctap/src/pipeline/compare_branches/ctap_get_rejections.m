@@ -46,6 +46,7 @@ function [treeRej, rej_files] = ctap_get_rejections(ind, oud, varargin)
 p = inputParser;
 p.addRequired('ind', @ischar)
 p.addRequired('oud', @ischar)
+
 p.addParameter('filt', {''}, @iscellstr)
 p.addParameter('anew', false, @islogical)
 p.addParameter('post_pipe_part', '', @ischar)
@@ -79,7 +80,7 @@ else
         for stix = 1:numel(treeRej(tidx).name)
             T = ctap_read_rejections(...
                 fullfile(treeRej(tidx).path, treeRej(tidx).name{stix})...
-                , Arg.filt);
+                , 'filt', Arg.filt);
             treeRej(tidx).pipe = table2struct(T);
             [treeRej(tidx).pipe.casename] = T.Properties.RowNames{:};
         end
