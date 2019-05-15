@@ -92,7 +92,10 @@ else
         [rejrank, rjix] = sort(treeRej(end).pipe(idx).badness);
         [srank, stix] = sort(treeStats(end).pipe(idx).mean_stats, 'descend');
         for p = 1:numel(plvls)
-            piperank(p) = find(rjix == p) + find(stix == p);
+            tmp = find(rjix == p) + find(stix == p);
+            if ~isempty(tmp)
+                piperank(p) = tmp;
+            end
         end
         bestix = find(piperank == min(piperank));
         if numel(bestix) > 1
