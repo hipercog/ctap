@@ -91,7 +91,7 @@ else
         
         [rejrank, rjix] = sort(treeRej(end).pipe(idx).badness);
         [srank, stix] = sort(treeStats(end).pipe(idx).mean_stats, 'descend');
-        for p = 1:numel(plvls)
+        for p = 1:numel(lvl_nms)
             tmp = find(rjix == p) + find(stix == p);
             if ~isempty(tmp)
                 piperank(p) = tmp;
@@ -101,7 +101,8 @@ else
         if numel(bestix) > 1
             [~, bestix] = min(rejrank(bestix));
         end
-        bestpipe(idx).bestpipe = bestix;
+        bestpipe(idx).bestpipe = lvl_nms{bestix};
+        bestpipe(idx).bestpipeix = bestix;
 
         if any(ismember(rejn, stan))
             bestpipe(idx).bestn = rejn(ismember(rejn, stan));
