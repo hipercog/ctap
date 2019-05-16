@@ -110,12 +110,12 @@ else
             bestpipe(idx).bestn = stan;
         end
 % TODO - THIS IS RESTRICTED TO FIRST TWO LEVELS OF BADNESS: EXTEND!?
-        bestpipe(idx).badness1 = treeRej(end).pipe(idx).badness(bestix);
-        bestpipe(idx).badness2 =...
-                       treeRej(end).pipe(idx).badness(bestpipe(idx).bestn);
-        bestpipe(idx).stat1 = treeStats(end).pipe(idx).mean_stats(bestix);
-        bestpipe(idx).stat2 =...
-                  treeStats(end).pipe(idx).mean_stats(bestpipe(idx).bestn);
+%         bestpipe(idx).badness1 = treeRej(end).pipe(idx).badness(bestix);
+%         bestpipe(idx).badness2 =...
+%                        treeRej(end).pipe(idx).badness(bestpipe(idx).bestn);
+%         bestpipe(idx).stat1 = treeStats(end).pipe(idx).mean_stats(bestix);
+%         bestpipe(idx).stat2 =...
+%                   treeStats(end).pipe(idx).mean_stats(bestpipe(idx).bestn);
     end
     save(fullfile(oud, 'best_pipe.mat'), 'bestpipe')
 end
