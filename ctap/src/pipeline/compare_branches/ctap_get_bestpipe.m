@@ -1,4 +1,5 @@
-function bestpipe = ctap_get_bestpipe(treeStats, treeRej, oud, plvls, varargin)
+function [bestpipe, bestpipeTab] =...
+                ctap_get_bestpipe(treeStats, treeRej, oud, plvls, varargin)
 %CTAP_GET_BESTPIPE combines stats and rejections information to judge the
 %                   best performing pipe from a set of competing branches
 % 
@@ -10,7 +11,7 @@ function bestpipe = ctap_get_bestpipe(treeStats, treeRej, oud, plvls, varargin)
 %               b) minimise removal of data by artefact-rejection routines
 % 
 % Syntax:
-%       bestpipe = ctap_get_bestpipe(treeStats, treeRej, oud, plvls, ...)
+%       [bestpipe, bestpipeTab] = ctap_get_bestpipe(treeStats, treeRej, oud, plvls, ...)
 % 
 % Input:
 %   treeStats   struct, output of ctap_compare_branchstats()
@@ -28,8 +29,8 @@ function bestpipe = ctap_get_bestpipe(treeStats, treeRej, oud, plvls, varargin)
 %                       default = false
 %
 % Outputs:
-%   treeRej     struct, 
-%   rej_files   struct, output of subdir(ind)
+%   bestpipe    struct,
+%   bestpipeTab table, 
 %
 % See also:
 %   ctap_compare_branch_rejs(), ctap_compare_branchstats()
@@ -74,7 +75,6 @@ else
     end
 
     bestpipe = struct;
-%     thr = 20;
     for idx = 1:numel(treeRej(end).pipe)
         if treeRej(end).pipe(idx).subj ~= treeStats(end).pipe(idx).subj
             error('ctap_get_bestpipe:rej_stats_differ'...
@@ -84,10 +84,14 @@ else
             bestpipe(idx).group = treeStats(end).pipe(idx).group;
             bestpipe(idx).proto = treeStats(end).pipe(idx).proto;
         end
+        rej = treeRej(end).pipe(idx).best;
+        sta = treeStats(end).pipe(idx).best;
+        bestpipe(idx).rejbest = rej;
+        bestpipe(idx).statbst = sta;
         rejn = treeRej(end).pipe(idx).bestn;
         stan = treeStats(end).pipe(idx).bestn;
-        bestpipe(idx).rejbest = rejn;
-        bestpipe(idx).statbst = stan;
+        bestpipe(idx).rejbestn = rejn;
+        bestpipe(idx).statbstn = stan;
         
         [rejrank, rjix] = sort(treeRej(end).pipe(idx).badness);
         [srank, stix] = sort(treeStats(end).pipe(idx).mean_stats, 'descend');
@@ -98,15 +102,16 @@ else
             end
         end
         bestix = find(piperank == min(piperank));
-        if numel(bestix) > 1
+        if numel(bestix) > 1 && all(ismember(bestix, 1:numel(rejrank)))
             [~, bestix] = min(rejrank(bestix));
         end
-        bestpipe(idx).bestpipe = lvl_nms{bestix};
         bestpipe(idx).bestpipeix = bestix;
 
         if any(ismember(rejn, stan))
             bestpipe(idx).bestn = rejn(ismember(rejn, stan));
+            bestpipe(idx).best = rej;
         else
+            bestpipe(idx).best = sta;
             bestpipe(idx).bestn = stan;
         end
 % TODO - THIS IS RESTRICTED TO FIRST TWO LEVELS OF BADNESS: EXTEND!?
@@ -117,5 +122,6 @@ else
 %         bestpipe(idx).stat2 =...
 %                   treeStats(end).pipe(idx).mean_stats(bestpipe(idx).bestn);
     end
-    save(fullfile(oud, 'best_pipe.mat'), 'bestpipe')
+    bestpipeTab = struct2table(bestpipe);
+    save(fullfile(oud, 'best_pipe.mat'), 'bestpipe', 'bestpipeTab')
 end

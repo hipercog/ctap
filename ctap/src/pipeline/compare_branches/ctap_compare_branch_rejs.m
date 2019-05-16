@@ -98,7 +98,6 @@ treeRej(end + 1).pipename = 'rank_pipes';
 %for each row, find lowest-scoring of given node pipes, and copy
 for idx = 1:numel(treeRej(lvl(1)).pipe)
     rowname = treeRej(lvl(1)).pipe(idx).casename;
-%     rowname(regexp(treeRej(1).name{s}, ('_set[0-9]')):end) = [];
     clear testvec
     for ldx = lvl
         rni = contains({treeRej(ldx).pipe.casename}, rowname);
@@ -116,8 +115,10 @@ for idx = 1:numel(treeRej(lvl(1)).pipe)
     end
     if exist('testvec', 'var') == 1
         low_lvl = lvl(testvec ==  min(testvec));
+        bestn = find(ismember(lvl, low_lvl));
         treeRej(end).pipe(idx).subj = treeRej(lvl(1)).pipe(idx).subj;
         treeRej(end).pipe(idx).badness = testvec;
-        treeRej(end).pipe(idx).bestn = find(ismember(lvl, low_lvl));
+        treeRej(end).pipe(idx).bestn = bestn;
+        treeRej(end).pipe(idx).best = lvl_nms{bestn};
     end
 end
