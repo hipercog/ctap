@@ -102,6 +102,7 @@ for idx = 1:numel(treeRej(lvl(1)).pipe)
     for ldx = lvl
         rni = contains({treeRej(ldx).pipe.casename}, rowname);
         if ~any(rni)
+            warning('Subject %s not found in level %d: skipping', rowname, ldx)
             continue; 
         elseif sum(rni) > 2
             error('ctap_compare_branch_rejs:xs_rows', ...
@@ -117,6 +118,8 @@ for idx = 1:numel(treeRej(lvl(1)).pipe)
         low_lvl = lvl(testvec ==  min(testvec));
         bestn = find(ismember(lvl, low_lvl));
         treeRej(end).pipe(idx).subj = treeRej(lvl(1)).pipe(idx).subj;
+        treeRej(end).pipe(idx).group = treeRej(lvl(1)).pipe(idx).group;
+        treeRej(end).pipe(idx).proto = treeRej(lvl(1)).pipe(idx).proto;
         treeRej(end).pipe(idx).badness = testvec;
         treeRej(end).pipe(idx).bestn = bestn;
         treeRej(end).pipe(idx).best = lvl_nms{bestn};

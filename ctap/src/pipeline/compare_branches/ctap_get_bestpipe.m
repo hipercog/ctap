@@ -66,24 +66,27 @@ if ~Arg.anew && exist(fullfile(oud, 'best_pipe.mat'), 'file') == 2
     bestpipe = tmp.bestpipe;
 else
     %% BUILD IT
-    % SET UP PIPE NAMES
+    bestpipe = struct;
+    %Set up pipe names
     plvlcombo = allcomb(plvls{:});
     pn = size(plvlcombo);
     lvl_nms = cell(1, pn(1));
     for pidx = 1:pn(1)
         lvl_nms{pidx} = ['p1_p' [plvlcombo{pidx, :}]];
     end
-
-    bestpipe = struct;
-    for idx = 1:numel(treeRej(end).pipe)
-        if treeRej(end).pipe(idx).subj ~= treeStats(end).pipe(idx).subj
-            error('ctap_get_bestpipe:rej_stats_differ'...
-                , 'Something has gone terribly wrong!')
-        else
-            bestpipe(idx).subj = treeStats(end).pipe(idx).subj;
-            bestpipe(idx).group = treeStats(end).pipe(idx).group;
-            bestpipe(idx).proto = treeStats(end).pipe(idx).proto;
-        end
+    %Find where rejections matches stats
+    r_in_s = ismember({treeRej(end).pipe.subj}', {treeStats(end).pipe.subj}');
+    s_in_r = ismember({treeStats(end).pipe.subj}', {treeRej(end).pipe.subj}');
+    %Step through all subjects one at a time
+    for idx = find(r_in_s)
+%         if treeRej(end).pipe(idx).subj ~= treeStats(end).pipe(idx).subj
+%             error('ctap_get_bestpipe:rej_stats_differ'...
+%                 , 'Something has gone terribly wrong!')
+%         else
+        bestpipe(idx).subj = treeStats(end).pipe(idx).subj;
+        bestpipe(idx).group = treeStats(end).pipe(idx).group;
+        bestpipe(idx).proto = treeStats(end).pipe(idx).proto;
+%         end
         rej = treeRej(end).pipe(idx).best;
         sta = treeStats(end).pipe(idx).best;
         bestpipe(idx).rejbest = rej;
@@ -121,6 +124,46 @@ else
 %         bestpipe(idx).stat1 = treeStats(end).pipe(idx).mean_stats(bestix);
 %         bestpipe(idx).stat2 =...
 %                   treeStats(end).pipe(idx).mean_stats(bestpipe(idx).bestn);
+    end
+    clear idx
+    if any(~r_in_s)
+        for idx = find(~r_in_s)
+            bestpipe(idx).subj = treeRej(end).pipe(idx).subj;
+            bestpipe(idx).group = treeRej(end).pipe(idx).group;
+            bestpipe(idx).proto = treeRej(end).pipe(idx).proto;
+            
+            bestpipe(idx).rejbest = treeRej(end).pipe(idx).best;
+            bestpipe(idx).rejbestn = treeRej(end).pipe(idx).bestn;
+            
+            bestpipe(idx).statbst = 'Stats not found';
+            bestpipe(idx).statbstn = NaN;
+
+            [rejrank, rjix] = sort(treeRej(end).pipe(idx).badness);
+            [~, bestpipe(idx).bestpipeix] = min(rejrank);
+
+            bestpipe(idx).bestn = bestpipe(idx).rejbestn;
+            bestpipe(idx).best = bestpipe(idx).rejbest;
+
+        end
+    end
+    if any(~s_in_r)
+        for idx = find(~s_in_r)
+            bestpipe(idx).subj = treeStats(end).pipe(idx).subj;
+            bestpipe(idx).group = treeStats(end).pipe(idx).group;
+            bestpipe(idx).proto = treeStats(end).pipe(idx).proto;
+
+            bestpipe(idx).rejbest = 'Rej not found';
+            bestpipe(idx).rejbestn = NaN;
+            
+            bestpipe(idx).statbst = treeStats(end).pipe(idx).best;
+            bestpipe(idx).statbstn = treeStats(end).pipe(idx).bestn;
+
+            [srank, stix] = sort(treeStats(end).pipe(idx).mean_stats, 'descend');
+            [~, bestpipe(idx).bestpipeix] = min(srank);
+
+            bestpipe(idx).best = bestpipe(idx).statbst;
+            bestpipe(idx).bestn = bestpipe(idx).statbstn;
+        end
     end
     bestpipeTab = struct2table(bestpipe);
     save(fullfile(oud, 'best_pipe.mat'), 'bestpipe', 'bestpipeTab')

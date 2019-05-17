@@ -103,6 +103,7 @@ for s = 1:numel(treeStats(1).pipe)
     for ldx = 1:numel(lvl)
         rni = contains(treeStats(lvl(ldx)).name, rowname);
         if ~any(rni)
+            warning('Subject %s not found in level %d: skipping', rowname, lvl(ldx))
             continue; 
         elseif sum(rni) > 2
             error('ctap_compare_branchstats:xs_stats', ...
@@ -137,7 +138,7 @@ for s = 1:numel(treeStats(1).pipe)
 %                 , cndname, rowname(1:5), lvl_nms{ldx})))
 %         end
     end
-    % make entry holding best pipe info
+    %% make entry holding best pipe info
     if any(rni)
         treeStats(nups(end)).name{rni} = rowname;
         treeStats(nups(end)).pipe(rni).subj = rowname(sbjIdx);
