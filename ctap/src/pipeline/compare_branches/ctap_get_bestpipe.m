@@ -75,8 +75,10 @@ else
         lvl_nms{pidx} = ['p1_p' [plvlcombo{pidx, :}]];
     end
     %Find where rejections matches stats
-    r_in_s = ismember({treeRej(end).pipe.subj}', {treeStats(end).pipe.subj}');
-    s_in_r = ismember({treeStats(end).pipe.subj}', {treeRej(end).pipe.subj}');
+%     r_in_s = ismember({treeRej(end).pipe.subj}', {treeStats(end).pipe.subj}');
+%     s_in_r = ismember({treeStats(end).pipe.subj}', {treeRej(end).pipe.subj}');
+    [r_in_s, s_in_r] = sbf_match_rs(treeRej(end).pipe, treeStats(end).pipe);
+    
     %Step through all subjects one at a time
     for idx = find(r_in_s)
 %         if treeRej(end).pipe(idx).subj ~= treeStats(end).pipe(idx).subj
@@ -167,4 +169,23 @@ else
     end
     bestpipeTab = struct2table(bestpipe);
     save(fullfile(oud, 'best_pipe.mat'), 'bestpipe', 'bestpipeTab')
+end
+
+end
+
+function [ixA, ixB] = sbf_match_rs(strA, strB)
+
+    ixA = ones(numel(strA), 1);
+    ixB = ones(numel(strB), 1);
+    
+    for i = 1:numel(strA)
+        ixB = ixB & ismember(strA(i).subj, {strB.subj}')...
+                  & ismember(strA(i).group, {strB.group}')...
+                  & ismember(strA(i).proto, {strB.proto}');
+    end
+    for i = 1:numel(strB)
+        ixA = ixA & ismember(strB(i).subj, {strA.subj}')...
+                  & ismember(strB(i).group, {strA.group}')...
+                  & ismember(strB(i).proto, {strA.proto}');
+    end
 end

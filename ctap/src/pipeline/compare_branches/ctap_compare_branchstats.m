@@ -103,7 +103,7 @@ for s = 1:numel(treeStats(1).pipe)
     for ldx = 1:numel(lvl)
         rni = contains(treeStats(lvl(ldx)).name, rowname);
         if ~any(rni)
-            warning('Subject %s not found in level %d: skipping', rowname, lvl(ldx))
+            warning('Subj:%s not found in %s: skipping', rowname, lvl_nms{ldx})
             continue; 
         elseif sum(rni) > 2
             error('ctap_compare_branchstats:xs_stats', ...

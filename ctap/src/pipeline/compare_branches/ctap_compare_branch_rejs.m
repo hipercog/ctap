@@ -75,10 +75,10 @@ for ix = 1:numel(lvl)
     vars = fieldnames(treeRej(root).pipe);
     rootpc = vars{contains(vars, '_pc')};
     for s = {treeRej(lix).pipe.subj}
+        for p = cnds
 %TODO: INDEXING HERE BY SUBJ-FIELD AND PROTO-FIELD IS SUITABLE FOR THE
 %NEURO-ENHANCE PROJECT, BUT NOT NECESSARILY GENERAL. 
 %FIND A WAY TO INCLUDE grps PARAMETER IN THE INDEXING...
-        for p = cnds
             sidx = ismember({treeRej(lix).pipe.subj}, s) &...
                    ismember({treeRej(lix).pipe.proto}, p);
             rsdx = ismember({treeRej(root).pipe.subj}, s) &...
@@ -102,7 +102,8 @@ for idx = 1:numel(treeRej(lvl(1)).pipe)
     for ldx = lvl
         rni = contains({treeRej(ldx).pipe.casename}, rowname);
         if ~any(rni)
-            warning('Subject %s not found in level %d: skipping', rowname, ldx)
+            warning('Subject %s not found in %s: skipping'...
+                                            , rowname, lvl_nms{lvl == ldx})
             continue; 
         elseif sum(rni) > 2
             error('ctap_compare_branch_rejs:xs_rows', ...
