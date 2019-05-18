@@ -184,7 +184,16 @@ function [ixB, findB] = sbf_match_rs(strA, strB)
         idx = ( ismember({strB.subj}', strA(i).subj)...
               & ismember({strB.group}', strA(i).group)...
               & ismember({strB.proto}', strA(i).proto) );
-        findB(i) = find(idx);
+        if any(idx)
+            if sum(idx) == 1
+                findB(i) = find(idx);
+            else
+                tmp = find(idx);
+                findB(i) = tmp(1);
+                warning('sbf_match_rs:multi', 'Multiple matches for %s-%s-%s'...
+                    , strA(i).subj, strA(i).group, strA(i).proto)
+            end
+        end
         ixB = ixB | idx;
     end
     findB(isnan(findB)) = [];
