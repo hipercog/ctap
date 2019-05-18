@@ -75,31 +75,31 @@ else
         lvl_nms{pidx} = ['p1_p' [plvlcombo{pidx, :}]];
     end
     %Find where rejections matches stats
-%     r_in_s = ismember({treeRej(end).pipe.subj}', {treeStats(end).pipe.subj}');
-%     s_in_r = ismember({treeStats(end).pipe.subj}', {treeRej(end).pipe.subj}');
-    [r_in_s, s_in_r] = sbf_match_rs(treeRej(end).pipe, treeStats(end).pipe);
+    [r_in_s, fRinSd] = sbf_match_rs(treeRej(end).pipe, treeStats(end).pipe);
+    [s_in_r, fSinRd] = sbf_match_rs(treeStats(end).pipe, treeRej(end).pipe);
     
     %Step through all subjects one at a time
-    for idx = find(r_in_s)
+    for idx = 1:numel(fRinSd)
 %         if treeRej(end).pipe(idx).subj ~= treeStats(end).pipe(idx).subj
 %             error('ctap_get_bestpipe:rej_stats_differ'...
 %                 , 'Something has gone terribly wrong!')
 %         else
-        bestpipe(idx).subj = treeStats(end).pipe(idx).subj;
-        bestpipe(idx).group = treeStats(end).pipe(idx).group;
-        bestpipe(idx).proto = treeStats(end).pipe(idx).proto;
+        bestpipe(idx).subj = treeStats(end).pipe(fSinRd(idx)).subj;
+        bestpipe(idx).group = treeStats(end).pipe(fSinRd(idx)).group;
+        bestpipe(idx).proto = treeStats(end).pipe(fSinRd(idx)).proto;
 %         end
         rej = treeRej(end).pipe(idx).best;
-        sta = treeStats(end).pipe(idx).best;
+        sta = treeStats(end).pipe(fSinRd(idx)).best;
         bestpipe(idx).rejbest = rej;
         bestpipe(idx).statbst = sta;
         rejn = treeRej(end).pipe(idx).bestn;
-        stan = treeStats(end).pipe(idx).bestn;
+        stan = treeStats(end).pipe(fSinRd(idx)).bestn;
         bestpipe(idx).rejbestn = rejn;
         bestpipe(idx).statbstn = stan;
         
         [rejrank, rjix] = sort(treeRej(end).pipe(idx).badness);
-        [srank, stix] = sort(treeStats(end).pipe(idx).mean_stats, 'descend');
+        [srank, stix] = sort(treeStats(end).pipe(fSinRd(idx)).mean_stats...
+                                                                , 'descend');
         for p = 1:numel(lvl_nms)
             tmp = find(rjix == p) + find(stix == p);
             if ~isempty(tmp)
@@ -129,7 +129,8 @@ else
     end
     clear idx
     if any(~r_in_s)
-        for idx = find(~r_in_s)
+        fRinRd = find(~r_in_s);
+        for idx = 1:numel(fRinRd)
             bestpipe(idx).subj = treeRej(end).pipe(idx).subj;
             bestpipe(idx).group = treeRej(end).pipe(idx).group;
             bestpipe(idx).proto = treeRej(end).pipe(idx).proto;
@@ -149,7 +150,8 @@ else
         end
     end
     if any(~s_in_r)
-        for idx = find(~s_in_r)
+        fSinSd = find(~s_in_r);
+        for idx = 1:numel(fSinSd)
             bestpipe(idx).subj = treeStats(end).pipe(idx).subj;
             bestpipe(idx).group = treeStats(end).pipe(idx).group;
             bestpipe(idx).proto = treeStats(end).pipe(idx).proto;
@@ -173,19 +175,17 @@ end
 
 end
 
-function [ixA, ixB] = sbf_match_rs(strA, strB)
+function [ixB, findB] = sbf_match_rs(strA, strB)
 
-    ixA = ones(numel(strA), 1);
-    ixB = ones(numel(strB), 1);
+    ixB = zeros(numel(strB), 1);
+    findB = NaN(numel(strB), 1);
     
     for i = 1:numel(strA)
-        ixB = ixB & ismember(strA(i).subj, {strB.subj}')...
-                  & ismember(strA(i).group, {strB.group}')...
-                  & ismember(strA(i).proto, {strB.proto}');
+        idx = ( ismember({strB.subj}', strA(i).subj)...
+              & ismember({strB.group}', strA(i).group)...
+              & ismember({strB.proto}', strA(i).proto) );
+        findB(i) = find(idx);
+        ixB = ixB | idx;
     end
-    for i = 1:numel(strB)
-        ixA = ixA & ismember(strB(i).subj, {strA.subj}')...
-                  & ismember(strB(i).group, {strA.group}')...
-                  & ismember(strB(i).proto, {strA.proto}');
-    end
+    findB(isnan(findB)) = [];
 end
