@@ -76,29 +76,28 @@ else
     end
     %Find where rejections matches stats
     [r_in_s, fRinSd] = sbf_match_rs(treeRej(end).pipe, treeStats(end).pipe);
-    [s_in_r, fSinRd] = sbf_match_rs(treeStats(end).pipe, treeRej(end).pipe);
+    [s_in_r, ~] = sbf_match_rs(treeStats(end).pipe, treeRej(end).pipe);
     
     %Step through all subjects one at a time
     for idx = 1:numel(fRinSd)
-%         if treeRej(end).pipe(idx).subj ~= treeStats(end).pipe(idx).subj
-%             error('ctap_get_bestpipe:rej_stats_differ'...
-%                 , 'Something has gone terribly wrong!')
-%         else
-        bestpipe(idx).subj = treeStats(end).pipe(fSinRd(idx)).subj;
-        bestpipe(idx).group = treeStats(end).pipe(fSinRd(idx)).group;
-        bestpipe(idx).proto = treeStats(end).pipe(fSinRd(idx)).proto;
-%         end
+        if treeRej(end).pipe(idx).subj ~= treeStats(end).pipe(fRinSd(idx)).subj
+            error('ctap_get_bestpipe:rej_stats_differ'...
+                , 'Something has gone terribly wrong!')
+        end
+        bestpipe(idx).subj = treeStats(end).pipe(fRinSd(idx)).subj;
+        bestpipe(idx).group = treeStats(end).pipe(fRinSd(idx)).group;
+        bestpipe(idx).proto = treeStats(end).pipe(fRinSd(idx)).proto;
         rej = treeRej(end).pipe(idx).best;
-        sta = treeStats(end).pipe(fSinRd(idx)).best;
+        sta = treeStats(end).pipe(fRinSd(idx)).best;
         bestpipe(idx).rejbest = rej;
         bestpipe(idx).statbst = sta;
         rejn = treeRej(end).pipe(idx).bestn;
-        stan = treeStats(end).pipe(fSinRd(idx)).bestn;
+        stan = treeStats(end).pipe(fRinSd(idx)).bestn;
         bestpipe(idx).rejbestn = rejn;
         bestpipe(idx).statbstn = stan;
         
         [rejrank, rjix] = sort(treeRej(end).pipe(idx).badness);
-        [srank, stix] = sort(treeStats(end).pipe(fSinRd(idx)).mean_stats...
+        [srank, stix] = sort(treeStats(end).pipe(fRinSd(idx)).mean_stats...
                                                                 , 'descend');
         for p = 1:numel(lvl_nms)
             tmp = find(rjix == p) + find(stix == p);
