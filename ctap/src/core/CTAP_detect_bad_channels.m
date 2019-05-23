@@ -85,9 +85,34 @@ end
 
 
 %% CORE
-[EEG, params, result] = ctapeeg_detect_bad_channels(EEG, Arg);
+if strcmpi(Arg.method, 'given')
+    if isfield(Arg, 'badChanCsv')
+        gch = readtable(Arg.badChanCsv, 'delimiter', ',', 'ReadRowNames', 1);
+    else
+        error('CTAP_detect_bad_channels:insufficient_parameters'...
+            , 'You must pass a valid CSV file of bad channels to this method')
+    end
+    gch = strsplit(gch{cellfun(@(x) contains(Cfg.measurement.subject, x)...
+                                        , gch.Properties.RowNames), :}{:});
+    % First check if all exist as labels in EEG.chanlocs
+    idx = ismember(gch, {EEG.chanlocs(chidx).labels});
+    if any(idx)
+        result.chans = gch(idx);
+    elseif ~any(isnan(str2double(gch))) && any(ismember(str2double(gch), chidx))
+        %all are numbers - treat as indices
+        gch = str2double(gch);
+        result.chans = {EEG.chanlocs(gch(ismember(gch, chidx))).labels};
+    else
+        error('CTAP_detect_bad_channels:bad_chan_file_is_bad'...
+            , 'Given bad channels do not index any existing channels!')
+    end
+    result.method_data = 'user_given_bad_channels';
+    params = Arg;
+else
+    [EEG, params, result] = ctapeeg_detect_bad_channels(EEG, Arg);
 
-Arg = joinstruct(Arg, params);
+    Arg = joinstruct(Arg, params);
+end
 
 
 %% PARSE RESULT

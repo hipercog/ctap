@@ -131,7 +131,7 @@ switch file.ext
             , 'dataformat', df(1, strcmp(df(2, :), file.ext)), tmp{:});
         
     case 'raw'
-        EEG = pop_readegi(fullfile(file.path, file.name), [], [], 'auto');
+        EEG = pop_readegi(fullfile(file.path, file.name), [], [], '');
         
 end
 
