@@ -69,7 +69,11 @@ end
             case 1
                 sig = EEG.data(chIndArr,:);
             case 2
-                sig = EEG.data(chIndArr(1),:)-EEG.data(chIndArr(2),:);
+                if all(EEG.data(chIndArr(1),:) == EEG.data(chIndArr(2),:))
+                    sig = EEG.data(chIndArr(1),:);
+                else
+                    sig = EEG.data(chIndArr(1),:) - EEG.data(chIndArr(2),:);
+                end
             otherwise
                 error('eeglab_extract_eog:tooManyChannels',...
                     'There are too many channels specified. Check inputs.');
