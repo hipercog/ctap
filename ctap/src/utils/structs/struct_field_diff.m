@@ -45,13 +45,12 @@ end
 
 sOut = struct();
 diff_size = 0;
-s1mem = whos('s1');
-s2mem = whos('s2');
-if s1mem.bytes == s2mem.bytes
-    return;
-end
+% s1mem = whos('s1');
+% s2mem = whos('s2');
+% if s1mem.bytes == s2mem.bytes
+%     return;
+% end
 if isstruct(s1) && isstruct(s2)
-    warning('off', 'all')
     sOut = s2;
     f1 = fieldnames(s1);
     f2 = fieldnames(s2);
@@ -62,6 +61,7 @@ if isstruct(s1) && isstruct(s2)
     end
     fcommon = intersect(f1,f2);
     for k = 1:length(fcommon)
+%         for i = 1:length(s1)
         fk = fcommon{k};
         sOut = rmfield(sOut, fk);
         [tmpOut, dfsz] = struct_field_diff(...
@@ -71,7 +71,6 @@ if isstruct(s1) && isstruct(s2)
         end
         diff_size = diff_size + dfsz;
     end
-    warning('on', 'all')
 elseif isstruct(s1)
     fprintf('struct_field_diff::struct %s was replaced by non-struct %s'...
         , s1str, s2str)
