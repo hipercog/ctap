@@ -17,6 +17,7 @@ function Cfg = get_meas_cfg_MC(Cfg, srcfile, varargin)
 %   sbj_filt    cell | vector | empty, some index of subjects to choose,
 %               default = 'all' (a keyword to return all available)
 %   eeg_ext     char, file-type of the EEG data if using directory as 'srcfile'
+%   fname_filt  char, string to require in the filenames to be selected
 %
 % Outputs:
 %   Cfg         struct, Cfg struct is updated by a valid Measurement Config
@@ -36,11 +37,12 @@ function Cfg = get_meas_cfg_MC(Cfg, srcfile, varargin)
 p = inputParser;
 p.KeepUnmatched = true;
 
-p.addRequired('Cfg', @isstruct);
-p.addRequired('srcfile', @ischar);
+p.addRequired('Cfg', @isstruct)
+p.addRequired('srcfile', @ischar)
 
-p.addParameter('sbj_filt', 'all', @(x) iscell(x) || isvector(x) || isempty(x));
-p.addParameter('eeg_ext', '', @ischar);
+p.addParameter('sbj_filt', 'all', @(x) iscell(x) || isvector(x) || isempty(x))
+p.addParameter('eeg_ext', '', @ischar)
+p.addParameter('fname_filt', '', @ischar)
 
 p.parse(Cfg, srcfile, varargin{:});
 Arg = p.Results;
@@ -52,7 +54,7 @@ Arg = p.Results;
 % first create measurement structure from given dir and file extension
 switch ext
     case ''
-        f_arr = path2filearr(srcfile, Arg.eeg_ext);
+        f_arr = path2filearr(srcfile, Arg.eeg_ext, Arg.fname_filt, p.Unmatched);
         if isempty(Arg.eeg_ext)%Get only EEG files of one type in file array
             [~, ~, es] = cellfun(@fileparts, f_arr, 'Un', 0);
             rejfs = ~ismember(strrep(es, '.', ''), ctap_supported_eeg_types);
@@ -71,7 +73,9 @@ switch ext
         MC = read_measinfo_spreadsheet(srcfile);
     otherwise
         if strcmp(name, '*') && ismember(ext, ctap_supported_eeg_types)
-            MC = filearr2measconf(path2filearr(pathstr, ext), p.Unmatched);
+            MC = filearr2measconf(...
+                path2filearr(pathstr, ext, fname_filt, p.Unmatched)...
+                , p.Unmatched);
         else
             error('get_meas_cfg_MC:fileTypeError',...
                'The input file type ''%s'' is not supported.', ext)
