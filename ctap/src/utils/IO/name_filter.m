@@ -17,14 +17,14 @@ function [fltnames, nameidx] = name_filter(rawnames, subj_filt)
 % Input:
 %   rawnames    struct, array with .name field; as return-value of dir()
 %   subj_filt   cell, cell array of string names (or name parts) of files
-%                  AND/OR vector of file indices
+%                  AND/OR row vector of file indices
 %                  OR vector of numbers occurring in file names
 
 %--------------------------------------------------------------------------
 % Initialise inputs
 p = inputParser;
 p.addRequired('rawnames', @isstruct);
-p.addRequired('subj_filt', @(x) iscell(x) || isnumeric(x) || ischar(x));
+p.addRequired('subj_filt', @(x) iscell(x) || isnumeric(x) || ischar(x) || islogical(x));
 p.parse(rawnames, subj_filt);
 % Arg = p.Results;
 
@@ -83,13 +83,14 @@ if ~isempty(num_filt)
     end
     num_filt = abs(num_filt);
     % Filter by numeric index or numeric part of given name
+%TODO - REPLACE NUMERIC INDICES WITH LOGICAL, SO NO CONFUSION POSSIBLE!!!!!
     testi = num_filt(ismember(num_filt, 1:length(rawnames)));
     if isempty(testi)
         testi = num2cell(num_filt);
         numidx = sbf_string_match(rawnames...
                                 , cellfun(@num2str, testi, 'Uni', false));
     else
-        numidx = num_filt;
+        numidx = ismember(1:length(rawnames), num_filt);
     end
 end
 

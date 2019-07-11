@@ -12,6 +12,8 @@ function [EEG, Cfg] = CTAP_resample_data(EEG, Cfg)
 %   Cfg.ctap.resample_data:
 %   .newsrate   scalar, value to resample towards,
 %               default: EEG.srate / 2
+%   .sratemul   scalar, value to multiply existing srate by
+%               default: 1 / 2
 %   .fc         double, anti-aliasing filter cutoff (pi rad / sample)
 %               default: 0.9
 %   .df         double, anti-aliasing filter transition bandwidth (pi rad/sample) 
@@ -21,7 +23,7 @@ function [EEG, Cfg] = CTAP_resample_data(EEG, Cfg)
 %   EEG         struct, EEGLAB structure modified by this function
 %   Cfg         struct, Cfg struct is updated by parameters,values actually used
 %
-% Notes: 
+% Notes: if user passes 'newsrate' parameter, it OVERRIDES 'sratemul'
 %
 % See also: pop_resample()
 %
@@ -34,18 +36,23 @@ function [EEG, Cfg] = CTAP_resample_data(EEG, Cfg)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% Set optional arguments
-Arg.newsrate = EEG.srate / 2;
+Arg.sratemul = 1 / 2;
 Arg.fc = 0.9;
 Arg.df = 0.2;
 
 % Override defaults with user parameters
 if isfield(Cfg.ctap, 'resample_data')
     Arg = joinstruct(Arg, Cfg.ctap.resample_data); %override with user params
+else
+    Cfg.ctap.resample_data = [];
 end
 
 
 %% ASSIST
 Arg.fc = mod(Arg.fc, 1);
+if ~isfield(Cfg.ctap.resample_data, 'newsrate')
+    Arg.newsrate = EEG.srate * Arg.sratemul;
+end
 
 
 %% CORE

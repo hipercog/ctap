@@ -72,7 +72,7 @@ end
 %% CORE
 switch Arg.method
     case 'handle'
-        EEG = Arg.handle(EEG, Arg.src, rmfield(Arg, 'src'));
+        EEG = Arg.handle(EEG, Arg.src, rmfield(Arg, {'method' 'src'}));
         
     case 'presentation'
         EEG = pop_importpres(EEG, Arg.src);

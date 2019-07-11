@@ -99,7 +99,7 @@ function savedir = get_savepath(Cfg, funcname, type, varargin)
     end
     
     if Arg.createDir
-        if ~isdir(savedir), mkdir(savedir); end
+        if ~isfolder(savedir), mkdir(savedir); end
     end
     
 end

@@ -89,8 +89,8 @@ if isempty(MC) || (isstruct(MC) && isempty(fieldnames(MC)))
 end
 % Select measurements to process, matching to contents of Arg.sbj_filt
 Filt.subject = {MC.subject.subject};
-[~, fltidx] = name_filter(cell2struct({MC.subject.subject}, 'name'), Arg.sbj_filt);
-Filt.subject = Filt.subject(fltidx);
+[~, fx] = name_filter(cell2struct({MC.subject.subject}, 'name'), Arg.sbj_filt);
+Filt.subject = Filt.subject(fx);
 % OLD WAY:
 % if ~isempty(Arg.sbj_filt)
 %     if iscell(Arg.sbj_filt)

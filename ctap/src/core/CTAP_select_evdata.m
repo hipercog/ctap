@@ -14,15 +14,15 @@ function [EEG, Cfg] = CTAP_select_evdata(EEG, Cfg)
 %   EEG         struct, EEGLAB structure
 %   Cfg         struct, CTAP configuration structure
 %   Cfg.ctap.select_evdata:
-%   .evtype     string, event type to select, default = 'all'
-%   .covertype  string, coverage of points around events, default = ''
+%   .evtype     string, event type to select, default: 'all'
+%   .covertype  string, coverage of points around events, default: ''
 %               'total' - select (1st evt + duration1) to (last evt + duration2)
 %               'longest' - find x=longest gap between events, select 1st-x to last+x
 %               'own' - use each event's own duration field, if exists
 %               'next' - set evt duration = offset from next event; select by durations
 %               'fixed' - use a fixed duration given by Arg.duration = [min max]
-%   .duration   [1,1] numeric, Fixed duration around selected events,
-%                     default = min, max = minus/plus one second, i.e. -+1 * EEG.srate
+%   .duration   [1,1] numeric, Fixed millisec duration around selected events,
+%                default: min, max = minus/plus one second, i.e. -+1000
 %
 % Outputs:
 %   EEG         struct, EEGLAB structure modified by this function
@@ -33,7 +33,7 @@ function [EEG, Cfg] = CTAP_select_evdata(EEG, Cfg)
 % See also: ctapeeg_select_data()  
 %
 % Copyright(c) 2015 FIOH:
-% Benjamin Cowley (Benjamin.Cowley@ttl.fi), Jussi Korpela (jussi.korpela@ttl.fi)
+% Benjamin Cowley (Ben.Cowley@helsinki.fi), Jussi Korpela (jussi.korpela@ttl.fi)
 %
 % This code is released under the MIT License
 % http://opensource.org/licenses/mit-license.php
@@ -45,7 +45,7 @@ Arg.evtype = 'all';     %Default event type to select: all
 
 Arg.covertype = 'total';  %Default coverage of points around events
 
-Arg.duration = [-EEG.srate EEG.srate]; %Fixed duration around selected events
+Arg.duration = [-1000 1000]; %Fixed duration around selected events
 
 % Override defaults with user parameters
 if isfield(Cfg.ctap, 'select_evdata')
@@ -58,6 +58,8 @@ if ~isfield(Arg, 'evtype')
     error(  'CTAP_select_evdata:inputError',...
             'Field Cfg.ctap.select_evdata.evtype has to be specified.');
 end
+%convert duration milliseconds to latencies
+Arg.duration = Arg.duration .* (EEG.srate / 1000);
 
 
 %% CORE

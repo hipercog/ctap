@@ -18,24 +18,32 @@ function [EEG, Cfg] = CTAP_load_chanlocs(EEG, Cfg)
 %   EEG         struct, EEGLAB structure
 %   Cfg         struct, CTAP configuration structure
 %   Cfg.ctap.load_chanlocs:
-%   .filetype   string, type of chanlocs file; 
-%               default = derived from 'locs' file extension 
-%               If ext is not supported, input is set to custom, with given format
+%   .filetype   string, file extension denoting type of chanlocs; If ext is 
+%               not supported, input is set to custom, with given format
+%               default: derived from 'locs' file extension 
 %   .format     cell string array, IF .filetype = custom THEN format required,
-%               default = throws error
+%               default: throws error
 %   .skiplines  integer, number header lines for custom chanlocs
-%               default = 1
+%               default: 1
 %   .field      cell array of {'index' 'field' 'value'} string triples.
 %               Indices should be within range of available channels.
 %               Labels and other fields can be (carefully) defined by user.
 %               Types should be three letter codes, EEG, EOG, ECG, REF, etc
-%               For example: {'1:128' 'EEG'},{'129:130' 'ECG'}
-%               default = {}, no field assignment action taken
+%               For example: {'1:128' 'type' 'EEG'}, {'129' 'labels' 'HEOG1'}
+%               If empty, no field assignment action is taken
+%               default: {}
 %   .tidy       cell array of {'fieldname' 'value'} string pairs.
 %               channels with 'fieldname' matching 'value' will be deleted.
 %               For example: {'type' 'ECG'}, {'labels' ''} removes channels
 %               of ECG data, and channels with empty label.
-%               default = {}, no channel tidy action taken
+%               If empty, no channel tidy action is taken
+%               default: {}
+%   .opt_centre logical, call EEGLAB's 'chancenter' to auto-optimise centre
+%               default: true
+%   .cnv_coords logical, call EEGLAB's 'convertlocs' to convert coordinates
+%               default: true
+%   .topoplot   logical, call EEGLAB's 'topoplot' to save a 2D fig of chanlocs
+%               default: true
 %
 %   Cfg.eeg.chanlocs
 %       'file'  string, full filename pointing to a channel locations file,
@@ -66,8 +74,9 @@ end
 Arg.file = ctap_eeg_find_chlocs(Cfg);
 Arg.field = {}; %user must set this based on his own knowledge!
 Arg.tidy = {};
-Arg.optimise_centre = true;
-Arg.convert_coords = true;
+Arg.opt_centre = true;
+Arg.cnv_coords = true;
+Arg.topoplot = true;
 
 % Override defaults with user parameters
 if isfield(Cfg.ctap, 'load_chanlocs')
@@ -112,20 +121,37 @@ end
 
 
 %% MISCELLANEOUS %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Set any chanlocs types according to user definition
+% Set any chanlocs types/labels/other fields according to user definition
 if ~isempty(Arg.field)
     for fdx = 1:numel(Arg.field)
         if strcmpi(Arg.field{fdx}{1}, 'all')
             Arg.field{fdx}{1} = {EEG.chanlocs.labels};
         end
+        if ischar(Arg.field{fdx}{1})
+            Arg.field{fdx}{1} = Arg.field{fdx}(1);
+        end
         for chidx = 1:numel(Arg.field{fdx}{1})
+            idx = 0;
+            % Test numeric index
             if isnumeric(Arg.field{fdx}{1}(chidx))
                 idx = 1:numel(EEG.chanlocs) == Arg.field{fdx}{1}(chidx);
             else
+                strdx = str2double(Arg.field{fdx}{1}(chidx));
+                if ~isnan(strdx)
+                    idx = 1:numel(EEG.chanlocs) == Arg.field{fdx}{1}(chidx);
+                end
+            end
+            if ~any(idx)
                 idx = ismember({EEG.chanlocs.labels}, Arg.field{fdx}{1}(chidx));
+                if ~any(idx)
+                    idx = ismember({EEG.chanlocs.type}, Arg.field{fdx}{1}(chidx));
+                end
             end
             if any(idx)
                 [EEG.chanlocs(idx).(Arg.field{fdx}{2})] = deal(Arg.field{fdx}{3});
+            else
+                warning('CTAP_load_chanlocs:field_fail'...
+                    , 'no channel found to match %s', Arg.field{fdx}{1}{chidx})
             end
         end
         if fdx > 1
@@ -136,7 +162,7 @@ if ~isempty(Arg.field)
     % Feedback about types
     myReport({EEG.chanlocs.labels; EEG.chanlocs.type},...
         Cfg.env.logFile, sprintf('\t'));
-    myReport('WARN^ ^ ^ ^ CAUTION - CHECK YOUR TYPE ASSIGNMENT! ^ ^ ^ ^');
+    myReport('WARN^ ^ ^ ^ CAUTION - CHECK YOUR CHANLOCS ASSIGNMENT! ^ ^ ^ ^');
 end 
 
 % tidy up - get rid of user-defined channels
@@ -151,7 +177,7 @@ if ~isempty(Arg.tidy)
 end
 
 % Auto-optimise the head centre and convert to spherical and polar coords
-if Arg.optimise_centre
+if Arg.opt_centre
     xidx = ~cellfun(@isempty, {EEG.chanlocs.X});
     yidx = ~cellfun(@isempty, {EEG.chanlocs.Y});
     zidx = ~cellfun(@isempty, {EEG.chanlocs.Z});
@@ -161,7 +187,7 @@ if Arg.optimise_centre
     [EEG.chanlocs(xidx).X, EEG.chanlocs(yidx).Y, EEG.chanlocs(zidx).Z] =...
                                                     deal(X{:}, Y{:}, Z{:});
 end
-if Arg.convert_coords
+if Arg.cnv_coords
     myReport('Note: auto-converted XYZ coordinates to spherical & polar'...
         , Cfg.env.logFile);
     EEG.chanlocs = convertlocs(EEG.chanlocs, 'cart2all');
@@ -171,6 +197,18 @@ end
 EEG = eeg_checkchanlocs(EEG);
 % update urchanlocs, e.g. retain only the desired channels
 EEG.urchanlocs = EEG.chanlocs;%make interpolation possible after channel removal
+
+% PLOT SCALPMAP OF CHANLOCS FOR QA
+if Arg.topoplot
+    fh = figure('Visible', 'off');
+    topoplot([], EEG.chanlocs...
+        , 'style', 'blank'...
+        , 'electrodes', 'labels'...
+        , 'whitebk', 'on');
+    print(fh, '-dpng', fullfile(get_savepath(Cfg, mfilename, 'qc')...
+        , [EEG.CTAP.measurement.casename 'chanlocs.png']))
+    close(fh)
+end
 
 
 %% ERROR/REPORT %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

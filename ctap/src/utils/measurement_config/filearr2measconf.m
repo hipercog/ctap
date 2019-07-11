@@ -90,7 +90,8 @@ for i = 1:numel(file_arr)
     end
     % Subject number
     if length(Arg.subjectnr) == 3 && all(cellfun(@isnumeric, Arg.subjectnr) == rgx)
-        MC.subject(i).subjectnr = sbf_regex_number(fname, Arg.subjectnr, i);
+        MC.subject(i).subjectnr = ...
+                        str2double(sbf_regex_namepart(fname, Arg.subjectnr));
     elseif isnan(Arg.subjectnr)
         MC.subject(i).subjectnr = i;
     else
@@ -134,21 +135,11 @@ for i = 1:numel(file_arr)
     
 end
 
-    %% Get 'subject', 'session', or 'measurement' info from filename with regex
+    %% Get 'subject/nr', 'session', or 'measurement' from filename with regex
     function out = sbf_regex_namepart(filename, rgx_cell)
         offset = rgx_cell{2};
         offlen = min(length(filename), ...
                 regexp(filename, rgx_cell{1}) + offset + rgx_cell{3} - 1);
         out = filename(regexp(filename, rgx_cell{1}) + offset : offlen);
-    end
-
-        
-    %% Get the info for the 'subjectnr' field
-    function out = sbf_regex_number(filename, rgx_cell, idx)
-        offset = rgx_cell{2};
-        offlen = min(length(filename), ...
-                regexp(filename, rgx_cell{1}) + offset + rgx_cell{3} - 1);
-        out = filename(regexp(filename, rgx_cell{1}) + offset : offlen);
-        out = str2double(out);
     end
 end
