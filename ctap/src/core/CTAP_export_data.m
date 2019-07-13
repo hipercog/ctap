@@ -58,6 +58,7 @@ if ~isfolder(Arg.outdir), mkdir(Arg.outdir); end
 
 
 %% CORE
+savename = '';
 switch Arg.type
     case 'set'
         savename = fullfile(Arg.outdir, [Arg.name '.set']);
@@ -77,16 +78,15 @@ switch Arg.type
             'SPR', EEG.srate);
         
     case 'hdf5'
-        idx = get_event_epochIdx(EEG, Arg.lock_event);
+        [idx, lock_evname] = get_event_epochIdx(EEG, Arg.lock_event);
         if any(idx)
             EEGev = pop_select(EEG, 'trial', find(idx));
             savename = fullfile(Arg.outdir, sprintf('%s_%s_ERPdata.h5'...
-                            , EEG.CTAP.measurement.casename, Arg.lock_event));
+                            , EEG.CTAP.measurement.casename, lock_evname));
             eeglab_writeh5_erp(savename, EEGev);
-            msg = myReport('Exporting EEG data to HDF5', Cfg.env.logFile);
+            msg = ['Export ERP of ' lock_evname ' epochs to HDF5'];
         else
-            msg = myReport(['WARN No epochs found containing ' Arg.lock_event]...
-                , Cfg.env.logFile);
+            msg = ['WARN No epochs found containing ' lock_evname];
         end
         
     case 'leda'
