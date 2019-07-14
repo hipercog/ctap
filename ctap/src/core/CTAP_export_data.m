@@ -96,7 +96,7 @@ switch Arg.type
         msg = myReport('Exporting EDA data to Ledalab', Cfg.env.logFile);
 
     case 'mul'
-        mul = eeglab2mul(EEG, 'lock_event', Arg.lock_event);
+        mul = eeglab2mul(EEG, Arg.lock_event);
         msg = myReport(['Exporting a mul-file ERP for averaged data ' ...
             'time-locked to event ' Arg.lock_event], Cfg.env.logFile);
         % Make a name suitable for CBRU mul-plugin

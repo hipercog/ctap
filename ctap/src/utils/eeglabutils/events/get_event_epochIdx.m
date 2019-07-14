@@ -9,9 +9,11 @@ function [ephits, lock_evname] = get_event_epochIdx(EEG, event)
 % 
 % Inputs:
 %   EEG     struct, EEG structure to search
-%   event   struct, 'name', 'value' pairs; names must match fieldnames in
-%                   EEG.event; values must match some that occur in events
+%   event   struct | string, 'name', 'value' pairs; names must match fieldnames
+%                   in EEG.event; values must match some that occur in events
 %                   E.g. 'type', 'target'
+%           NOTE: if 'event' is string, will be converted to the value of a
+%           struct 'event.type', i.e. 'type' is default event matching field
 % 
 %
 % Copyright(c) 2019:
@@ -27,7 +29,7 @@ function [ephits, lock_evname] = get_event_epochIdx(EEG, event)
 p = inputParser;
 
 p.addRequired('EEG', @(x) isstruct(x) && all(isfield(EEG, {'epoch' 'event'})))
-p.addRequired('event', @(x) isstruct(x) && numel(x) == 1)
+p.addRequired('event', @(x) (isstruct(x) && numel(x) == 1) || ischar(x))
 
 p.parse(EEG, event)
 
@@ -42,6 +44,9 @@ if ~all(match_fields)
     error('get_event_epochIdx:bad_event'...
         , 'EEG.event does not have the requested fields: %s'...
         , strjoin(event_fnames(~match_fields), ', '))
+end
+if ischar(event)
+    event = struct('type', event);
 end
 
 

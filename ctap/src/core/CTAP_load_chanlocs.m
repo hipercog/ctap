@@ -154,10 +154,6 @@ if ~isempty(Arg.field)
                     , 'no channel found to match %s', Arg.field{fdx}{1}{chidx})
             end
         end
-        if fdx > 1
-            ovw = ismember(Arg.field{fdx - 1}{1}, Arg.field{fdx}{1});
-            Arg.field{fdx - 1}{1}(ovw) = [];
-        end
     end
     % Feedback about types
     myReport({EEG.chanlocs.labels; EEG.chanlocs.type},...

@@ -83,26 +83,21 @@ res.file = file;
 %% Get requested file
 switch file.ext
     case 'set'
-            EEG = pop_loadset('filename', file.name, 'filepath', file.path);
+        EEG = pop_loadset('filename', file.name, 'filepath', file.path);
             
     case {'bdf' 'gdf' 'edf'}
-            %EEG = pop_biosig(fullfile(directory, filename), 'ref', g.ref);
-            % Note: Regardless of what is promised in the
-            % documentation, pop_biosig() does remove the reference
-            % channels. Hence, load without 'ref' and use pop_reref()
-            % to rereference according to BioSemi recommendations.
-            % Implemented in ctapeeg_reref_data()
-            EEG = pop_biosig(fullfile(file.path, file.name));
+%TODO - GDF AND EDF MIGHT NOT BE READABLE USING ctap_readbdf()
+        EEG = ctap_readbdf(fullfile(file.path, file.name));
             
     case 'vhdr'
-            EEG = pop_loadbv(file.path, file.name);
+        EEG = pop_loadbv(file.path, file.name);
             
     case 'eeg'
-            EEG = loadeeg(fullfile(file.path, file.name));
+        EEG = loadeeg(fullfile(file.path, file.name));
             
     case 'vpd'
-            vpd = ImportVPD(fullfile(file.path, file.name));
-            [EEG, file.date] = vpd2eeglab(vpd);
+        vpd = ImportVPD(fullfile(file.path, file.name));
+        [EEG, file.date] = vpd2eeglab(vpd);
             
     case {'neurone' 'xml'}
         if ~isfield(Arg, 'neurone_version') || strcmpi(Arg.neurone_version, 'old')

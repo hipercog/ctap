@@ -31,7 +31,7 @@ function mul = eeglab2mul(EEG, varargin)
 %% Parse input arguments and set varargin defaults
 p = inputParser;
 p.addRequired('EEG', @isstruct);
-p.addParameter('lock_event', '', @ischar);
+p.addRequired('lock_event', @(x) ischar(x) || isstruct(x));
 
 p.parse(EEG, varargin{:});
 Arg = p.Results;
