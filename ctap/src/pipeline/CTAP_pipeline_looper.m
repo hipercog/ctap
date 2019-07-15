@@ -66,7 +66,7 @@ end
 fnames = fieldnames(Cfg.env.paths);
 fnames(~cellfun(@ischar, struct2cell(Cfg.env.paths))) = [];
 for fn = 1:numel(fnames)
-    if ~isdir(Cfg.env.paths.(fnames{fn})) && ...
+    if ~isfolder(Cfg.env.paths.(fnames{fn})) && ...
        ~isempty(Cfg.env.paths.(fnames{fn}))
         mkdir(Cfg.env.paths.(fnames{fn}));
     end
@@ -174,13 +174,13 @@ for n = 1:numMC %over measurements
                     continue
                 end
             %...OR, if stepSet calls peek_data ONLY, and it has been done before
-            elseif ismember(cellfun(@func2str...
-                   , Cfg.pipe.stepSets(i).funH, 'Un', 0), 'CTAP_peek_data')
+            elseif ismember(cellfun(@func2str, Cfg.pipe.stepSets(i).funH...
+                                                , 'Un', 0), 'CTAP_peek_data')
                testi = fullfile(Cfg.env.paths.qualityControlRoot...
                    , 'CTAP_peek_data', sprintf('set%d_fun1'...
                    , i + Cfg.pipe.totalSets - numel(runSets))...
                    , Cfg.measurement.casename);
-               if isdir(testi) && ~isempty(dirflt(testi))
+               if isfolder(testi) && ~isempty(dirflt(testi))
                    continue
                end
             end
@@ -201,7 +201,7 @@ for n = 1:numMC %over measurements
                     'filepath', sbf_get_src_subdir(Cfg, i),...
                     'filename', [Cfg.measurement.casename, '.set']);
             end
-        catch ME,
+        catch ME
             funStr = 'intermediate_data_load';
             sbf_report_error(ME);
             break;
@@ -234,7 +234,7 @@ for n = 1:numMC %over measurements
             else
                 try
                     i_Cfg_tmp = sbf_execute_pipefun;
-                catch ME,
+                catch ME
                     sbf_report_error(ME);
                     if isfield(i_EEG, 'CTAP')
                         i_EEG.CTAP.history(end+1) = create_CTAP_history_entry(...
@@ -265,7 +265,7 @@ for n = 1:numMC %over measurements
         end
         %actions to take whatever happened during ananlysis steps
         i_sv = fullfile(Cfg.env.paths.analysisRoot, Cfg.pipe.stepSets(i).id);
-        if ~isdir(i_sv), mkdir(i_sv); end %make stepSet directory
+        if ~isfolder(i_sv), mkdir(i_sv); end %make stepSet directory
         EEG = i_EEG; %store EEG state to write out history after loops
 
         % if stepSet loop didn't complete, measurement is no longer processed.
@@ -301,12 +301,16 @@ for n = 1:numMC %over measurements
     Cfg = tmp_Cfg; %reassign original ctap
 
     suxes = {'successfully! :)' 'unsuccessfully :''('};
-    suxes = sprintf('\n================\nMeasurement ''%s'' analyzed %s\n',...
-        Cfg.measurement.casename, suxes{MCbad(n) + 1});
-    histfile = sprintf('%s_history.txt', Cfg.measurement.casename);
+    pssfl = {'PASS' 'FAIL'};
+    suxes = sprintf('\n================\nMeasurement ''%s'' analyzed %s\n'...
+                            , Cfg.measurement.casename, suxes{MCbad(n) + 1});
+    histfile = sprintf('%s_history-%s.txt'...
+                            , Cfg.measurement.casename, pssfl{MCbad(n) + 1});
+    histdir = fullfile(Cfg.env.paths.logRoot, 'histories');
+    if ~isfolder(histdir), mkdir(histdir); end
     myReport(suxes, Cfg.env.logFile);
-    myReport(suxes, fullfile(Cfg.env.paths.logRoot, histfile));
-    ctap_check_hist(EEG, fullfile(Cfg.env.paths.logRoot, histfile));
+    myReport(suxes, fullfile(histdir, histfile));
+    ctap_check_hist(EEG, fullfile(histdir, histfile));
 
 end %over measurements
 
@@ -316,7 +320,7 @@ myReport(sprintf('\nAnalysis run ended at %s.\n', datestr(now, 30)),...
     Cfg.env.logFile);
 if any(MCbad)
     myReport({'Analysis failed for: ' MCSub.measurement(MCbad).casename},...
-        Cfg.env.logFile, sprintf('\n'));
+        Cfg.env.logFile, newline);
 else
     myReport('All Analysis Successful!', Cfg.env.logFile);
 end
@@ -332,23 +336,7 @@ end
 % Concatenate all the bad data tables and write as a single text file
 if ismember('CTAP_reject_data', cellfun(@func2str...
         , [Cfg.pipe.stepSets(runSets).funH], 'UniformOutput', false))
-    rejfiles = dir(fullfile(Cfg.env.paths.qualityControlRoot, '*rejections.mat'));
-    if ~isempty(rejfiles)
-        tmp = load(fullfile(Cfg.env.paths.qualityControlRoot, rejfiles(1).name));
-        rejtab = tmp.rejtab;
-        for rt = 2:numel(rejfiles)
-            nxt = fullfile(Cfg.env.paths.qualityControlRoot, rejfiles(rt).name);
-            tmp = load(nxt);
-%TODO(feature-request)(BEN) join tables with non-matching rownames, use missing values
-            try
-                rejtab = join(rejtab, tmp.rejtab, 'Keys', 'RowNames');
-            catch ME,
-                fprintf('%s::%s misses rows, can''t join\n', ME.message, nxt)
-            end
-        end
-        writetable(rejtab, fullfile(Cfg.env.paths.logRoot, 'all_rejections.txt')...
-            ,  'WriteRowNames', true);
-    end
+    CTAP_gather_pipe_rejections(Cfg)
 end
 
 fclose('all');
@@ -412,6 +400,7 @@ end
 
 % Get source directory of loadable files
 function src_subdir = sbf_get_src_subdir(Cfg, idx)
+
     if ~isempty(Cfg.pipe.stepSets(idx).srcID)
         src_subdir = Cfg.pipe.stepSets(idx).srcID;
     else
@@ -424,7 +413,6 @@ function src_subdir = sbf_get_src_subdir(Cfg, idx)
         src_subdir = Cfg.pipe.stepSets(idx).id;
     end
     src_subdir = fullfile(Cfg.env.paths.analysisRoot, src_subdir);
-
 end
 
 end% CTAP_pipeline_looper()

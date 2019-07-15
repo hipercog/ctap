@@ -4,8 +4,14 @@ function [file_arr, files] = path2filearr(filepath, ext, filepattern, varargin)
 % Example:
 %   file_arr = path2filearr('<some dir with *.set files>', '*.set', 'control');
 %
-% Authors: Benjamin Cowley (HY, 2018)
-% -------------------------------------------------------------------------
+% Copyright(c) 2018 :
+% Benjamin Cowley (ben.cowley@helsinki.fi)
+%
+% This code is released under the MIT License
+% http://opensource.org/licenses/mit-license.php
+% Please see the file LICENSE for details.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 
 %% Parse input arguments and set varargin defaults
 p = inputParser;
