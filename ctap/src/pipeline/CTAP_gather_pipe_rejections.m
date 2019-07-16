@@ -1,4 +1,4 @@
-function MrT = CTAP_gather_pipe_rejections(Cfg, varargin)
+function rejtab = CTAP_gather_pipe_rejections(Cfg, varargin)
 % CTAP_GATHER_PIPE_REJECTIONS: Get all per-subject bad data rejection tables 
 % 
 % Description: for a given pipe, gather all the subject-wise bad-data .mat
@@ -12,7 +12,7 @@ function MrT = CTAP_gather_pipe_rejections(Cfg, varargin)
 %           Default: true
 % 
 % Output:
-%   MrT     table, aggregated bad-data rejections
+%   rejtab  table, aggregated bad-data rejections
 % 
 % Copyright(c) 2018 :
 % Benjamin Cowley (ben.cowley@helsinki.fi)
@@ -36,7 +36,7 @@ Arg = p.Results;
 
 
 %% Gather the bad-data rejection files, aggregate to one table
-MrT = [];
+rejtab = [];
 pth = Cfg.env.paths.qualityControlRoot;
 rejfiles = dir(fullfile(pth, '*rejections.mat'));
 rejmethods = {'badchans', 'badepochs', 'badsegev', 'badcomps'};
@@ -61,11 +61,11 @@ if ~isempty(rejfiles)
                 end
             end
             % Combine horizontally by columns
-            if isempty(MrT)
-                MrT = T;
+            if isempty(rejtab)
+                rejtab = T;
             else
                 try
-                    MrT = join(MrT, T, 'Keys', 'RowNames');
+                    rejtab = join(rejtab, T, 'Keys', 'RowNames');
                 catch err
                     fprintf('%s::%s misses rows, can''t join\n'...
                         , err.message, nxt)
