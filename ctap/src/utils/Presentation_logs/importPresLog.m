@@ -150,12 +150,9 @@ try
     end
     
 catch
-    disp(' *************************************************************');
-    disp([' Sorry I''m giving up on line ' num2str(j+offset)]);
-    disp(' This is a permanent error ... I give up :(');
-    disp(' If you are able to find the error feel free to contact me');
-    disp(' and I will add the changes.');
-    disp(' *************************************************************');
+    disp(' *************************************************************')
+    warning('importPresLog:read_fail', 'Failed on line %d', j+offset)
+    disp(' *************************************************************')
 end
 
 %% Tidy up

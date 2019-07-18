@@ -80,18 +80,34 @@ EEG = eeg_checkset(EEG);
 
 
 %% EXTRACT EVENTS FROM LAST CHANNEL
-fprintf('ctap_readbdf : Extracting events...');
-thiscode = 0;
-for p = 1:size(EEG.data, 2) - 1
-    prevcode = thiscode;
-    thiscode = mod(EEG.data(end, p), 256 * 256);
-    if (thiscode ~= 0) && (thiscode ~= prevcode) 
-        EEG.event(end + 1).latency = p;
-        EEG.event(end).type = thiscode;
+% If triggers are coded by raising and lowering of the bit (pulsed), then
+% each trigger corresponds to an entire contiguous period of not-0, even if
+% its level varies (due to some jitter, etc)
+fprintf('ctap_readbdf : Extracting 24-bit events...\n');
+PULSE_OFF = true;
+trggrch = mod(EEG.data(end, :), 256 * 256) - 65280;%set trigger base-level to 0
+if ~any(trggrch == 0)
+    warning('ctap_readbdf:bad_triggers', 'Trigger channel malformed!! %s'...
+        , 'No events read into EEG')
+else
+    for p = 1:size(EEG.data, 2) - 1
+        trggr = trggrch(p);
+        if trggr ~= 0 %IF trigger channel rises...
+            if PULSE_OFF %...AND pulse flag is off...
+                EEG.event(end + 1).latency = p; %...THEN code pulse onset...
+                EEG.event(end).type = trggr + 65280; %...AND value (+ 2 bytes)
+                PULSE_OFF = false; %Guard against coding more triggers
+            end
+        else %IF trigger channel falls...
+            if ~PULSE_OFF %...AND pulse flag is on (=not off), THEN add duration
+                EEG.event(end).duration = p - EEG.event(end).latency;
+            end
+            PULSE_OFF = true; %set pulse flag off
+        end
     end
+    EEG = pop_select(EEG, 'nochannel', EEG.nbchan);
+    EEG = eeg_checkset(EEG, 'makeur');
 end
-EEG = pop_select(EEG, 'nochannel', EEG.nbchan);
-EEG = eeg_checkset(EEG, 'makeur');
 
 
 %% REFERENCE

@@ -81,7 +81,8 @@ for i = 1:numel(file_arr)
     [fpath, fname, fext] = fileparts(file_arr{i});
 
     % Subject name
-    if length(Arg.subject) == 3 && all(cellfun(@isnumeric, Arg.subject) == rgx) %#ok<*BDSCI>
+    testi = cellfun(@isnumeric, Arg.subject);
+    if length(Arg.subject) == 3 && all(testi(:)' == rgx) %#ok<*BDSCI>
         MC.subject(i).subject = sbf_regex_namepart(fname, Arg.subject);
     elseif isempty(Arg.subject)
         MC.subject(i).subject = fname;
@@ -89,7 +90,8 @@ for i = 1:numel(file_arr)
         MC.subject(i).subject = Arg.subject{i};
     end
     % Subject number
-    if length(Arg.subjectnr) == 3 && all(cellfun(@isnumeric, Arg.subjectnr) == rgx)
+    testi = cellfun(@isnumeric, Arg.subjectnr);
+    if length(Arg.subjectnr) == 3 && all(testi(:)' == rgx)
         MC.subject(i).subjectnr = ...
                         str2double(sbf_regex_namepart(fname, Arg.subjectnr));
     elseif isnan(Arg.subjectnr)
@@ -105,13 +107,15 @@ for i = 1:numel(file_arr)
     MC.measurement(i).subject = MC.subject(i).subject;
     MC.measurement(i).subjectnr = MC.subject(i).subjectnr;
     % Measurement session
-    if length(Arg.session) == 3 && all(cellfun(@isnumeric, Arg.session) == rgx)
+    testi = cellfun(@isnumeric, Arg.session);
+    if length(Arg.session) == 3 && all(testi(:)' == rgx)
         MC.measurement(i).session = sbf_regex_namepart(fname, Arg.session);
     else
         MC.measurement(i).session = Arg.session{i};
     end
     % Measurement measurement
-    if length(Arg.measurement) == 3 && all(cellfun(@isnumeric, Arg.measurement) == rgx)
+    testi = cellfun(@isnumeric, Arg.measurement);
+    if length(Arg.measurement) == 3 && all(testi(:)' == rgx)
         MC.measurement(i).measurement = sbf_regex_namepart(fname, Arg.measurement);
     else
         MC.measurement(i).measurement = Arg.measurement{i};
