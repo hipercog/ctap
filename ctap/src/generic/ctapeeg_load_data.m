@@ -86,7 +86,8 @@ switch file.ext
         EEG = pop_loadset('filename', file.name, 'filepath', file.path);
             
     case {'bdf' 'gdf' 'edf'}
-        if ~isempty(which('pop_biosig'))
+        if Arg.biosig && ~isempty(which('pop_biosig')) && cellfun(@(x) ...
+                contains(x, [filesep 'biosig']), regexp(path,pathsep,'Split'))
             EEG = pop_biosig(fullfile(file.path, file.name));
         else
 %TODO - GDF AND EDF MIGHT NOT BE READABLE USING ctap_readbdf()
@@ -150,7 +151,7 @@ varargout{2} = res;
         end
 
         % If desired, the default values can be changed here:
-        Arg = struct();
+        Arg = struct('biosig', false);
 
         % No Arg fields defined; vargs is canonical: join structs
         Arg = joinstruct(Arg, vargs);
