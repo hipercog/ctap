@@ -86,8 +86,12 @@ switch file.ext
         EEG = pop_loadset('filename', file.name, 'filepath', file.path);
             
     case {'bdf' 'gdf' 'edf'}
+        if ~isempty(which('pop_biosig'))
+            EEG = pop_biosig(fullfile(file.path, file.name));
+        else
 %TODO - GDF AND EDF MIGHT NOT BE READABLE USING ctap_readbdf()
-        EEG = ctap_readbdf(fullfile(file.path, file.name));
+            EEG = ctap_readbdf(fullfile(file.path, file.name));
+        end
             
     case 'vhdr'
         EEG = pop_loadbv(file.path, file.name);

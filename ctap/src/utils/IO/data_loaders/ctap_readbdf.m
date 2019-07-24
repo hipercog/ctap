@@ -13,6 +13,8 @@ function EEG = ctap_readbdf(filename, varargin)
 %   filename    string, Biosemi 24-bit BDF file name
 % 
 % Varargin
+%   gettrig     true, read triggers from last data channel
+%               Default: truee
 %   refchan     [1 n] channel index or index(s) for the reference.
 %                    Reference channels are not removed from the data,
 %                    allowing easy re-referencing. If more than one
@@ -45,6 +47,7 @@ p.KeepUnmatched = true;
 
 p.addRequired('filename', @ischar)
 
+p.addParameter('gettrig', true, @islogical)
 p.addParameter('refchan', [], @isnumeric)
 
 p.parse(filename, varargin{:});
@@ -83,19 +86,33 @@ EEG = eeg_checkset(EEG);
 % If triggers are coded by raising and lowering of the bit (pulsed), then
 % each trigger corresponds to an entire contiguous period of not-0, even if
 % its level varies (due to some jitter, etc)
-fprintf('ctap_readbdf : Extracting 24-bit events...\n');
-PULSE_OFF = true;
-trggrch = mod(EEG.data(end, :), 256 * 256) - 65280;%set trigger base-level to 0
+trggrch = 1;
+
+if Arg.gettrig
+    fprintf('ctap_readbdf : Extracting 24-bit events...\n');
+    PULSE_OFF = true;
+    trggrch = mod(EEG.data(end, :), 256 * 256);
+    offset = 65280; %offset SHOULD be 256^2 - 256, but might vary
+    for o = 0:6 %set trigger base-level to 0 by subtracting an offset
+        tmp = trggrch - (offset + 32 * o);
+        if any(tmp == 0)
+            offset = (offset + 32 * o);
+            fprintf('Triggers offset by -%d\n', offset);
+            trggrch = tmp;
+            break
+        end
+    end
+end
+
 if ~any(trggrch == 0)
-    warning('ctap_readbdf:bad_triggers', 'Trigger channel malformed!! %s'...
-        , 'No events read into EEG')
+    warning('ctap_readbdf:bad_triggers', 'No events read into EEG')
 else
     for p = 1:size(EEG.data, 2) - 1
         trggr = trggrch(p);
         if trggr ~= 0 %IF trigger channel rises...
             if PULSE_OFF %...AND pulse flag is off...
                 EEG.event(end + 1).latency = p; %...THEN code pulse onset...
-                EEG.event(end).type = trggr + 65280; %...AND value (+ 2 bytes)
+                EEG.event(end).type = trggr + offset; %...AND value (+ 2 bytes)
                 PULSE_OFF = false; %Guard against coding more triggers
             end
         else %IF trigger channel falls...
