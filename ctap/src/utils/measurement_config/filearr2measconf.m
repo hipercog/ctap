@@ -90,10 +90,12 @@ for i = 1:numel(file_arr)
         MC.subject(i).subject = Arg.subject{i};
     end
     % Subject number
-    testi = cellfun(@isnumeric, Arg.subjectnr);
-    if length(Arg.subjectnr) == 3 && all(testi(:)' == rgx)
-        MC.subject(i).subjectnr = ...
+    if iscell(Arg.subjectnr)
+        testi = cellfun(@isnumeric, Arg.subjectnr);
+        if length(Arg.subjectnr) == 3 && all(testi(:)' == rgx)
+            MC.subject(i).subjectnr = ...
                         str2double(sbf_regex_namepart(fname, Arg.subjectnr));
+        end
     elseif isnan(Arg.subjectnr)
         MC.subject(i).subjectnr = i;
     else
