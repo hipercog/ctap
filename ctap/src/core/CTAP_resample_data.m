@@ -58,6 +58,7 @@ end
 %% CORE
 % Re-reference
 EEG = pop_resample(EEG, Arg.newsrate, Arg.fc, Arg.df);
+EEG.setname = strrep(EEG.setname, ' resampled', '');
 
 
 %% ERROR/REPORT

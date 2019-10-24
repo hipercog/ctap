@@ -6,7 +6,7 @@ function leda = eeglab2leda(EEG, varargin)
 %   Ledalab. EEGALB '.data' field should be a single vector of EDA data
 %
 % Syntax:
-%   leda = eeglab2leda(EEG, chan)
+%   leda = eeglab2leda(EEG, varargin)
 %
 % Inputs:
 %   'EEG'       struct, EEGLAB structure
@@ -76,12 +76,7 @@ leda.event = struct(...
 
 
 %% add user-defined event fields from EEG.event struct
-if ~isempty(Arg.evnames)
-    % loop given event fields, adding to leda.event
-    for i = numel(Arg.evnames)
-        leda.event.(Arg.evnames{i}) = EEG.event.(Arg.evnames{i});
-    end
-end
+leda.event = add_dyn_fields(EEG.event, leda.event, Arg.evnames);
 
 
 %% add user-defined event fields from udefnames & udefvals

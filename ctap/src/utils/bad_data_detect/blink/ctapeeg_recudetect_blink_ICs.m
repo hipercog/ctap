@@ -4,7 +4,7 @@ function [comp_match, method_data] = ctapeeg_recudetect_blink_ICs(EEG, varargin)
 % 
 % Description: Similarity of each IC to the blink template
 % is measured by eeglab_detect_icacomps_blinktemplate() and ICs are ordered 
-% by this metric. Then the top Arg.test_pc% of ICs are tested in turn: 
+% by this metric. Then the top Arg.test_pc of ICs are tested in turn: 
 %  - blink-locked 1 sec ERPs are generated for the VEOG channel
 %  - each IC is removed from the data by projection, and the value by which this 
 %    operation moves the quantile band [2.5% 97.5%] toward zero is calculated.
