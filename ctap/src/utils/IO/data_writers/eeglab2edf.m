@@ -62,23 +62,16 @@ else
     header.subject.ID = EEG.setname;
 end
 header.events.POS = [EEG.event.latency];
-header.events.DUR = [EEG.event.duration];
 header.events.TYP = {EEG.event.type};
+if isfield(EEG.event, 'duration')
+    header.events.DUR = [EEG.event.duration];
+else
+    header.events.DUR = zeros(1, numel(EEG.event));
+end
 
 % add dyanmic event fields
-header.events = add_dyn_fields(EEG.event...
-                            , header.events...
-                            , Arg.evnames...
-                            , 'as_array', false);
-% for i = 1:numel(Arg.evnames)
-%     tmp = {EEG.event.(Arg.evnames{i})};
-%     if isnumeric(cell2mat(tmp(1)))
-%         nullx = cellfun(@isempty, tmp);
-%         tmp{nullx} = NaN;
-%         tmp = cell2mat(tmp);
-%     end
-%     header.events.(Arg.evnames{i}) = tmp;
-% end
+header.events =...
+    add_dyn_fields(EEG.event, header.events, Arg.evnames, 'as_array', false);
 
 
 %% SAVE EDF FILE USING SaveEDF.m

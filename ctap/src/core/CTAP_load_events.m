@@ -88,7 +88,7 @@ end
 %% ERROR/REPORT
 Cfg.ctap.load_events = Arg;
 
-msg = myReport({'Edited events for ' EEG.subject '_' EEG.setname}...
+msg = myReport({'Edited events for ' EEG.setname ' - based on log = ' Arg.src}...
     , Cfg.env.logFile);
 
 EEG.CTAP.history(end+1) = create_CTAP_history_entry(msg, mfilename, Arg);
