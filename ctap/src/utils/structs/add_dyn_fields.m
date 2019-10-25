@@ -23,7 +23,9 @@ else
         tmp = {A.(dynames{i})};
         if isnumeric(cell2mat(tmp(1)))
             nullx = cellfun(@isempty, tmp);
-            tmp{nullx} = NaN;
+            if any(nullx)
+                tmp{nullx} = NaN;
+            end
             tmp = cell2mat(tmp);
         end
         B.(dynames{i}) = tmp;
