@@ -126,7 +126,10 @@ if numMC == 0 && ~isempty(strucFilt)
 end
 % get the index of the start stepSet - i.e. where the first data was loaded
 % using this approach, runSets can jump around, jump around
-idx_start_sets = find([Cfg.pipe.stepSets.save], 1, 'first');
+idx_start_sets = 1;
+if any([Cfg.pipe.stepSets.save])
+    idx_start_sets = find([Cfg.pipe.stepSets.save], 1, 'first');
+end
 
 
 %% Run sets

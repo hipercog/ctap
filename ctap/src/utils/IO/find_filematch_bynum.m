@@ -1,14 +1,9 @@
-function [match, num_match] =...
-    find_filematch_bynum(srch_num, srch_dir, exts, partial)
-
-    if nargin < 4
-        partial = true;
-    end
+function [match, num_match] = find_filematch_bynum(srch_num, srch_dir, exts)
     
     if nargin < 3
         exts = ''; 
     else
-        exts = unique(exts);
+        exts = unique(exts, 'stable');
     end
 
     if ~isempty(exts) && ~iscell(exts) && ischar(exts)
@@ -27,22 +22,21 @@ function [match, num_match] =...
     
     % use only the filename part of the found names
     [~, fnm, ~] = cellfun(@fileparts, {fs.name}, 'Un', 0);
+    
+    % Try completely numeric way
     fnums = cellfun(@(x) regexprep(x, '\D', ''), fnm, 'Un', 0);
-    
     if ~isnumeric(srch_num)
-        srch_num = str2double(regexprep(srch_num, '\D', ''));
+        num_num = str2double(regexprep(srch_num, '\D', ''));
+    end
+    matches = str2double(fnums) == num_num;
+    
+    % if no unique match, try string match
+    if sum(matches) ~= 1
+        matches = contains(fnm, srch_num, 'IgnoreCase', 1);
     end
     
-    matches = str2double(fnums) == srch_num;
-    if ~any(matches) && partial
-        matches = contains(fnums, num2str(srch_num));
-        if ~any(matches)
-            matches = cell2mat(cellfun(@(x) contains(num2str(srch_num), x)...
-                                                            , fnums, 'Un', 0));
-        end
-    end
     if ~any(matches)
-        match = [];
+        match = '';
         num_match = 0;
         return
     end

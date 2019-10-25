@@ -44,7 +44,7 @@ Arg.method = 'importevent';
 if isfield(Cfg.measurement, 'measurementlog')
     Arg.src = Cfg.measurement.measurementlog;
 end
-Arg.src_ext = 'log';
+Arg.log_ext = {'log', 'txt'};
 
 % Override defaults with user parameters
 if isfield(Cfg.ctap, 'load_events')
@@ -53,16 +53,22 @@ end
 
 
 %% ASSIST
-errmsg = 'Log file is needed to load events';
+errmsg = 'Log file is needed to load events!';
 if ~isfield(Arg, 'src')
     error('CTAP_load_events:no_log', '%s :: No source given', errmsg)
 elseif isfolder(Arg.src)
-    exts = {'log', 'txt', Arg.src_ext};
-    % Find events from directory = filename containing subject number
-    Arg.src = find_filematch_bynum(Cfg.measurement.subject, Arg.src, exts);
-    % If numeric matching failed = filename closest matching to EEG filename
-    if isempty(Arg.src)
-        Arg.src = find_closest_file(Cfg.measurement.physiodata, Arg.src, exts);
+    % Find filename containing subject number
+    m{1} = find_filematch_bynum(Cfg.measurement.subject, Arg.src, Arg.log_ext);
+    % Find filename closest matching to EEG filename
+    m{2} = find_closest_file(Cfg.measurement.physiodata, Arg.src, Arg.log_ext);
+    if strcmp(m{1}, m{2})
+        Arg.src = m{1};
+        msg = 'SUCCESS! ';
+    elseif any(~cellfun(@isempty, m))
+        Arg.src = m{~cellfun(@isempty, m)};
+        msg = 'WARN ';
+    else
+        error('CTAP_load_events:no_log', '%s :: No file match found', errmsg)
     end
 elseif ischar(Arg.src) && ~exist(Arg.src, 'file') == 2
     error('CTAP_load_events:no_log', '%s :: Bad filename or not a file', errmsg)
@@ -88,7 +94,7 @@ end
 %% ERROR/REPORT
 Cfg.ctap.load_events = Arg;
 
-msg = myReport({'Edited events for ' EEG.setname ' - based on log = ' Arg.src}...
+msg = myReport({msg 'Wrote events in ' EEG.setname ' - from log = ' Arg.src}...
     , Cfg.env.logFile);
 
 EEG.CTAP.history(end+1) = create_CTAP_history_entry(msg, mfilename, Arg);

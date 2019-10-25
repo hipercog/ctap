@@ -3,7 +3,7 @@ function [match, num_match] = find_closest_file(srch_name, srch_dir, exts)
     if nargin < 3
         exts = ''; 
     else
-        exts = unique(exts);
+        exts = unique(exts, 'stable');
     end
 
     if ~isempty(exts) && ~iscell(exts) && ischar(exts)
