@@ -1,4 +1,4 @@
-function [EEG, date] = vpd2eeglab( VPD )
+function [EEG, date] = vpd2eeglab(VPD, varargin)
 % VPD2EEGLAB converts data imported from a .vpd file to an EEGLAB struct
 %
 % Description:
@@ -9,6 +9,11 @@ function [EEG, date] = vpd2eeglab( VPD )
 % Inputs:
 %   'VPD'           struct, data from the Varioport psychophysiological
 %                   recording system, to be converted to EEGLAB structure
+% 
+% Varargin
+%   'events'        struct [m n], m events with n fields:
+%                                 'name'
+%                                 'time' in seconds
 %
 % Outputs:
 %   'EEG'           struct, converted EEG structure
@@ -28,9 +33,20 @@ function [EEG, date] = vpd2eeglab( VPD )
 % Please see the file LICENSE for details.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+p = inputParser;
+
+p.addRequired('VPD', @isstruct)
+
+p.addParameter('events', struct(), @isstruct)
+
+p.parse(VPD, varargin{:});
+Arg = p.Results;
+
+
+%% BUILD EEG
 [~, EEG, ~] = pop_newset([], [], 1, 'gui', 'off');
 
-chidx =~ cellfun(@isempty, strfind(VPD.channels(:, 1), 'EEG'));
+chidx = contains(VPD.channels(:, 1), 'EEG');
 
 EEG.srate = mean([VPD.chn(1, chidx).sr]);
 
@@ -49,9 +65,18 @@ if r ~= numch || c ~= EEG.pnts
 end
 date = [VPD.mdate ' ' VPD.mtime];
 
+
+%% COPY EVENTS TO EEG
+if ~isempty(fieldnames(Arg.events))
+    VPD.events = Arg.events;
+end
+
 EEG.event = VPD.events;
 [EEG.event.type] = VPD.events.name;
 EEG.event = rmfield(EEG.event, 'name');
+for i = 1:numel(VPD.events)
+    VPD.events(i).time = VPD.events(i).time * EEG.srate; 
+end
 [EEG.event.latency] = VPD.events.time;
 EEG.event = rmfield(EEG.event, 'time');
 

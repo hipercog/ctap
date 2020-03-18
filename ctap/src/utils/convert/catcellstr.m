@@ -52,7 +52,10 @@ end
 %% Check inputs
 if ischar(strarray)
     strout = strarray;
-    return;
+    return
+elseif all(cellfun(@isempty, strarray))
+    strout = '';
+    return
 end
 
 %% Catenate

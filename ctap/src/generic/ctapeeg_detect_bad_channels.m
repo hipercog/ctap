@@ -84,6 +84,7 @@ function [EEG, varargout] = ctapeeg_detect_bad_channels(EEG, varargin)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
+faster_vars = {'chanCorrelation' 'variance' 'hurst'};
 sbf_check_input() % parse the varargin, set defaults
 EEGtmp = EEG;
 
@@ -96,8 +97,6 @@ if ~isempty(strfind(Arg.method, 'fast'))
     else
         varargout{2} = myReport('FAIL :: reference channel not found ...');
     end
-    faster_vars = {'chanCorrelation' 'variance' 'hurst'};
-
 end
 
 % Remove channel baselines

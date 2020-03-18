@@ -124,9 +124,6 @@ stepSet(i).id = [num2str(i) '_blink_correction'];
 
 out.detect_bad_comps = struct(...
     'method', 'blink_template');
-out.detect_bad_comps = struct(...
-    'method', {'adjust' 'blink_template'},...
-    'adjustarg', {'horiz' ''});
 
 
 %% DETECT AND CORRECT BAD CHANNELS AND SEGMENTS OUTSIDE +-75uV

@@ -16,21 +16,34 @@ function [EEG, Cfg] = CTAP_peek_data(EEG, Cfg)
 %   EEG         struct, EEGLAB structure
 %   Cfg         struct, CTAP configuration structure
 %   Cfg.ctap.peek_data:
-%       .channels       cellstring array, chanlocs labels or type, default: 'EEG'
-%       .overwrite      logical, wipe existing output from prior peek_data runs
-%       .logStats       logical, compute stats for whole data, default: true
-%       .plotEEGHist    logical, Plot EEG histogram?, default: Cfg.grfx.on
-%       .hists          scalar, square number histograms per figure, default: 16
-% 
-%       .makePeeks      logical, make individual peeks at all? Default: true
-%       .plotEEG        logical, Plot EEG data?, default: Cfg.grfx.on
-%       .plotICA        logical, Plot ICA components?, default: Cfg.grfx.on
-%       .plotAllPeeks   logical, Plot all peeks or 1 random one?, default: true
-%       .savePeekData   logical, Save EEG data from each peek, default: false
-%       .savePeekICA    logical, Save IC values from each peek, default: false
-%       .peekStats      logical, compute stats for each peek, default: false
-%       .numpeeks       numeric, number of randomly generated peeks, default=10
-%       .secs           numeric, seconds to plot from min to max, default: 0 16
+%       .channels       cellstring array, chanlocs labels or type, 
+%                       default: 'EEG'
+%       .overwrite      logical, wipe existing output from prior peek_data runs,
+%                       default: true 
+%       .logStats       logical, compute stats for whole data, 
+%                       default: true
+%       .plotEEGHist    logical, Plot EEG histogram?, 
+%                       default: Cfg.grfx.on
+%       .hists          scalar, square number histograms per figure, 
+%                       default: 16
+%       .makePeeks      logical, make individual peeks at all? 
+%                       Default: true
+%       .plotEEG        logical, Plot EEG data?, 
+%                       default: Cfg.grfx.on
+%       .plotICA        logical, Plot ICA components?, 
+%                       default: Cfg.grfx.on
+%       .plotAllPeeks   logical, Plot all peeks or 1 random one?, 
+%                       default: true
+%       .savePeekData   logical, Save EEG data from each peek, 
+%                       default: false
+%       .savePeekICA    logical, Save IC values from each peek, 
+%                       default: false
+%       .peekStats      logical, compute stats for each peek, 
+%                       default: false
+%       .numpeeks       numeric, number of randomly generated peeks, 
+%                       default: 10
+%       .secs           numeric, seconds to plot from min to max, 
+%                       default: 0 16
 %       .peekevent      cellstring array, event name(s) to base peek windows on
 %       .peekindex      vector, index of such events to use, default (only if 
 %                       .peekevent is defined): uniform distribution of 10
@@ -163,7 +176,7 @@ end
 %% Define latencies to peek at
 peekmatch = ismember({EEG.event.type}, 'ctapeeks');
 if any(peekmatch)%peek events are present - use them
-    starts = [EEG.event(peekmatch).latency]; 
+    starts = int32([EEG.event(peekmatch).latency]);
 else
     %create new peeks from existing user-defined events
     if isfield(Arg, 'peekevent')
@@ -199,11 +212,13 @@ else
         starts = (linspace(1, EEG.xmax * EEG.trials - Arg.secs(2), npk) +...
                                    [rand(1, npk - 1) .* dur 0]) * EEG.srate;
     end
+    starts = int32(starts);
     
     % add peek positions as events
     labels = cellfun(@(x) sprintf('peek%d',x), num2cell(1:numel(starts)),'Un', 0);
+    cls = str2func(class(EEG.event(1).latency));
     EEG.event = eeglab_merge_event_tables(EEG.event,...
-                eeglab_create_event(starts, 'ctapeeks', 'label', labels),...
+                eeglab_create_event(cls(starts), 'ctapeeks', 'label', labels),...
                 'ignoreDiscontinuousTime');
             
     peekmatch = ismember({EEG.event.type}, 'ctapeeks'); %assumed to exist later
@@ -215,7 +230,6 @@ else
     % dangerous to resort to this, make sure labels always exist!
     labels = cellfun(@(x) sprintf('peek%d',x), num2cell(1:sum(peekmatch)), 'Un', 0);
 end
-starts = int64(starts);
 
 % Save defined peek-times
 peektab = table(ascol(starts / EEG.srate)...
@@ -275,7 +289,8 @@ end
 if Arg.plotEEG
     % set channels to plot in red
     if isfield(EEG.CTAP, 'badchans') &&...
-       isfield(EEG.CTAP.badchans, 'detect')
+       isfield(EEG.CTAP.badchans, 'detect') &&...
+       EEG.CTAP.badchans.detect.prc > 0
         markChannels = EEG.CTAP.badchans.detect.chans;
     else
         markChannels = {};
