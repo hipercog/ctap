@@ -7,6 +7,11 @@
 %% General setup
 BRANCH_NAME = 'ctap_hydra_badchan';
 
+FILE_ROOT = mfilename('fullpath');
+PROJECT_ROOT = FILE_ROOT(1:strfind(FILE_ROOT, fullfile(...
+    'test_param_sweep_sdgen_badchan')) - 1);
+
+
 RERUN_PREPRO = true;
 RERUN_SWEEP = true;
 
@@ -22,14 +27,14 @@ mkdir(PARAM.path.sweepresDir);
 %% CTAP config
 CH_FILE = 'chanlocs128_biosemi.elp';
 
-Cfg.env.paths = cfg_create_paths(PARAM.path.projectRoot, BRANCH_NAME, '');
+Cfg.env.paths = cfg_create_paths(PARAM.path.projectRoot, BRANCH_NAME, {''}, 1);
 Cfg.eeg.chanlocs = CH_FILE;
 chanlocs = readlocs(CH_FILE);
 
 Cfg.eeg.reference = {'L_MASTOID' 'R_MASTOID'};
 Cfg.eeg.veogChannelNames = {'C17'}; %'C17' has highest blink amplitudes
 Cfg.eeg.heogChannelNames = {'HEOG1','HEOG2'};
-Cfg.grfx.on = false;
+Cfg.grfx.on = true;
 
 % Create measurement config (MC) based on folder
 % Measurement config based on synthetic source files
@@ -166,7 +171,7 @@ for k = 1:numel(Cfg.MC.measurement)
         chinds = get_eeg_inds(EEGprepro, SWEEG{i}.CTAP.badchans.variance.chans);
         if any(chinds)
             figh = ctaptest_plot_bad_chan(EEGprepro, chinds...
-                , 'sweep_i', i...
+                , 'context', sprintf('sweep-%d', i)...
                 , 'savepath', tmp_savedir);
         end
     end
@@ -203,4 +208,9 @@ for k = 1:numel(Cfg.MC.measurement)
     EEG.CTAP.artifact.variance_table(chm,:)   
 
     clear('SWEEG');
+    
+    
+    
+    
+    
 end

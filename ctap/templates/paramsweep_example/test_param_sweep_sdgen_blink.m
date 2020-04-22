@@ -6,11 +6,15 @@
 % PROJECT_ROOT = '/home/jkor/work_local/projects/ctap/ctapres_hydra';
 
 %% General setup
+FILE_ROOT = mfilename('fullpath');
+PROJECT_ROOT = FILE_ROOT(1:strfind(FILE_ROOT, fullfile(...
+    'test_param_sweep_sdgen_blink')) - 1);
+
+
 BRANCH_NAME = 'ctap_hydra_blink';
 
 RERUN_PREPRO = true;
 RERUN_SWEEP = true;
-
 STOP_ON_ERROR = true;
 OVERWRITE_OLD_RESULTS = true;
 
@@ -23,7 +27,7 @@ mkdir(PARAM.path.sweepresDir);
 %% CTAP config
 CH_FILE = 'chanlocs128_biosemi.elp';
 
-Cfg.env.paths = cfg_create_paths(PARAM.path.projectRoot, BRANCH_NAME, '');
+Cfg.env.paths = cfg_create_paths(PARAM.path.projectRoot, BRANCH_NAME, {''}, 1);
 Cfg.eeg.chanlocs = CH_FILE;
 chanlocs = readlocs(CH_FILE);
 

@@ -6,6 +6,14 @@
 
 
 %% Setup
+
+FILE_ROOT = mfilename('fullpath');
+REPO_ROOT = FILE_ROOT(1:strfind(FILE_ROOT, fullfile(...
+    'ctap', 'templates', 'paramsweep_example', 'batch_psweep_datagen')) - 1);
+PROJECT_ROOT = FILE_ROOT(1:strfind(FILE_ROOT, fullfile(...
+    'batch_psweep_datagen')) - 1);
+CH_ROOT = REPO_ROOT + "/res/chanlocs128_biosemi.elp";
+
 PARAM = param_sweep_setup(PROJECT_ROOT);
 
 
