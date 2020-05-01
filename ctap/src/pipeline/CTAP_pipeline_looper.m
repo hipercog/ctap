@@ -109,7 +109,7 @@ else
     if numel(strucFilt.casename) == 0
        warning('CTAP_pipeline_looper:inputError',...
         'Source directory ''%s'' does not contain data for casename ''%s''. Please check.',...
-        srcSrcDir, Cfg.pipe.runMeasurements{1});
+        srcSubDir, Cfg.pipe.runMeasurements{1});
     end
     
 end

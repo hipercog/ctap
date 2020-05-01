@@ -113,7 +113,7 @@ try
     % Ordered according to  matches of Arg.csegEvent in EEG.event - 
     % this should be a an ascending order in latency but is there a 
     % guarantee for this in EEGLAB?
-catch ME,
+catch ME
     if strcmp(ME.identifier, 'eegseg2arr:eventsMissing')
         msg=['Found no events of type ''',Arg.csegEvent...
             ,'''. Cannot estimate PSD. Check calculation segment rejections.']; 

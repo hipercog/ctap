@@ -1,38 +1,32 @@
-function EEG = ctapeeg_add_regular_events(EEG, evLength, evOverlap, evType, varargin)
-%CTAPEEG_ADD_REGULAR_EVENTS - Add events to EEG
+function EEG = eeg_add_regular_events(EEG, evType, varargin)
+%EEG_ADD_REGULAR_EVENTS - Add events to EEG
 %
 % Description:
 %   Add regularly spaced events to EEG.event to enable computations.
 %
 % Syntax:
-%   EEG = ctapeeg_add_regular_events(EEG, evLength, evOverlap, evType, varargin)
+%   EEG = eeg_add_regular_events(EEG, evLength, evOverlap, evType, varargin)
 %
 % Inputs:
 %   EEG         struct, EEGLAB struct, non-epoched data
-%   evLength   [1,1] numeric, Event length in seconds
-%   evOverlap  [1,1] numeric, Event overlap percentage using range [0,1]
 %   evType      string, Event type string for the new events
 %
-%   varargin    Keyword-value pairs
-%   Keyword         Type, description, values
-%   startAt str, Event type string for an event that is to be
-%           considered time zero when adding the events
-%   stopAt  str, Event type string for an event that is to be
-%           considered end of generation range       
+% Varargin      Keyword-value pairs
+% 
+%   evLength    [1,1] numeric, Event length in seconds, default = 5
+%   evOverlap   [1,1] numeric, Event overlap percentage [0..1], default = 0
+%   startAt     str, Event type string for an event that is to be
+%               considered time zero when adding the events
+%   stopAt      str, Event type string for an event that is to be
+%               considered end of generation range       
 %
 % Outputs:
 %   EEG         struct, EEGLAB struct with new events of evLength at
 %               with possible overlap.
-%
-% Assumptions:
-%
-% References:
-%
-% Example:
-%
+% 
 % Notes:
-%   Assumes continuous time. Does not check for the existence of boundary
-%   events within the generated segments.
+%   Assumes continuous time. Checks for boundary events within the generated 
+%   segments and removes those segments.
 %
 % See also:
 %
@@ -40,7 +34,7 @@ function EEG = ctapeeg_add_regular_events(EEG, evLength, evOverlap, evType, vara
 % 2015 Jussi Korpla, FIOH, jussi.korpela@ttl.fi
 %
 % Copyright(c) 2015 FIOH:
-% Benjamin Cowley (Benjamin.Cowley@ttl.fi), Jussi Korpela (jussi.korpela@ttl.fi)
+% Benjamin Cowley (Ben.Cowley@helsinki.fi), Jussi Korpela (jussi.korpela@ttl.fi)
 %
 % This code is released under the MIT License
 % http://opensource.org/licenses/mit-license.php
@@ -52,15 +46,15 @@ function EEG = ctapeeg_add_regular_events(EEG, evLength, evOverlap, evType, vara
 p = inputParser;
 p.KeepUnmatched = true;
 
-p.addRequired('EEG', @isstruct);
-p.addRequired('evLength', @isnumeric);
-p.addRequired('evOverlap', @isnumeric);
-p.addRequired('evType', @ischar);
+p.addRequired('EEG', @isstruct)
+p.addRequired('evType', @ischar)
 
-p.addParameter('startAt', '', @ischar);
-p.addParameter('stopAt', '', @ischar);
+p.addParameter('evLength', 5, @isnumeric)
+p.addParameter('evOverlap', 0, @isnumeric)
+p.addParameter('startAt', '', @ischar)
+p.addParameter('stopAt', '', @ischar)
 
-p.parse(EEG, evLength, evOverlap, evType, varargin{:});
+p.parse(EEG, evType, varargin{:})
 Arg = p.Results;
 
 
@@ -73,7 +67,7 @@ if ~isempty(EEG.event)
         startsample = 1;    
     else
         if length(startEventInd) > 1
-            warning('ctapeeg_add_regular_events:eventInconsistency'...
+            warning('eeg_add_regular_events:eventInconsistency'...
                 , 'Several range start events found. Taking the first one.'); 
             startEventInd = startEventInd(1);
         end
@@ -87,7 +81,7 @@ if ~isempty(EEG.event)
 
     else
         if length(stopEventInd) > 1
-            warning('ctapeeg_add_regular_events:eventInconsistency'...
+            warning('eeg_add_regular_events:eventInconsistency'...
                 , 'Several range stop events found. Taking last one.');
             stopEventInd = stopEventInd(end); 
         end
@@ -102,9 +96,9 @@ end
 
 %% Generate segments
 csegArr = startsample - 1 + ...
-          generate_segments(stopsample-startsample,...
-                            floor(evLength*EEG.srate),...
-                            evOverlap);
+          generate_segments(stopsample - startsample,...
+                            floor(Arg.evLength * EEG.srate),...
+                            Arg.evOverlap);
 
 
 %% Prune out csegs which would contain a boundary event
@@ -115,9 +109,10 @@ if ~isempty(EEG.event)
     cs_keep_match = ~range_has_point(csegArr, boundary_lat);
     csegArr = csegArr(cs_keep_match,:);
 end
+
         
 %% Add segments as 'cseg' events
-fprintf('ctapeeg_add_regular_events: adding events of type ''%s''.', evType);
+fprintf('eeg_add_regular_events: adding events of type ''%s''.', evType);
 
 event = eeglab_create_event(csegArr(:,1),...
                             evType,...

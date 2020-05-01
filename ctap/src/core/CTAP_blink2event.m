@@ -77,10 +77,11 @@ msg = myReport(['Added blinks as events for ' EEG.subject ' - ' EEG.setname]...
 
 EEG.CTAP.history(end+1) = create_CTAP_history_entry(msg, mfilename, Arg);
 
-% Plot blink detection criterion values and grouping
+% PLOTS
 if isfield(EEG.CTAP, 'detected')
     if isfield(EEG.CTAP.detected, 'blink')
         
+        % Plot blink detection criterion values and grouping
         figH = figure(  'Visible', 'off',...
                         'PaperUnits', 'normalized',...
                         'PaperType', 'a4',...
@@ -100,11 +101,25 @@ if isfield(EEG.CTAP, 'detected')
         title('Blink detection criterion values (y-jittered)')
         set(gca, 'YTickLabel', '');
         
-        savename = [EEG.CTAP.measurement.casename, '_',...
-                    '_blink_criterion.png'];
+        savename = [EEG.CTAP.measurement.casename, '_blink_criterion.png'];
         savefile = fullfile(get_savepath(Cfg, mfilename, 'qc'), savename);
         print(figH, '-dpng', savefile);
         close(figH);
         
+        % Plot ERP of detected blinks
+        eegep = pop_epoch(EEG, {'blink'}, [-0.3 0.3]);
+        
+        chixv = get_eeg_inds(EEG, Cfg.eeg.veogChannelNames);
+        chixh = get_eeg_inds(EEG, Cfg.eeg.heogChannelNames);
+        chinds = union(chixv, chixh);
+        figH = plot_epoched_EEG({eegep},...
+                        'channels', {EEG.chanlocs(chinds).labels},...
+                        'idArr', {'detected blinks'},...
+                        'visible', 'off');
+        
+        savename = [EEG.CTAP.measurement.casename, '_blink_ERP.png'];
+        savefile = fullfile(get_savepath(Cfg, mfilename, 'qc'), savename);
+        print(figH, '-dpng', savefile);
+        close(figH);
     end
 end

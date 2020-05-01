@@ -340,14 +340,12 @@ end
 %   Only if current stepSets is not a subset excluding step 1
 if numel(runSets) == numel(allSets) && numel(runSets) == Cfg.pipe.totalSets
     %check for chanlocs
-    tmp = cellfun(@isempty, strfind(runPipeFuns, 'load_chanlocs'));
-    if all(tmp)
+    if ~any(contains(runPipeFuns, 'load_chanlocs'))
         warning('ctap_auto_config:no_load_chanlocs',...
             '**** MAKE SURE you have chanlocs or pipe may FAIL ****');
     end
     %check for reref
-    tmp = cellfun(@isempty, strfind(runPipeFuns, 'reref_data'));
-    if all(tmp)
+    if ~any(contains(runPipeFuns, 'reref_data'))
         warning('ctap_auto_config:no_reref_data',...
          'NO reref! Consider ADDING data re-reference (once chanlocs exist)??');
     end

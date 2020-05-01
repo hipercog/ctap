@@ -51,6 +51,8 @@ function [EEG, Cfg] = CTAP_extract_PSDindices(EEG, Cfg)
 
 %% Set optional arguments
 Arg = struct;
+Arg.eind.bandLabels = {'delta' 'theta' 'alpha' 'beta'};
+Arg.eindcc.bandLabels = {'delta' 'theta' 'alpha' 'beta'};
 Arg.eindcc.fzStr = get_channel_name_by_description(EEG,'frontal');
 Arg.eindcc.pzStr = get_channel_name_by_description(EEG,'vertex');
 Arg.extra_path = '';
@@ -93,7 +95,7 @@ varg =  struct2varargin(Arg.eindcc);
 %% Save
 savepath = fullfile(Cfg.env.paths.featuresRoot, 'PSDindices', Arg.extra_path);
 if isfield(Cfg, 'export'), Cfg.export.featureSavePoints{end + 1} = savepath; end
-if ~isdir(savepath), mkdir(savepath); end
+if ~isfolder(savepath), mkdir(savepath); end
 savename = sprintf('%s_PSDindices.mat', Cfg.measurement.casename);
 save(fullfile(savepath, savename)...
     , 'INFO', 'SEGMENT', 'resENTROPY', 'resEIND', 'resEINDM');

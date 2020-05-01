@@ -19,7 +19,8 @@ function [EEG, Cfg] = CTAP_compute_psd(EEG, Cfg)
 %               value should be a power of two, default: next power
 %               of two higher than Arg.m*EEG.srate
 %   overlap     [1,1] numeric, Welch segment overlap, "percentage" value 
-%               [0...1], default: 0.5 
+%               [0...1], default: 0.5
+%   excludeBoundaries    boolean, sets whether to exclude csegs with boundaries
 %
 % Outputs:
 %   EEG         struct, EEGLAB structure modified by this function
@@ -42,7 +43,8 @@ Arg = struct(...
     'm', NaN,...% in sec
     'overlap', 0.5,...% in percentage [0,1]
     'nfft', NaN,... % in samples (int), should be 2^x, nfft > m*srate
-    'bandlimit', false);
+    'bandlimit', false,...
+    'excludeBoundaries', true);
 % Defaults are set in eeglab_psd()
 
 % Override defaults with user parameters
@@ -63,17 +65,19 @@ cseg_start = [EEG.event(cseg_match).latency]';
 cseg_end = cseg_start + [EEG.event(cseg_match).duration]' - 1;
 cseg_arr = horzcat(cseg_start, cseg_end);
 
-% Check if any of the csegs contains a boundary event              
-bound_match = ismember({EEG.event.type}, 'boundary');
-boundary_lat = [EEG.event(bound_match).latency];
+% Check if any of the csegs contains a boundary event
+if Arg.excludeBoundaries
+    bound_match = ismember({EEG.event.type}, 'boundary');
+    boundary_lat = [EEG.event(bound_match).latency];
 
-split_cseg = range_has_point(cseg_arr, boundary_lat);
-if sum(split_cseg) > 0
-    warning('CTAP_compute_psd:csegError',...
-         ['Some of the cseg events of type: ''%s'' overlap with boundary events.'...
-         ' These cseg events will be removed.'], Cfg.event.csegEvent);
-    idx = find(cseg_match);
-    EEG.event(idx(split_cseg)) = [];
+    split_cseg = range_has_point(cseg_arr, boundary_lat);
+    if sum(split_cseg) > 0
+        warning('CTAP_compute_psd:csegError',...
+             ['Some cseg events of type: ''%s'' overlap with boundary events.'...
+             ' These cseg events will be removed.'], Cfg.event.csegEvent);
+        idx = find(cseg_match);
+        EEG.event(idx(split_cseg)) = [];
+    end
 end
 
 % Check that last cseg remains within data

@@ -12,12 +12,19 @@ function Eog = eeglab_extract_eog(EEG, veogChanNames, heogChanNames, varargin)
 %% Parse input arguments and set varargin defaults
 p = inputParser;
 p.addRequired('EEG', @isstruct);
-p.addRequired('veogChanNames', @iscellstr);
-p.addRequired('heogChanNames', @iscellstr);
+p.addRequired('veogChanNames', @(x) iscellstr(x) || isstring(x) || ischar(x));
+p.addRequired('heogChanNames', @(x) iscellstr(x) || isstring(x) || ischar(x));
 p.addParameter('filter', false, @islogical);
 
 p.parse(EEG, veogChanNames, heogChanNames, varargin{:});
 Arg = p.Results;
+
+if ~iscell(veogChanNames)
+    veogChanNames = {veogChanNames};
+end
+if ~iscell(heogChanNames)
+    heogChanNames = {heogChanNames};
+end
 
 
 %% Create veog and heog signals
