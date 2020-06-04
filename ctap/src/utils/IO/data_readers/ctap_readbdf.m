@@ -4,6 +4,7 @@ function EEG = ctap_readbdf(filename, varargin)
 % Description:
 %   Emulates EEGLAB's pop_readbdf() from bdfimport1.1
 %   Code is refactored to bypass GUI and some obsolete/odd processes.
+%   WARNING - does not always read events into EEG.event structure
 %   
 % Syntax:
 %   EEG = pop_readbdf( filename );
@@ -40,6 +41,7 @@ function EEG = ctap_readbdf(filename, varargin)
 % Please see the file LICENSE for details.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+% TODO - FIX EVENT READING, NOT CURRENTLY WORKING AS BIOSIG
 
 %% Parse input
 p = inputParser;

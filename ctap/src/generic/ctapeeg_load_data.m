@@ -86,8 +86,8 @@ switch file.ext
         EEG = pop_loadset('filename', file.name, 'filepath', file.path);
             
     case {'bdf' 'gdf' 'edf'}
-        if Arg.biosig && ~isempty(which('pop_biosig')) && cellfun(@(x) ...
-                contains(x, [filesep 'biosig']), regexp(path,pathsep,'Split'))
+        if Arg.biosig && ~isempty(which('pop_biosig')) 
+%             && any(cellfun(@(x) contains(x, [filesep 'biosig']), regexp(path,pathsep,'Split')))
             EEG = pop_biosig(fullfile(file.path, file.name));
         else
 %TODO - GDF AND EDF MIGHT NOT BE READABLE USING ctap_readbdf()
