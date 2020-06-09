@@ -212,6 +212,7 @@ if isempty(Cfg.pipe.runMeasurements) || isempty(runSets)
     return
 end
 
+clc
 myReport(sprintf('Pipe analysis has stepSets:\n\t%s\n', char(Cfg.pipe.runSets)')...
     , Cfg.env.logFile);
 EEG = struct;

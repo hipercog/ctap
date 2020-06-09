@@ -74,6 +74,7 @@ for fn = 1:numel(fnames)
     end
 end
 
+clc
 myReport(sprintf('Pipe analysis has stepSets:%s %s %s',...
     newline, char(Cfg.pipe.runSets)', newline), Cfg.env.logFile);
 EEG = struct;

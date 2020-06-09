@@ -129,25 +129,32 @@ end
 
 function idx = sbf_num_match(names, FILT)
 
-    M = cell(numel(names), 1);
+    C = cell(numel(names), 1);
     %tokenise the names for numeric content
     for i = 1:numel(names)
         S = sprintf('%s ', names(i).name);
         S(isstrprop(S, 'alpha')) = ' ';
         S(isstrprop(S, 'punct')) = ' ';
-        M{i} = sscanf(S, '%d')';
+        C{i} = sscanf(S, '%d')';
     end
-    empty = cellfun(@isempty, M);
-    M = cell2mat(M)';
-    for i = 1:size(M, 1)
-        idx(i) = numel(unique(M(i, :))); %#ok<AGROW>
+    empty = cellfun(@isempty, C);
+    M = cell2mat(C);
+    M = M(:);
+    if isvector(M)
+        match = ismember(M, FILT);
+        idx = false(1, size(C, 1));
+        idx(~empty) = match;
+    else
+        idx = zeros(size(M, 1), 1);
+        for i = 1:size(M, 1)
+            idx(i) = numel(unique(M(i, :)));
+        end
+        idx = idx == sum(~empty);
+        if sum(idx) > 1
+            error('sbf_num_match:no_solution', 'No unique solution')
+        end
+        idx = ismember(M(idx, :), FILT);
     end
-    idx = idx == sum(~empty);
-    if sum(idx) > 1
-        error('sbf_num_match:no_solution', 'No unique solution')
-    end
-    idx = ismember(M(idx, :), FILT);
-    idx(empty) = false;
 end
 
 function idx = sbf_string_match(names, FILT)

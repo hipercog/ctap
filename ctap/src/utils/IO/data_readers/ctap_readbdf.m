@@ -14,8 +14,8 @@ function EEG = ctap_readbdf(filename, varargin)
 %   filename    string, Biosemi 24-bit BDF file name
 % 
 % Varargin
-%   gettrig     true, read triggers from last data channel
-%               Default: truee
+%   gettrig     true, read triggers from data channel labelled 'Status'
+%               Default: true
 %   refchan     [1 n] channel index or index(s) for the reference.
 %                    Reference channels are not removed from the data,
 %                    allowing easy re-referencing. If more than one
@@ -60,6 +60,7 @@ Arg = p.Results;
 % ----------
 fprintf('ctap_readbdf : Reading BDF data in 24-bit format...\n');
 dat = openbdf(filename);
+fid = dat.Head.FILE.FID;
 if isempty(dat.Head.NRec)
     dat.Head.NRec = 100;
 end
@@ -88,12 +89,18 @@ EEG = eeg_checkset(EEG);
 % If triggers are coded by raising and lowering of the bit (pulsed), then
 % each trigger corresponds to an entire contiguous period of not-0, even if
 % its level varies (due to some jitter, etc)
-trggrch = 1;
-
 if Arg.gettrig
+    trgdx = strcmp('Status', {EEG.chanlocs.labels});
+    if ~any(trgdx)
+        trgdx = size(EEG.data, 1);
+    end
+% TODO - SEE biosig/T200_FileAccess/sopen.m line 1036-1072, which uses only
+%   fread.m and bdf2biosig_events.m (latter could be CTAP-embedded)
+%     [t,c] = fread(fid, inf, [int2str(dat.Head.SampleRate(trgdx)*3),'*uint8']...
+%         , dat.Head.AS.spb - dat.Head.SampleRate(trgdx) * 3);
     fprintf('ctap_readbdf : Extracting 24-bit events...\n');
     PULSE_OFF = true;
-    trggrch = mod(EEG.data(end, :), 256 * 256);
+    trggrch = mod(EEG.data(trgdx, :), 256 * 256);
     offset = 65280; %offset SHOULD be 256^2 - 256, but might vary
     for o = 0:6 %set trigger base-level to 0 by subtracting an offset
         tmp = trggrch - (offset + 32 * o);
@@ -104,28 +111,28 @@ if Arg.gettrig
             break
         end
     end
-end
 
-if ~any(trggrch == 0)
-    warning('ctap_readbdf:bad_triggers', 'No events read into EEG')
-else
-    for p = 1:size(EEG.data, 2) - 1
-        trggr = trggrch(p);
-        if trggr ~= 0 %IF trigger channel rises...
-            if PULSE_OFF %...AND pulse flag is off...
-                EEG.event(end + 1).latency = p; %...THEN code pulse onset...
-                EEG.event(end).type = trggr + offset; %...AND value (+ 2 bytes)
-                PULSE_OFF = false; %Guard against coding more triggers
+    if ~any(trggrch == 0)
+        warning('ctap_readbdf:bad_triggers', 'No events read into EEG')
+    else
+        for p = 1:size(EEG.data, 2) - 1
+            trggr = trggrch(p);
+            if trggr ~= 0 % IF trigger channel rises...
+                if PULSE_OFF % AND pulse flag is off...
+                    EEG.event(end + 1).latency = p; % THEN code pulse onset...
+                    EEG.event(end).type = trggr + offset; % AND value (+2bytes)
+                    PULSE_OFF = false; % Guard against coding more triggers
+                end
+            else % IF trigger channel falls...
+                if ~PULSE_OFF % ...AND pulse flag is ON, THEN add duration
+                    EEG.event(end).duration = p - EEG.event(end).latency;
+                end
+                PULSE_OFF = true; %set pulse flag off
             end
-        else %IF trigger channel falls...
-            if ~PULSE_OFF %...AND pulse flag is on (=not off), THEN add duration
-                EEG.event(end).duration = p - EEG.event(end).latency;
-            end
-            PULSE_OFF = true; %set pulse flag off
         end
+        EEG = pop_select(EEG, 'nochannel', EEG.nbchan);
+        EEG = eeg_checkset(EEG, 'makeur');
     end
-    EEG = pop_select(EEG, 'nochannel', EEG.nbchan);
-    EEG = eeg_checkset(EEG, 'makeur');
 end
 
 
