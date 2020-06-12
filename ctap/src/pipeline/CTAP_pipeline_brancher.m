@@ -195,6 +195,7 @@ for fn = 1:numel(fnames)
     if ~isfolder(Cfg.env.paths.(fnames{fn})) && ...
        ~isempty(Cfg.env.paths.(fnames{fn}))
         mkdir(Cfg.env.paths.(fnames{fn}));
+        addpath(Cfg.env.paths.(fnames{fn}))
     end
 end
 
@@ -398,7 +399,7 @@ for n = 1:numMC %over measurements
         end
         %actions to take whatever happened during ananlysis steps
         i_sv = fullfile(Cfg.env.paths.analysisRoot, Cfg.pipe.stepSets(i).id);
-        if ~isfolder(i_sv), mkdir(i_sv); end %make stepSet directory
+        if ~isfolder(i_sv), mkdir(i_sv); addpath(i_sv); end %make stepSet directory
         EEG = i_EEG; %store EEG state to write out history after loops
 
         % if stepSet loop didn't complete, measurement is no longer processed.
@@ -440,7 +441,7 @@ for n = 1:numMC %over measurements
     histfile = sprintf('%s_history-%s.txt'...
                             , Cfg.measurement.casename, pssfl{MCbad(n) + 1});
     histdir = fullfile(Cfg.env.paths.logRoot, 'histories');
-    if ~isfolder(histdir), mkdir(histdir); end
+    if ~isfolder(histdir), mkdir(histdir); addpath(histdir); end
     myReport(suxes, Cfg.env.logFile);
     myReport(suxes, fullfile(histdir, histfile));
     ctap_check_hist(EEG, fullfile(histdir, histfile));
@@ -508,6 +509,7 @@ function i_Cfg_tmp = sbf_execute_pipefun
             Cfg.pipe.current.set = i + Cfg.pipe.totalSets - numel(runSets);
             Cfg.pipe.current.funAtSet = k;
             [i_EEG, i_Cfg_tmp] = Cfg.pipe.stepSets(i).funH{k}(i_EEG, Cfg);
+            hh = 1;
         otherwise
             % Unpack Cfg to pass parameters to function via
             % varargin, as name, value pairs in cell array
@@ -516,6 +518,7 @@ function i_Cfg_tmp = sbf_execute_pipefun
             [i_EEG, i_Cfg_tmp] = Cfg.pipe.stepSets(i).funH{k}(i_EEG...
                                                           , fun_varargs{:});
     end
+    
 end
 
 % Add a new stepset data location to EEG.CTAP
