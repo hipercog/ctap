@@ -259,6 +259,7 @@ if Arg.plotEvents && ~isempty(EEG.event)
                (evlat <= LastSample);
 
     if any(evlatidx) %note: to plot, we need events in range to plot
+        t = NaN;
         evplot = EEG.event(evlatidx);
         
         peekidx = ismember({evplot.type}, 'ctapeeks');
@@ -279,7 +280,7 @@ if Arg.plotEvents && ~isempty(EEG.event)
             pk = evplot(peekidx);
             t = sbf_plotevt([pk.latency], {pk.label}, 'g', [0.9 0.9 0.9 0.5]);
         end
-        top = t.Extent;
+        if ~isnan(t), top = t.Extent; end
         top = top(2) + top(4);
     end
 end
