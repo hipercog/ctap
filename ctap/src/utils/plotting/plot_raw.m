@@ -26,8 +26,8 @@ function [figh, startSamp] = plot_raw(EEG, varargin)
 %   'paperwh'       vector, output dimensions in cm - if set to 0,0 uses screen 
 %                           dimensions, if either dimension is negative then
 %                           calculates from data, default = [0 0]
-%   'shadingLimits' vector, beginning and end sample to be shaded, 
-%                           default = [NaN NaN]
+%   'boxLimits' vector, beginning and end sample to be shaded, 
+%                           default = [0 0]
 % 
 %
 % See also:
@@ -49,22 +49,22 @@ startSamp = -1;
 p = inputParser;
 p.KeepUnmatched = true;
 
-p.addRequired('EEG', @isstruct);
+p.addRequired('EEG', @isstruct)
 
-p.addParameter('dataname', 'Channels', @isstr); %what is data called?
-p.addParameter('startSample', 1, @isnumeric); %start of plotting in samples
-p.addParameter('secs', [0 16], @isnumeric); %how much to plot
-p.addParameter('epoch', 0, @isnumeric); %plot the numbered frame; 0 = continuous
-p.addParameter('timeResolution', 'sec', @ischar); %time res to plot, sec or ms
-p.addParameter('channels', {EEG.chanlocs.labels}, @iscellstr); %channels to plot
-p.addParameter('markChannels', {}, @iscellstr); %channels to plot in red
-p.addParameter('plotEvents', true, @islogical);
-p.addParameter('figVisible', 'off', @isstr);
-p.addParameter('eegname', EEG.setname, @isstr);
-p.addParameter('paperwh', [0 0], @isnumeric);
-p.addParameter('shadingLimits', [NaN NaN], @isnumeric); % in samples
+p.addParameter('dataname', 'Channels', @isstr) %what is data called?
+p.addParameter('startSample', 1, @isnumeric) %start of plotting in samples
+p.addParameter('secs', [0 16], @isnumeric) %how much to plot
+p.addParameter('epoch', 0, @isnumeric) %plot the numbered frame; 0 = continuous
+p.addParameter('timeResolution', 'sec', @ischar) %time res to plot, sec or ms
+p.addParameter('channels', {EEG.chanlocs.labels}, @iscellstr) %channels to plot
+p.addParameter('markChannels', {}, @iscellstr) %channels to plot in red
+p.addParameter('plotEvents', true, @islogical)
+p.addParameter('figVisible', 'off', @isstr)
+p.addParameter('eegname', EEG.setname, @isstr)
+p.addParameter('paperwh', [0 0], @isnumeric)
+p.addParameter('boxLimits', [0 0], @isnumeric) % in samples
 
-p.parse(EEG, varargin{:});
+p.parse(EEG, varargin{:})
 Arg = p.Results;
 
 
@@ -123,17 +123,18 @@ else
             Arg.secs(2) = min([Arg.secs(2) EEG.xmax]);
     end
 
+    %Time in samples, set to integer, as EEG latencies are often double
+    Arg.startSample = int64(max(Arg.startSample + (Arg.secs(1) * EEG.srate), 1));
+    
     %get the data duration in samples
-    dur = floor(min([EEG.srate * diff(Arg.secs) ...
-                     , EEG.pnts - min(Arg.shadingLimits)]));
-    if dur == 0
+    dur = floor(min([EEG.srate * diff(Arg.secs), EEG.pnts - Arg.startSample]));
+    if dur <= 0
         warning('plot_raw:duration_zero', 'Duration was 0 - no plot made')
         return
     end
-
-    %Time in samples, set to integer, as EEG latencies are often double
-    Arg.startSample = int64(max(Arg.startSample + (Arg.secs(1) * EEG.srate), 1));
-    LastSample = Arg.startSample + dur - 1;
+    
+    LastSample = min(Arg.startSample + dur - 1, EEG.pnts);
+    
     if SECS
         Arg.secs = single(round([Arg.startSample / EEG.srate, LastSample / EEG.srate]));
     else
@@ -144,10 +145,12 @@ end
 
 
 %% Setup Plot
-%Build y-shifted data matrix so channels cannot overlap
-t = linspace(Arg.secs(1), Arg.secs(2), dur);
 sig = eegdata(:, Arg.startSample:LastSample);
-% calculate shift
+
+% get x-axis tick values
+t = linspace(Arg.secs(1), Arg.secs(2), dur);
+
+%Build y-shifted data matrix so channels cannot overlap
 mi = min(sig, [], 2);
 match = abs(mi) < 1e-4;
 mi(match) = mean(mi); %to get space around low variance channels
@@ -236,14 +239,14 @@ line([xbds(2) xw], [sbr100 sbr100], 'color', 'r', 'clipping', 'off')
 
 %% make shaded area
 set(figh, 'Color', 'w')
-if ~any(isnan(Arg.shadingLimits))
+if all(Arg.boxLimits > 0)
     tr = 1;
     if ~SECS
         tr = 1000;
     end
-    x = xbds(1) + (Arg.shadingLimits(1) - Arg.startSample) / EEG.srate * tr;
+    x = xbds(1) + (Arg.boxLimits(1) - Arg.startSample) / EEG.srate * tr;
     y = ybds(1);
-    w = (Arg.shadingLimits(2) - Arg.shadingLimits(1)) / EEG.srate * tr;
+    w = (Arg.boxLimits(2) - Arg.boxLimits(1)) / EEG.srate * tr;
     h = ybds(2) - ybds(1);
     rectangle('Position', [x, y, w, h], 'EdgeColor', 'red', 'LineWidth', 1);
 end

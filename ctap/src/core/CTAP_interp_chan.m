@@ -107,16 +107,17 @@ end
 EEG = eeg_interp( EEG, Arg.channels, Arg.method );
 
 %get labels of interpolated channels for reporting
-chans_interpolated = setdiff({EEG.chanlocs.labels},...
-                             chans_before_interpolation);
+chs_intrpd = setdiff({EEG.chanlocs.labels}, chans_before_interpolation);
 
-EEG = pop_chanedit(EEG, 'settype', {get_eeg_inds(EEG, chans_interpolated) 'EEG'});
+if ~isempty(chs_intrpd)
+    EEG = pop_chanedit(EEG, 'settype', {get_eeg_inds(EEG, chs_intrpd) 'EEG'});
+end
 
 
 %% ERROR/REPORT
 Cfg.ctap.interp_chan = Arg;
 
-msg = myReport({'Interpolated channels -' chans_interpolated 'by' Arg.method}...
+msg = myReport({'Interpolated channels -' chs_intrpd 'by' Arg.method}...
     , Cfg.env.logFile );
 
 EEG.CTAP.history(end+1) = create_CTAP_history_entry(msg, mfilename, Arg);
