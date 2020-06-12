@@ -61,6 +61,7 @@ p.parse(veog, varargin{:});
 Arg = p.Results;
 
 veog = double(veog); %often single
+duration = length(veog) / fs;
 
 
 %% Filter data 
@@ -117,7 +118,7 @@ if ~isnan(Arg.featureAcceptRange(1))
 else
     % select all
     high_match = false(1, numel(Dv)); %none marked as extremely high
-    ok_match = true(1, numel(Dv));
+%     ok_match = true(1, numel(Dv));
     ok_inds = 1:numel(Dv);
 end
 
@@ -138,7 +139,7 @@ switch Arg.classMethod
 % This method is no longer used as k-means is not very stable when there
 % is large class imbalance in the data.
 % Could not verify the problem with class imbalance.
-        blink_match_tmp = sbf_1Dclass_kmeans(Dv_sub);
+        blink_match_tmp = sbf_1Dclass_kmeans(Dv_sub, duration);
 
     case {'emgauss_heuristic', 'emgauss_asymmetric'}
 %--------------------------------------------------------------------------
@@ -196,7 +197,7 @@ end
 % hold off;
 
 
-%% Assing outputs
+%% Passing outputs
 cluster = ones(1,length(Dv)); % label 1 == non blink
 cluster(blink_match) = 2;
 %blinkCluster = 2;
@@ -263,9 +264,10 @@ ylabel('non-blinks');
 %% Helper functions
 
 % 1D classification using k-means
-function [blink_match] = sbf_1Dclass_kmeans(Dv)
+function blink_match = sbf_1Dclass_kmeans(Dv, dur, medseed)
 
-    fprintf('Running k-means ...');
+    if nargin < 3, medseed = false; end
+    fprintf('Running k-means ...')
 
     % Special initalization for classes
     % Often there are very few blinks and a random initialization of classes
@@ -274,11 +276,16 @@ function [blink_match] = sbf_1Dclass_kmeans(Dv)
     % initial clustering to start from.
 
     % Initialize classes
-    [nonBlinkySeed, nonBlinkySeedInd] = min(Dv);
-    [blinkySeed, blinkySeedInd] = max(Dv);
-    %seedPointInds = [nonBlinkySeedInd, blinkySeedInd];
+    [nonBlinkySeed, ~] = min(Dv);
+    [blinkySeed, ~] = max(Dv);
+    if medseed
+        blinkyMed = median(Dv);
+        mad = olof_mad(Dv);
+        nonBlinkySeed = max(nonBlinkySeed, blinkyMed - mad * 2);
+        blinkySeed = min(blinkySeed, blinkyMed + mad * 2);
+    end
 
-    label = ones(1,length(Dv)); % label 1 == non blink
+    label = ones(1, length(Dv)); % label 1 == non blink
     for dix = 1:length(Dv)
         if((Dv(dix)- nonBlinkySeed)^2 > (Dv(dix) - blinkySeed)^2)
            label(dix) = 2; %blinkySeed closer -> switch label
@@ -290,10 +297,15 @@ function [blink_match] = sbf_1Dclass_kmeans(Dv)
 
 
     clusterMeans = [mean(Dv(cluster==1)), mean(Dv(cluster==2))] ;
-    [~, max_ind] = max(clusterMeans); 
+    [~, max_i] = max(clusterMeans); 
 
-    blink_match = cluster==max_ind;
-    fprintf(' done. \n');
+    blink_match = cluster==max_i;
+    ebr = (sum(blink_match) * 60) / dur;
+    fprintf(' done, counting blink rate at %2.1f per minute. \n', ebr)
+    if ebr < 3 && ~medseed
+        fprintf('...blink rate too low, trying again with median seed\n')
+        blink_match = sbf_1Dclass_kmeans(Dv, dur, true);
+    end
 end
 
 
@@ -350,7 +362,7 @@ function [blink_match] = sbf_emgauss_interpret(Dv, mu, sd, P, Arg, method)
             evi_norm = Lnb*prior_nonblink + Lb*prior_blink; % evidence of norm data=
                                                             % normalization constant
             pbn = Lb * prior_blink ./ evi_norm; % normalized probability: sample=blink
-            pnbn = 1 - pbn; % normalized probability for the sample to be a non-blink
+%             pnbn = 1 - pbn; % normalized probability for the sample to be a non-blink
 
             blink_match = pbn > 0.5; % Get the needed blink match!!
 
