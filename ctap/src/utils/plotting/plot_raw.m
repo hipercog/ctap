@@ -148,7 +148,7 @@ end
 sig = eegdata(:, Arg.startSample:LastSample);
 
 % get x-axis tick values
-t = linspace(Arg.secs(1), Arg.secs(2), dur);
+xt = linspace(Arg.secs(1), Arg.secs(2), dur);
 
 %Build y-shifted data matrix so channels cannot overlap
 mi = min(sig, [], 2);
@@ -194,7 +194,7 @@ end
 % rows must be plotted one by one, otherwise ordering information is lost!
 hold on;
 for i = 1:size(eegdata, 1)
-    ploh = plot(t, sig(i, :), 'b');
+    ploh = plot(xt, sig(i, :), 'b');
     if ismember(CHANNELS{i}, Arg.markChannels)% color marked channels
         set(ploh, 'Color', [1 0 0]);
     end
@@ -280,7 +280,7 @@ if Arg.plotEvents && ~isempty(EEG.event)
             pk = evplot(peekidx);
             t = sbf_plotevt([pk.latency], {pk.label}, 'g', [0.9 0.9 0.9 0.5]);
         end
-        if ~isnan(t)
+        if isa(t, 'matlab.graphics.primitive.Text')
             top = t.Extent;
             top = top(2) + top(4);
         end
