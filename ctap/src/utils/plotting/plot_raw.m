@@ -280,8 +280,10 @@ if Arg.plotEvents && ~isempty(EEG.event)
             pk = evplot(peekidx);
             t = sbf_plotevt([pk.latency], {pk.label}, 'g', [0.9 0.9 0.9 0.5]);
         end
-        if ~isnan(t), top = t.Extent; end
-        top = top(2) + top(4);
+        if ~isnan(t)
+            top = t.Extent;
+            top = top(2) + top(4);
+        end
     end
 end
 %return output value
