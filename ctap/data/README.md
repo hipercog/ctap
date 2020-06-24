@@ -61,8 +61,24 @@ Importantly, please note that the signals included in these sets are randomized 
 Andrzejak RG, Lehnertz K, Rieke C, Mormann F, David P, Elger CE (2001) _Indications of nonlinear deterministic and finite dimensional structures in time series of brain electrical activity: Dependence on recording region and brain state_, Phys. Rev. E, 64, 061907
 
 
+# Dataset 3: 01C_vigilance_EC_clean.set
 
-# Dataset 3: SCCN eeg_recording_8.bdf
+Data is from a standard Vigilance protocol defined by the University Hospital Leipzig (to be used with their VIGALL algorithm), recorded at University of Helsinki as part of CENT project (Cowley et al, 2016).
+
+## Experimental Setup
+Dataset was recorded from a healthy right-handed male subject, aged 29. Within the period of data included, subject was instructed to remain seated and relaxed with eyes closed. They reported that they did not fall asleep, and arrived at the experiment with a high score of 3 on Karolinska sleepiness scale, and had consumed no stimulants/depressants and no medications during last 24 hrs.
+
+### Technical Information
+
+EEG data were collected synchronously from 128 scalp and four electroocular electrodes with an active reference (Biosemi, Amsterdam) at a sampling rate of 512 Hz with 24-bit A/D resolution. Data was FIR filtered to high-pass at 0.5Hz, lowpass at 45Hz. Channel locations were loaded from Biosemi's 'chanlocs128_pist.elp' file. Data was then rereferenced to the linked mastoids. 90s of clean data in the time window 450-540s was selected, and non-EEG channels were discarded.
+
+### References
+https://research.uni-leipzig.de/vigall/
+Cowley, B., Holmström, É., Juurmaa, K., Kovarskis, L., & Krause, C. M. (2016). Computer Enabled Neuroplasticity Treatment: A Clinical Trial of a Novel Design for Neurofeedback Therapy in Adult ADHD. Frontiers in Human Neuroscience, 10(205). https://doi.org/10.3389/fnhum.2016.00205
+
+
+
+# Dataset 4 (download): SCCN eeg_recording_8.bdf
 
 Data is from the database of HeadIT (Human Electrophysiology, Anatomic Data and Integrated Tools Resource), run by the UCSD SCCN lab http://headit.ucsd.edu/studies/9d557882-a236-11e2-9420-0050563f2612
 
