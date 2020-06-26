@@ -66,7 +66,11 @@ SWPipeParams.detect_bad_channels.method = 'variance';
 
 SweepParams.funName = 'CTAP_detect_bad_channels';
 SweepParams.paramName = 'bounds';
-SweepParams.values = num2cell(1.5:0.3:7);
+values = num2cell(1.5:0.3:7);
+lowbound = 3;
+for i=1:length(values)
+    SweepParams.values{i}=[-lowbound; values{i}];
+end
 
 
 % Run preprocessing pipe
@@ -111,14 +115,12 @@ end
 
 %% Analyze
 for k = 1:numel(Arg.MC.measurement)
-    %for k = 1
     
     k_id = Arg.MC.measurement(k).casename;
     k_synid = strrep(Arg.MC.measurement(k).subject,'_syndata','');
     
     % Load needed datasets
     % Original data (for synthetic datasets)
-    
     [EEG_n, EEGart, EEGclean] = param_sweep_sdload(k_synid, PARAM);
     
     % CTAP data that the sweep was based on
@@ -136,53 +138,108 @@ for k = 1:numel(Arg.MC.measurement)
     dmat = NaN(n_sweeps, 2);
     cost_arr = NaN(n_sweeps, 1);
     
+    dmmat = zeros(n_sweeps, 3);
+    performance = zeros(n_sweeps, 3);
+    performance1 = zeros(n_sweeps, 3);
     ep_win = [-1, 1]; %sec
     ch_inds = horzcat(78:83, 91:96); %frontal
     EEGclean.event = EEGprepro.event;
     EEG_clean_ep = pop_epoch( EEGclean, {'blink'}, ep_win);
-    
+
     tmp_savedir = fullfile(PARAM.path.sweepresDir, k_id);
     mkdir(tmp_savedir);
     for i = 1:n_sweeps
-        dmat(i,:) = [SweepParams.values{i},...
-            numel(SWEEG{i}.CTAP.badchans.variance.chans) ];
-        myReport(sprintf('mad: %1.2f, n_chans: %d\n', dmat(i,1), dmat(i,2))...
+        dmat(i,:) = [values{i},...
+                    numel(SWEEG{i}.CTAP.badchans.(method).chans)];
+        count = 0;
+        for n=1:numel(SWEEG{i}.CTAP.badchans.(method).chans)
+            if(ismember(SWEEG{i}.CTAP.badchans.(method).chans(n),artifact_chanloc))
+                count=count+1;
+            end
+        end
+        dmmat(i,:) = [values{i},...
+                    count...
+                    numel(SWEEG{i}.CTAP.badchans.(method).chans)];
+        myReport(sprintf('mad: %1.2f, n_chans: %d, n_true_badchans:%d\n', dmmat(i,1), dmmat(i,3), dmmat(i,2))...
             , fullfile(tmp_savedir, 'sweeplog.txt'));
         
         % PLOT BAD CHANS
-        chinds = get_eeg_inds(EEGprepro, SWEEG{i}.CTAP.badchans.variance.chans);
+        badness = numel(SWEEG{i}.CTAP.badchans.(method).chans);
+        chinds = get_eeg_inds(EEGprepro, SWEEG{i}.CTAP.badchans.(method).chans);
         if any(chinds)
             figh = ctaptest_plot_bad_chan(EEGprepro, chinds...
-                , 'context', sprintf('sweep-%d', i)...
-                , 'savepath', tmp_savedir);
+                    , 'context', sprintf('sweep-%d', i)...
+                    , 'savepath', tmp_savedir);
         end
+        
+        
+        sensitivity = count/PARAM.syndata.WRECK_N;
+        specificity = (SWEEG{i}.nbchan-10-badness+count)/(SWEEG{i}.nbchan-10);
+        TPR = sensitivity; 
+        FPR = (badness-count)/(SWEEG{i}.nbchan-10);
+        performance(i,:) = [values{i},...
+                        sensitivity...
+                        specificity];
+        performance1(i,:) = [values{i},...
+                        FPR,...
+                        TPR];
+                    
+        myReport(sprintf('mad: %1.2f, sensitivity(TPR): %1.2f, specificity:%1.2f, FPR:%1.2f\n', performance(i,1), performance(i,2), performance(i,3)),performance(i,2)...
+            , fullfile(tmp_savedir, 'sweep_performence_log.txt'));
     end
-    %plot(cost_arr, '-o')
     
-    figH = figure();
-    plot(dmat(:,1), dmat(:,2), '-o');
+    save(fullfile(PARAM.path.sweepresDir,...
+                    sprintf('sweep_badchan_%s_%s.mat', k_id, test_id )),'dmmat');
+                
+    %plot Number of artefactual channels detected
+    figH_1 = figure();
+    plot(dmmat(:,1), dmmat(:,2),'--o',dmmat(:,1), dmmat(:,3),'--*')
     xlabel('MAD multiplication factor');
     ylabel('Number of artefactual channels');
-    saveas(figH, fullfile(PARAM.path.sweepresDir,...
-        sprintf('sweep_N-bad-chan_%s.png', k_id)));
-    close(figH);
+    legend('The number of detected coincidence with generated badchan','badchan detected')
+    saveas(figH_1, fullfile(PARAM.path.sweepresDir,...
+                        sprintf('sweep_N-bad-chan-num-meets_%s_%s.png', k_id,  SWPipeParams.detect_bad_channels.method)));
+    close(figH_1);
+    
+    %plot performance of different parameters
+    figH_2 = figure();
+    plot(performance(:,1), performance(:,2),'--o',performance(:,1), performance(:,3),'--*')
+    xlabel('MAD multiplication factor');
+    ylabel('performance');
+    legend('sensitivity','specificity')
+    saveas(figH_2, fullfile(PARAM.path.sweepresDir,...
+                sprintf('sweep_N-bad-chan-performance_%s_%s.png', k_id,  SWPipeParams.detect_bad_channels.method)));
+    close(figH_2);
+    
+    %plot ROC space 
+    figH_3 = figure();
+    x = linspace(0,1);
+    y = x;
+    p = performance1(:,1);
+    plot(performance1(:,2), performance1(:,3),'o',x,y,'--')
+    xlabel('FPR');
+    ylabel('TPR');
+    for i=1:length(p)
+        text(performance1(i,2), performance1(i,3),num2str(i));
+    end
+    title('ROC Space')
+    saveas(figH_3, fullfile(PARAM.path.sweepresDir,...
+                        sprintf('sweep_N-bad-chan-performance1_%s_%s.png', k_id,  SWPipeParams.detect_bad_channels.method)));
+    close(figH_3);
+    
+    
     
     
     %% pick best bounds parameter and update Cfg
-    bounds = dmat(:,1);
-    channel_dected = dmat(:,2);
-    res = bounds(1);
-    cd = 0;
-    for i = 1:numel(bounds)
-        if channel_dected(i)<=PARAM.syndata.WRECK_N && channel_dected(i)> cd
-            cd = channel_dected(i);
-            res = bounds(i);
-        end
-    end
-    
-    res =  2.400000;
+    dist_p = zeros(n_sweeps, 1);
+    for i = 1:n_sweeps
+        dist_p(i) = sqrt((0-performance1(i,2))^2+(1-performance1(i,3))^2);
+    end   
+    [M,I] = max(dist_p);
+    res =  values(I);
+
     pipeFun = strrep(SweepParams.funName, 'CTAP_', '');
-    SWPipeParams.(pipeFun).(SweepParams.paramName) = res;
+    SWPipeParams.(pipeFun).(SweepParams.paramName) = [-3;res];
     Cfg.ctap.(pipeFun) = SWPipeParams.(pipeFun);
     msg = myReport(sprintf('the best parameter:', res)...
         , Cfg.env.logFile);
