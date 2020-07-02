@@ -26,10 +26,10 @@ PARAM = param_sweep_setup(PROJECT_ROOT);
  param_sweep_sdgen('BCICIV_calib_ds1a.set', chanlocs, PARAM);
 % 
 % % second synthetic dataset
- param_sweep_sdgen('B-scalp-EC-Oall.set', chanlocs, PARAM);
+ %param_sweep_sdgen('B-scalp-EC-Oall.set', chanlocs, PARAM);
 % 
 % % third synthetic dataset
- param_sweep_sdgen('A-scalp-EO-Zall.set', chanlocs, PARAM);
+% param_sweep_sdgen('A-scalp-EO-Zall.set', chanlocs, PARAM);
 
 % real dataset
 %param_sweep_sdgen('eeg_recording_1_session_meas.set', chanlocs, PARAM);
