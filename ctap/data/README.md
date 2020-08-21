@@ -61,7 +61,7 @@ Importantly, please note that the signals included in these sets are randomized 
 Andrzejak RG, Lehnertz K, Rieke C, Mormann F, David P, Elger CE (2001) _Indications of nonlinear deterministic and finite dimensional structures in time series of brain electrical activity: Dependence on recording region and brain state_, Phys. Rev. E, 64, 061907
 
 
-# Dataset 3: 01C_vigilance_EC_clean.set
+# Dataset 3: 18C_vigilance_EC_clean.set
 
 Data is from a standard Vigilance protocol defined by the University Hospital Leipzig (to be used with their VIGALL algorithm), recorded at University of Helsinki as part of CENT project (Cowley et al, 2016).
 
