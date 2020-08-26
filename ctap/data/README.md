@@ -61,7 +61,7 @@ Importantly, please note that the signals included in these sets are randomized 
 Andrzejak RG, Lehnertz K, Rieke C, Mormann F, David P, Elger CE (2001) _Indications of nonlinear deterministic and finite dimensional structures in time series of brain electrical activity: Dependence on recording region and brain state_, Phys. Rev. E, 64, 061907
 
 
-# Dataset 3: 01C_vigilance_EC_clean.set
+# Dataset 3: 18C_vigilance_EC_clean.set
 
 Data is from a standard Vigilance protocol defined by the University Hospital Leipzig (to be used with their VIGALL algorithm), recorded at University of Helsinki as part of CENT project (Cowley et al, 2016).
 
@@ -70,7 +70,7 @@ Dataset was recorded from a healthy right-handed male subject, aged 29. Within t
 
 ### Technical Information
 
-EEG data were collected synchronously from 128 scalp and four electroocular electrodes with an active reference (Biosemi, Amsterdam) at a sampling rate of 512 Hz with 24-bit A/D resolution. Data was FIR filtered to high-pass at 0.5Hz, lowpass at 45Hz. Channel locations were loaded from Biosemi's 'chanlocs128_pist.elp' file. Data was then rereferenced to the linked mastoids. 90s of clean data in the time window 450-540s was selected, and non-EEG channels were discarded. Code for these steps (after loading data to variable 'eeg'):
+EEG data were collected synchronously from 128 scalp and four electroocular electrodes with an active reference (Biosemi, Amsterdam) at a sampling rate of 512 Hz with 24-bit A/D resolution. Data was FIR filtered to high-pass at 0.5Hz, lowpass at 45Hz. Channel locations were loaded from Biosemi's 'chanlocs128_pist.elp' file. Data was then rereferenced to the linked mastoids. 180s of clean data in the time window 470-650s was selected, and non-EEG channels were discarded. Code for these steps (after loading data to variable 'eeg'):
 
 ```
 eeg = pop_eegfiltnew(eeg, 'locutoff', 0.5, 'hicutoff', 45);
