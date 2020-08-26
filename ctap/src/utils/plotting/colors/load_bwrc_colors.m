@@ -1,4 +1,4 @@
-function load_bwrc_colors(mapnum)
+function map = load_bwrc_colors(mapnum)
 %FUNCTION LOAD_BWRC_COLORS returns a color map based on BWRC color palette.
 % Options are 1 to 6, test to see.
 %
@@ -1571,3 +1571,4 @@ assignin('caller', 'BWRC_MAP5', BWRC_MAP5)
 assignin('caller', 'BWRC_MAP6', BWRC_MAP6)
 
 colormap(eval(['BWRC_MAP' num2str(mapnum)]));
+map = eval(['BWRC_MAP' num2str(mapnum)]);

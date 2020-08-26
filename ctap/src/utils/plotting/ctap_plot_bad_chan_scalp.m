@@ -10,7 +10,7 @@ p.addRequired('badness', @isnumeric); %TODO: could use this as optional input,
 % with default = [EEG.CTAP.artifact.variance.channel_idx]...but 'artifact'
 % field is not generated except when using synthetic data?
 p.addParameter('context', '', @ischar);
-p.addParameter('savepath', '', @isdir);
+p.addParameter('savepath', '', @isfolder);
 p.parse(EEG, badness, varargin{:});
 Arg = p.Results;
 
