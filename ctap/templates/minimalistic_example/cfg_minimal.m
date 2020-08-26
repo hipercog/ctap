@@ -26,7 +26,7 @@ Cfg.env.paths.ctapRoot = fullfile(...
 % Channel location file
 % For demonstration purposes this is in ctap repo folder "res", 
 % which should be in your path and therefore accessible without full path
-Cfg.eeg.chanlocs = 'chanlocs128_biosemi_withEOG_demo.elp';
+Cfg.eeg.chanlocs = 'chanlocs128_biosemi_withEOG.elp';
 
                 
 %% Define other important stuff
