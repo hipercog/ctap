@@ -6,7 +6,7 @@ reset(globalStream);
 if ~isdir(OUTDIR), mkdir(OUTDIR); end;
 
 % Data generation parameters
-CH_FILE = 'chanlocs128_biosemi_withEOG_demo.elp';
+CH_FILE = 'chanlocs128_biosemi_withEOG.elp';
 SRATE = 100;
 EEG_LEN_MIN = 1;
 EEG_LENGTH = 60 * EEG_LEN_MIN; %in seconds 
