@@ -133,6 +133,8 @@ switch Arg.classMethod
 % This would be a good option but no open source implementation was found.
 % Buying extra toolboxes would solve the problem...
 
+%         T = clusterdata(Dv_sub, cutoff);
+
     case 'kmeans'
 %--------------------------------------------------------------------------
 %%% k-means clustering
