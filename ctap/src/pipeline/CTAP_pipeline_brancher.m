@@ -509,7 +509,6 @@ function i_Cfg_tmp = sbf_execute_pipefun
             Cfg.pipe.current.set = i + Cfg.pipe.totalSets - numel(runSets);
             Cfg.pipe.current.funAtSet = k;
             [i_EEG, i_Cfg_tmp] = Cfg.pipe.stepSets(i).funH{k}(i_EEG, Cfg);
-            hh = 1;
         otherwise
             % Unpack Cfg to pass parameters to function via
             % varargin, as name, value pairs in cell array

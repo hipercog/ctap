@@ -161,6 +161,13 @@ if ~isempty(Arg.field)
     myReport('WARN^ ^ ^ ^ CAUTION - CHECK YOUR CHANLOCS ASSIGNMENT! ^ ^ ^ ^');
 end 
 
+%define default types
+for idx = 1:numel(EEG.chanlocs)
+    if isempty(EEG.chanlocs(idx).type)
+        EEG.chanlocs(idx).type = 'EEG';
+    end
+end
+
 % tidy up - get rid of user-defined channels
 if ~isempty(Arg.tidy)
     if ~iscell(Arg.tidy{1})

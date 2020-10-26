@@ -47,28 +47,11 @@ clear Pipe;
 
 i = 1; 
 Pipe(i).funH = {@CTAP_load_data,...
-                @CTAP_blink2event,...
-                @CTAP_generate_cseg}; 
+%                  @CTAP_blink2event,...
+%                  @CTAP_generate_cseg
+                }; 
 Pipe(i).id = [num2str(i) '_loaddata'];
-
-%{
-i = i+1; 
-Pipe(i).funH = {@CTAP_run_ica}; 
-Pipe(i).id = [num2str(i) '_ICA'];
-
-i = i+1; 
-Pipe(i).funH = {@CTAP_blink2event}; 
-Pipe(i).id = [num2str(i) '_tmp'];
-
-clear('PipeParams');
-PipeParams.run_ica.method = 'fastica';
-PipeParams.run_ica.overwrite = true;
-PipeParams.run_ica.channels = {'EEG' 'EOG'};
-PipeParams.detect_bad_comps.method = 'blink_template';
-%}
-
 PipeParams = struct([]);
-
 Arg.pipe.runSets = {'all'};
 Arg.pipe.stepSets = Pipe;
 Arg = ctap_auto_config(Arg, PipeParams);
@@ -80,11 +63,30 @@ SWPipe(i).funH = {  @CTAP_detect_bad_channels,... %detect bad channels
                     @CTAP_reject_data}; % reject ICs
 SWPipe(i).id = [num2str(i) '_badchan_correction'];
 
-SWPipeParams.detect_bad_channels.method = 'variance';
-
+method = 'variance';
+%method = 'maha_fast';
+SWPipeParams.detect_bad_channels.method = method;
 SweepParams.funName = 'CTAP_detect_bad_channels';
-SweepParams.paramName = 'bounds';
-SweepParams.values = num2cell(1.5:0.3:7);
+values = num2cell(1.5:0.3:7);
+switch method
+%     case 'recufast'
+%         bounds_value = num2cell(1.5:0.3:7);
+%         iters_value = num2cell(1:5);
+%         for m=1:numel(bounds_value)
+    case 'maha_fast'
+        SweepParams.paramName = 'factorVal';
+        SweepParams.values =  values;
+
+    case 'variance'
+        SweepParams.paramName = 'bounds';
+        lowbound = 3;
+        for i=1:length(values)
+            SweepParams.values{i}=[-lowbound; values{i}];
+        end
+end
+
+%test_id = [method , '_o'];
+test_id = [method , '_all6'];
 
 
 %% Run preprocessing pipe
@@ -161,86 +163,125 @@ for k = 1:numel(Arg.MC.measurement)
     cost_arr = NaN(n_sweeps, 1);
     
     dmmat = zeros(n_sweeps, 3);
-
+    performance = zeros(n_sweeps, 3);
+    performance1 = zeros(n_sweeps, 3);
     ep_win = [-1, 1]; %sec
     ch_inds = horzcat(78:83, 91:96); %frontal
-    EEGclean.event = EEGprepro.event;
-    EEG_clean_ep = pop_epoch( EEGclean, {'blink'}, ep_win);
 
     tmp_savedir = fullfile(PARAM.path.sweepresDir, k_id);
     mkdir(tmp_savedir);
     for i = 1:n_sweeps
-        dmat(i,:) = [SweepParams.values{i},...
-                    numel(SWEEG{i}.CTAP.badchans.variance.chans) ];
+        dmat(i,:) = [values{i},...
+                    numel(SWEEG{i}.CTAP.badchans.(method).chans)];
         count = 0;
-        for n=1:numel(SWEEG{i}.CTAP.badchans.variance.chans)
-            if(ismember(SWEEG{i}.CTAP.badchans.variance.chans(n),artifact_chanloc))
+        for n=1:numel(SWEEG{i}.CTAP.badchans.(method).chans)
+            if(ismember(SWEEG{i}.CTAP.badchans.(method).chans(n),artifact_chanloc))
                 count=count+1;
             end
         end
-        dmmat(i,:) = [SweepParams.values{i},...
+        dmmat(i,:) = [values{i},...
                     count...
-                    numel(SWEEG{i}.CTAP.badchans.variance.chans)];
+                    numel(SWEEG{i}.CTAP.badchans.(method).chans)];
         myReport(sprintf('mad: %1.2f, n_chans: %d\n', dmat(i,1), dmat(i,2))...
             , fullfile(tmp_savedir, 'sweeplog.txt'));
-
+        
         % PLOT BAD CHANS
-        chinds = get_eeg_inds(EEGprepro, SWEEG{i}.CTAP.badchans.variance.chans);
+        badness = numel(SWEEG{i}.CTAP.badchans.(method).chans);
+        chinds = get_eeg_inds(EEGprepro, SWEEG{i}.CTAP.badchans.(method).chans);
+        
         if any(chinds)
             figh = ctaptest_plot_bad_chan(EEGprepro, chinds...
-                , 'context', sprintf('sweep-%d', i)...
-                , 'savepath', tmp_savedir);
+                    , 'context', sprintf('sweep-%d', i)...
+                    , 'savepath', tmp_savedir);
         end
+        
+        
+        sensitivity = count/PARAM.syndata.WRECK_N;
+        specificity = (SWEEG{i}.nbchan-10-badness+count)/(SWEEG{i}.nbchan-10);
+        TPR = sensitivity; 
+        FPR = (badness-count)/(SWEEG{i}.nbchan-10);
+        performance(i,:) = [values{i},...
+                        sensitivity...
+                        specificity];
+        performance1(i,:) = [values{i},...
+                        FPR,...
+                        TPR];
+        myReport(sprintf('mad: %1.2f, sensitivity(TPR): %1.2f, specificity: %1.2f, FPR: %1.2f\n', performance(i,1), performance(i,2), performance(i,3),performance1(i,2))...
+            , fullfile(tmp_savedir, 'sweep_performence_log.txt'));
     end
+    
+    
+    
+    save(fullfile(PARAM.path.sweepresDir,...
+                    sprintf('sweep_badchan_%s_%s.mat', k_id, test_id )),'dmmat');
     %plot(cost_arr, '-o')
 
-    figH = figure();
-    plot(dmat(:,1), dmat(:,2), '-o');
-    xlabel('MAD multiplication factor');
-    ylabel('Number of artefactual channels');
-    saveas(figH, fullfile(PARAM.path.sweepresDir,...
-            sprintf('sweep_N-bad-chan_%s.png', k_id)));
-    close(figH);
+%     figH = figure();
+%     plot(dmat(:,1), dmat(:,2), '-o');
+%     xlabel('MAD multiplication factor');
+%     ylabel('Number of artefactual channels');
+%     saveas(figH, fullfile(PARAM.path.sweepresDir,...
+%                     sprintf('sweep_N-bad-chan_%s_%s.png', k_id, SWPipeParams.detect_bad_channels.method)));
+%     %sprintf('sweep_N-bad-  chan_%s_%s_%s.png', k_id, num2str(lowbound), SWPipeParams.detect_bad_channels.method)));
+% 
+%     close(figH);
 
+    figH_2 = figure();
+    plot(performance(:,1), performance(:,2),'--o',performance(:,1), performance(:,3),'--*')
+    xlabel('MAD multiplication factor');
+    ylabel('performance');
+    legend('sensitivity','specificity')
+    saveas(figH_2, fullfile(PARAM.path.sweepresDir,...
+                        sprintf('sweep_N-bad-chan-performance_%s_%s.png', k_id,  SWPipeParams.detect_bad_channels.method)));
+    close(figH_2);
+    
+    figH_3 = figure();
+    x = linspace(0,1);
+    y = x;
+    p = performance1(:,1);
+    plot(performance1(:,2), performance1(:,3),'o',x,y,'--')
+    xlabel('FPR');
+    ylabel('TPR');
+    for i=1:length(p)
+        text(performance1(i,2), performance1(i,3),num2str(i));
+    end
+    title('ROC Space')
+    saveas(figH_3, fullfile(PARAM.path.sweepresDir,...
+                        sprintf('sweep_N-bad-chan-performance1_%s_%s.png', k_id,  SWPipeParams.detect_bad_channels.method)));
+    close(figH_3);
+    
     figH_1 = figure();
     plot(dmmat(:,1), dmmat(:,2),'--o',dmmat(:,1), dmmat(:,3),'--*')
     xlabel('MAD multiplication factor');
     ylabel('Number of artefactual channels');
+    legend('The number of detected coincidence with generated badchan','badchan detected')
     saveas(figH_1, fullfile(PARAM.path.sweepresDir,...
-            sprintf('sweep_N-bad-chan-num-meets_%s.png', k_id)));
+                        sprintf('sweep_N-bad-chan-num-meets_%s_%s.png', k_id,  SWPipeParams.detect_bad_channels.method)));
     close(figH_1);
+        %sprintf('sweep_N-bad-chan-num-meets_%s_%s_%s.png', k_id, num2str(lowbound), SWPipeParams.detect_bad_channels.method)));
 
     %% pick best bounds parameter
-    bounds = dmat(:,1);
-    channel_dected = dmat(:,2);
-    res = bounds(1);
-    cd = 0;
-    for i = 1:numel(bounds)
-        if channel_dected(i)<=PARAM.syndata.WRECK_N && channel_dected(i)> cd
-            cd = channel_dected(i);
-            res = bounds(i);
-        end
-    end
+
     %% Test quality of identifications
     %SweepParams.values
     %EEG.CTAP.artifact.variance.channel_idx
     %EEG.CTAP.artifact.variance.multiplier
 
     th_value = 2;
-    th_idx = find( [SweepParams.values{:}] <= th_value , 1, 'last' );
+    th_idx = find( [values{:}] <= th_value , 1, 'last' );
 
     %SWEEG{th_idx}.CTAP.badchans.variance.chans
 
     % channels identified as artifactual which are actually clean
-    setdiff(SWEEG{th_idx}.CTAP.badchans.variance.chans, ...
-            EEG.CTAP.artifact.variance_table.name)
-
-    % wrecked channels not identified
-    tmp2 = setdiff(EEG.CTAP.artifact.variance_table.name, ...
-            SWEEG{th_idx}.CTAP.badchans.variance.chans);
-
-    chm = ismember(EEG.CTAP.artifact.variance_table.name, tmp2);
-    EEG.CTAP.artifact.variance_table(chm,:)   
+%     setdiff(SWEEG{th_idx}.CTAP.badchans.variance.chans, ...
+%             EEG.CTAP.artifact.variance_table.name)
+% 
+%     % wrecked channels not identified
+%     tmp2 = setdiff(EEG.CTAP.artifact.variance_table.name, ...
+%             SWEEG{th_idx}.CTAP.badchans.variance.chans);
+% 
+%     chm = ismember(EEG.CTAP.artifact.variance_table.name, tmp2);
+%     EEG.CTAP.artifact.variance_table(chm,:)   
 
     clear('SWEEG');
     

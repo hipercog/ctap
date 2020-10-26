@@ -1,12 +1,37 @@
-function [EEG,Cfg] = CTAP_test_chan(EEG, Cfg)
+function [EEG,Cfg] = CTAP_hydra_chan(EEG, Cfg)
 
+% sweep the provided value range and decide the best parameter
+%
+% Note:
+%   * assumes ctap root to be in workspace
+%   * run batch_psweep_datagen.m prior to running this script!
+%   * all parameter need should attached to Cfg.ctap.detect_bad_channels and pass Cfg as function parameter.
+%
+% Syntax:
+%   [EEG, Cfg] = CTAP_test_chan(EEG, Cfg);
+%
+% Inputs:
+%   EEG         struct, EEGLAB structure
+%   Cfg         struct, CTAP configuration structure
+%   Cfg.ctap.detect_bad_channels:
+%   .method       string/char
+%   .values       numerical array
+%   Other arguments as in ctapeeg_detect_bad_channels().
+%
+% Outputs:
+%   EEG         struct, EEGLAB structure modified by this function
+%   Cfg         struct, Cfg struct is updated by parameters,values actually used
+%   Cfg.ctap.detect_bad_channels:
+%   .(paramName)   paramName see ctapeeg_detect_bad_channels, each
+%                  methods have the corresponding paramName, and it's value
+%                  should be the best parameter picked.
+% ;
 
 
 BRANCH_NAME = 'ctap_hydra_badchan';
-
 FILE_ROOT = mfilename('fullpath');
 PROJECT_ROOT = FILE_ROOT(1:strfind(FILE_ROOT, fullfile(...
-    'CTAP_test_chan')) - 1);
+    'CTAP_hydra_chan')) - 1);
 
 
 RERUN_PREPRO = true;
@@ -16,7 +41,6 @@ STOP_ON_ERROR = true;
 OVERWRITE_OLD_RESULTS = true;
 
 PARAM = param_sweep_setup(PROJECT_ROOT);
-
 PARAM.path.sweepresDir = fullfile(PARAM.path.projectRoot, 'sweepres_channels');
 mkdir(PARAM.path.sweepresDir);
 
@@ -68,7 +92,7 @@ values = num2cell(1.5:0.3:7);
 switch method
     case 'recufast'
         
-        for 
+         
     case 'maha_fast'
         SweepParams.paramName = 'factorVal';
         SweepParams.values =  values;
@@ -99,30 +123,30 @@ if RERUN_PREPRO
 end
 
 
-%% Sweep
-% if RERUN_SWEEP
-%     for k = 1:numel(Arg.MC.measurement)
-%         
-%         k_id = Arg.MC.measurement(k).casename;
-%         
-%         %% Sweep
-%         % Note: This step does sweeping ONLY, preprocess using some other means
-%         %inpath = '/tmp/hydra/projtmp/projtmp/this/3_tmp';
-%         inpath = fullfile(Arg.env.paths.analysisRoot, '1_loaddata');
-%         infile = sprintf('%s.set', k_id);
-%         
-%         EEGprepro = pop_loadset(infile, inpath);
-%         
-%         % Note: This step does sweeping ONLY, preprocess using some other means
-%         [SWEEG, PARAMS] = CTAP_pipeline_sweeper(...
-%             EEGprepro, SWPipe, SWPipeParams, Arg, SweepParams);
-%         sweepres_file = fullfile(PARAM.path.sweepresDir, ...
-%             sprintf('sweepres_%s.mat', k_id));
-%         save(sweepres_file...
-%             , 'SWEEG', 'PARAMS','SWPipe','PipeParams', 'SweepParams', '-v7.3');
-%         clear('SWEEG');
-%     end
-% end
+% Sweep
+if RERUN_SWEEP
+    for k = 1:numel(Arg.MC.measurement)
+        
+        k_id = Arg.MC.measurement(k).casename;
+        
+        %% Sweep
+        % Note: This step does sweeping ONLY, preprocess using some other means
+        %inpath = '/tmp/hydra/projtmp/projtmp/this/3_tmp';
+        inpath = fullfile(Arg.env.paths.analysisRoot, '1_loaddata');
+        infile = sprintf('%s.set', k_id);
+        
+        EEGprepro = pop_loadset(infile, inpath);
+        
+        % Note: This step does sweeping ONLY, preprocess using some other means
+        [SWEEG, PARAMS] = CTAP_pipeline_sweeper(...
+            EEGprepro, SWPipe, SWPipeParams, Arg, SweepParams);
+        sweepres_file = fullfile(PARAM.path.sweepresDir, ...
+            sprintf('sweepres_%s.mat', k_id));
+        save(sweepres_file...
+            , 'SWEEG', 'PARAMS','SWPipe','PipeParams', 'SweepParams', '-v7.3');
+        clear('SWEEG');
+    end
+end
 
 
 %% Analyze
@@ -203,13 +227,13 @@ for k = 1:numel(Arg.MC.measurement)
     
     save(fullfile(PARAM.path.sweepresDir,...
                     sprintf('sweep_badchan_%s_%s.mat', k_id, test_id )),'dmmat');
-                
+    gt = zeros(n_sweeps,1)+numel(EEGprepro.CTAP.artifact.variance);           
     %plot Number of artefactual channels detected
     figH_1 = figure();
-    plot(dmmat(:,1), dmmat(:,2),'--o',dmmat(:,1), dmmat(:,3),'--*')
+    plot(dmmat(:,1), dmmat(:,2),'--o',dmmat(:,1), dmmat(:,3),'--*',dmmat(:,1),gt(:),'--x')
     xlabel('MAD multiplication factor');
     ylabel('Number of artefactual channels');
-    legend('The number of detected coincidence with generated badchan','badchan detected')
+    legend('The number of detected coincidence with generated badchan','badchan detected','ground truth')
     saveas(figH_1, fullfile(PARAM.path.sweepresDir,...
                         sprintf('sweep_N-bad-chan-num-meets_%s_%s.png', k_id,  SWPipeParams.detect_bad_channels.method)));
     close(figH_1);
@@ -252,13 +276,23 @@ for k = 1:numel(Arg.MC.measurement)
     res =  cell2mat(values(I));
 
     pipeFun = strrep(SweepParams.funName, 'CTAP_', '');
-    SWPipeParams.(pipeFun).(SweepParams.paramName) = [-3;res];
-    Cfg.ctap.(pipeFun) = SWPipeParams.(pipeFun);
-    msg = myReport(sprintf('the best parameter:', res)...
+    switch method
+        case 'maha_fast'
+            SWPipeParams.(pipeFun).(SweepParams.paramName) = res;
+            Cfg.ctap.(pipeFun).(SweepParams.paramName) = res;
+            
+        case 'variance'
+            SWPipeParams.(pipeFun).(SweepParams.paramName) = [-lowbound;res];
+            Cfg.ctap.(pipeFun).(SweepParams.paramName) = [-lowbound;res];
+    end
+
+    
+   
+    msg = myReport(sprintf('the best parameter: %f', res)...
         , Cfg.env.logFile);
     EEG.CTAP.history(end+1) = create_CTAP_history_entry(msg, mfilename, SWPipeParams.(pipeFun));
     
-    
-    
- %end
+    clear('SWEEG');
+
+end
 end
