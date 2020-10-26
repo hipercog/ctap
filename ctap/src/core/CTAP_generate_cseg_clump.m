@@ -23,7 +23,7 @@ function [EEG, Cfg] = CTAP_generate_cseg_clump(EEG, Cfg)
 %   .csegEvent      string, Event type string for the events, 
 %                   default: 'cseg'
 %   Other arguments should match the varargin of
-%   ctapeeg_add_regular_events().
+%   eeg_add_regular_events().
 %
 % Outputs:
 %   EEG         struct, EEGLAB structure modified by this function

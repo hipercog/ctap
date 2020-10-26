@@ -62,7 +62,8 @@ idx = single(Arg.channels);
 nchan = numel(idx);
 %stats don't care about epoch boundaries, I think? so reshape to handy 2D
 data = reshape(EEG.data(idx,:,:), nchan, EEG.pnts * EEG.trials);
-data = data(:, single(Arg.latency):single(Arg.latency + Arg.duration - 1));
+data = data(:, ...
+    single(Arg.latency):single(min(Arg.latency + Arg.duration - 1, EEG.pnts)));
 
 
 %% get stats of each channel requested, build a matrix of stats

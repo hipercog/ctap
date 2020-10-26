@@ -1,5 +1,5 @@
 function CsegMeta = gather_cseg_metadata(EEG, csegEvent)
-%GATHER_CSEG_METADATA - Collects calculation segment related metadata from EEG.event
+%GATHER_CSEG_METADATA - Collects calculation segment metadata from EEG.event
 %
 % Description:
 %   * collect calculation segment (cseg) related data from EEG.event

@@ -14,7 +14,7 @@ function [comp_match, method_data] = ctapeeg_detect_ICs_blinktemplate(EEG, Arg)
 
     % Compute blink ERP for future reference
     EEGbl = pop_epoch( EEG, {'blink'}, [-0.3, 0.3]);
-    EEGbl = pop_rmbase( EEGbl, [-300, 0]);
+    EEGbl = pop_rmbase( EEGbl, [EEGbl.xmin * 1000, 0]);
     blERPdf = create_dataframe(mean(EEGbl.data, 3),...
         {'channel', 'time'},...
         {{EEGbl.chanlocs.labels}, EEGbl.times});

@@ -12,14 +12,16 @@ function [EEG, Cfg] = CTAP_generate_cseg(EEG, Cfg)
 %   EEG         struct, EEGLAB structure
 %   Cfg         struct, CTAP configuration structure
 %   Cfg.ctap.generate_cseg:
-%   .segmentLength  [1,1] numeric, cseg length in sec, default: 5
-%   .segmentOverlap [1,1] numeric, cseg overlap in precentage, value range
-%                   [0...1], default: 0
 %   .csegEvent      string, Event type string for the events, 
 %                   default: 'cseg'
-%   Other arguments should match the varargin of
-%   ctapeeg_add_regular_events().
-%
+%   .regev          boolean, Create regular events (true) or event-locked events
+%                   default: true
+%   Depending on value or .regev, other arguments should match:
+%       eeg_add_regular_events()
+%   OR
+%       eeg_tile_locked_evts()
+% 
+% 
 % Outputs:
 %   EEG         struct, EEGLAB structure modified by this function
 %   Cfg         struct, Cfg struct is updated by parameters,values actually used
@@ -37,9 +39,8 @@ function [EEG, Cfg] = CTAP_generate_cseg(EEG, Cfg)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% Set optional arguments
-Arg.segmentLength = 5;%in sec
-Arg.segmentOverlap = 0; %in percentage [0,1]
 Arg.csegEvent = 'cseg'; %event type string
+Arg.regev = true;
 
 % Override defaults with user parameters
 if isfield(Cfg.ctap, 'generate_cseg')
@@ -49,11 +50,11 @@ vargs = struct2varargin(Arg);
 
 
 %% Add events
-EEG = ctapeeg_add_regular_events(EEG,...
-                                Arg.segmentLength,...
-                                Arg.segmentOverlap,...
-                                Arg.csegEvent,...
-                                vargs{:});
+if Arg.regev
+    EEG = eeg_add_regular_events(EEG, Arg.csegEvent, vargs{:});
+else
+    EEG = eeg_tile_locked_evts(EEG, Arg.csegEvent, Arg.TILESxEV, Arg.LOCK_EVTS, Arg.END_EVTS);
+end
                       
 % MAYBEDO: Create a visualization of how the events are located with
 % respect to e.g. boundary events and the dataset duration

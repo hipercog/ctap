@@ -72,6 +72,7 @@ for fn = 1:numel(fnames)
     end
 end
 
+clc
 myReport(sprintf('Begin analysis run at %s with stepSets:%s %s %s',...
     datestr(now), newline, char(Cfg.pipe.runSets)', newline), Cfg.env.logFile);
 EEG = struct;
@@ -109,7 +110,7 @@ else
     if numel(strucFilt.casename) == 0
        warning('CTAP_pipeline_looper:inputError',...
         'Source directory ''%s'' does not contain data for casename ''%s''. Please check.',...
-        srcSrcDir, Cfg.pipe.runMeasurements{1});
+        srcSubDir, Cfg.pipe.runMeasurements{1});
     end
     
 end

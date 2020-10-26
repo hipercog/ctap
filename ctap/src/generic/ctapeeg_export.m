@@ -46,7 +46,7 @@ function [EEG, varargout] = ctapeeg_export(EEG, varargin)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-sbf_check_input() % parse the varargin, set defaults
+Arg = sbf_check_input(); % parse the varargin, set defaults
 
 if ~isfolder(Arg.outdir), mkdir(Arg.outdir); end
 
@@ -81,7 +81,7 @@ varargout{2} = success;
 
 
 %% Sub-functions
-    function sbf_check_input() % parse the varargin, set defaults
+    function Arg = sbf_check_input() % parse the varargin, set defaults
         % Unpack and store varargin
         if isempty(varargin)
             vargs = struct;

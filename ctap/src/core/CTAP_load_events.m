@@ -54,9 +54,10 @@ end
 
 %% ASSIST
 errmsg = 'Log file is needed to load events!';
-if ~isfield(Arg, 'src')
-    error('CTAP_load_events:no_log', '%s :: No source given', errmsg)
-elseif isfolder(Arg.src)
+if ~isfield(Arg, 'src') || isempty(Arg.src)
+    Arg.src = 'EEG.event';
+    msg = 'WARN No source given, assuming this was intended. ';
+elseif (ischar(Arg.src) || iscellstr(Arg.src)) && isfolder(Arg.src)
     % Find filename containing subject number
     m{1} = find_filematch_bynum(Cfg.measurement.subject, Arg.src, Arg.log_ext);
     % Find filename closest matching to EEG filename
@@ -78,7 +79,7 @@ end
 %% CORE
 switch Arg.method
     case 'handle'
-        EEG = Arg.handle(EEG, Arg.src, rmfield(Arg, {'method' 'src'}));
+        EEG = Arg.handle(EEG, rmfield(Arg, {'method' 'src' 'handle'}));
         
     case 'presentation'
         EEG = pop_importpres(EEG, Arg.src);
@@ -94,7 +95,7 @@ end
 %% ERROR/REPORT
 Cfg.ctap.load_events = Arg;
 
-msg = myReport({msg 'Wrote events in ' EEG.setname ' - from log = ' Arg.src}...
+msg = myReport({msg 'Wrote events in <' EEG.setname '> from source = ' Arg.src}...
     , Cfg.env.logFile);
 
 EEG.CTAP.history(end+1) = create_CTAP_history_entry(msg, mfilename, Arg);

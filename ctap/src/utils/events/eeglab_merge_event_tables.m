@@ -35,7 +35,7 @@ function [newevent, rejevent] = eeglab_merge_event_tables(event1, event2, timeSy
 %
 %
 % Syntax:
-%   [newevent, rejevent] = merge_event_tables(event1, event2, timeSyncMode);
+%   [newevent, rejevent] = eeglab_merge_event_tables(event1, event2, timeSyncMode);
 %
 % Inputs:
 %   event#      struct, EEGLAB event table structure as in EEG.event

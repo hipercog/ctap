@@ -151,6 +151,7 @@ end
 
 
 %% Assign values
+event = repmat(struct('type', NaN, 'latency', 0), length(type), 1);
 for i = 1:length(type)
    
     event(i).type = type{i};

@@ -45,7 +45,7 @@ function [DAT, varargout] = ctapeeg_extract_signal(EEG, varargin)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-sbf_check_input() % parse the varargin, set defaults
+Arg = sbf_check_input(); % parse the varargin, set defaults
 
 
 %% Extract the requested data
@@ -68,7 +68,7 @@ varargout{2} = EEG;
 
 
 %% Sub-functions
-    function sbf_check_input() % parse the varargin, set defaults
+    function Arg = sbf_check_input() % parse the varargin, set defaults
         % Unpack and store varargin
         if isempty(varargin)
             vargs = struct;

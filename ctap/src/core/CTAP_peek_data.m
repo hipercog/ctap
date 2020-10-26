@@ -16,7 +16,7 @@ function [EEG, Cfg] = CTAP_peek_data(EEG, Cfg)
 %   EEG         struct, EEGLAB structure
 %   Cfg         struct, CTAP configuration structure
 %   Cfg.ctap.peek_data:
-%       .channels       cellstring array, chanlocs labels or type, 
+%       .channels       cellstr array, chanlocs labels or type, 
 %                       default: 'EEG'
 %       .overwrite      logical, wipe existing output from prior peek_data runs,
 %                       default: true 
@@ -44,9 +44,10 @@ function [EEG, Cfg] = CTAP_peek_data(EEG, Cfg)
 %                       default: 10
 %       .secs           numeric, seconds to plot from min to max, 
 %                       default: 0 16
-%       .peekevent      cellstring array, event name(s) to base peek windows on
-%       .peekindex      vector, index of such events to use, default (only if 
-%                       .peekevent is defined): uniform distribution of 10
+%       .peekevent      cellstr array, event name(s) to base peek windows on
+%       .peekindex      vector, index of peekevents to use as peek windows,
+%                               NOTE: .peekevent must be defined
+%                       default: uniform distribution of 10
 %
 % Outputs:
 %   EEG         struct, EEGLAB structure modified by this function

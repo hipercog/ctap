@@ -21,7 +21,7 @@ function [EEG, Cfg] = CTAP_select_evdata(EEG, Cfg)
 %               'own' - use each event's own duration field, if exists
 %               'next' - set evt duration = offset from next event; select by durations
 %               'fixed' - use a fixed duration given by Arg.duration = [min max]
-%   .duration   [1,1] numeric, Fixed millisec duration around selected events,
+%   .duration   [1 2] numeric, Fixed millisec duration around selected events,
 %                default: min, max = minus/plus one second, i.e. -+1000
 %
 % Outputs:
@@ -75,7 +75,8 @@ if isempty(event_match)
 end
 
 % Extract latencies of events
-event_lat = [EEG.event(event_match).latency]';
+event_lat = [EEG.event(event_match).latency];
+event_lat = event_lat(:);
 switch Arg.covertype
     case 'total'
         event_lat = [event_lat(1) + Arg.duration(1)...
@@ -87,7 +88,13 @@ switch Arg.covertype
 
     case 'own'
         if isfield(EEG.event, 'duration')
-            event_lat(:,2) = event_lat(:,1) + [EEG.event(event_match).duration]';
+            evdur = [EEG.event(event_match).duration];
+            if any(isnan(evdur))
+                error('CTAP_select_evdata:durationError',...
+                    'Some event durations are NaN.');
+            else
+                event_lat = [event_lat event_lat + evdur(:)];
+            end
         else
             error('CTAP_select_evdata:durationError',...
                     'Events have no ''duration'' field.');
