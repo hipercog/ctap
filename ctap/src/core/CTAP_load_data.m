@@ -89,4 +89,22 @@ EEG = add_CTAP(EEG, Cfg,...
     'time', time_specs,...
     'meta', result);
 
+
+%% HANDLE CHANLOCS
+if strcmp(EEG.CTAP.files.channelLocationsFile, '-UNSPECIFIED-')
+
+    %define default types
+    if ~isfield(EEG.chanlocs, 'type')
+        EEG.chanlocs.type = 'EEG';
+    else
+        for idx = 1:numel(EEG.chanlocs)
+            if isempty(EEG.chanlocs(idx).type)
+                EEG.chanlocs(idx).type = 'EEG';
+            end
+        end
+    end
+
+end
+
+
 EEG.CTAP.history = create_CTAP_history_entry(msg, mfilename, Arg);

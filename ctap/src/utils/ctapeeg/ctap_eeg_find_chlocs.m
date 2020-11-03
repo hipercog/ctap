@@ -10,13 +10,12 @@ function locstr = ctap_eeg_find_chlocs(Cfg)
 %   'cell' - assume it is cell string array of chanlocs filenames; return the
 %           cell contents at the index of the current subject number
 
-locstr = '-UNSPECIFIED-';
 
 if ~isfield(Cfg.eeg, 'chanlocs') || islogical(Cfg.eeg.chanlocs)
     % SUPPORT THE CASE WHEN CHANLOCS ARE ALREADY IN THE EEG FILE
     myReport('WARN No chanlocs data provided; assuming chanlocs are in EEG'...
         , Cfg.env.logFile);
-    return
+    locstr = '-UNSPECIFIED-';
 
 elseif exist(Cfg.eeg.chanlocs, 'file') == 2
     locstr = Cfg.eeg.chanlocs; 

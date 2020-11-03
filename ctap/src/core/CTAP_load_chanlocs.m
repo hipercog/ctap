@@ -159,14 +159,8 @@ if ~isempty(Arg.field)
     myReport({EEG.chanlocs.labels; EEG.chanlocs.type},...
         Cfg.env.logFile, sprintf('\t'));
     myReport('WARN^ ^ ^ ^ CAUTION - CHECK YOUR CHANLOCS ASSIGNMENT! ^ ^ ^ ^');
-end 
-
-%define default types
-for idx = 1:numel(EEG.chanlocs)
-    if isempty(EEG.chanlocs(idx).type)
-        EEG.chanlocs(idx).type = 'EEG';
-    end
 end
+
 
 % tidy up - get rid of user-defined channels
 if ~isempty(Arg.tidy)
