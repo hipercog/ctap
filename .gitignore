@@ -31,3 +31,22 @@ ehthumbs.db
 Thumbs.db
 dependencies/export_fig/*
 update_matlab_path_ctap_jkor.m
+
+
+# paramsweep output
+/ctap/templates/paramsweep_example/syndata
+/ctap/templates/paramsweep_example/batch_psweep_datagen
+
+/ctap/templates/paramsweep_example/ctap_hydra_badchan
+/ctap/templates/paramsweep_example/ctap_hydra_badseg
+/ctap/templates/paramsweep_example/ctap_hydra_blink
+
+/ctap/templates/paramsweep_example/logs
+
+/ctap/templates/paramsweep_example/sweepres_segments
+/ctap/templates/paramsweep_example/sweepres_channels
+/ctap/templates/paramsweep_example/sweepres_blinks
+
+sccn-clean-20min/
+
+untitled.m

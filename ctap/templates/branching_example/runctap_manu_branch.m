@@ -22,7 +22,7 @@ if ~isdir(project_dir), mkdir(project_dir); end;
 
 %% Create synthetic data (only if needed)
 % Note: Cfg needed to set data_dir_out
-data_dir_seed = fullfile(cd(),'ctap','data');
+data_dir_seed = fullfile(cd(),'ctap','data','test_data');
 data_dir = fullfile(Cfg.env.paths.projectRoot,'data','manuscript');
 if ( isempty(dir(fullfile(data_dir,'*.set'))) || OVERWRITE_SYNDATA)
     % Normally this is run only once

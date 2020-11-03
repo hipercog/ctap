@@ -65,7 +65,7 @@ ranges2 = sortrows(ranges2, 1);
 
 
 %% Create masks
-max_idx = max(ranges1(end,2), ranges2(end,2));
+max_idx = max(max(ranges1(:,2)), max(ranges2(:,2)));
 tf1 = NaN(max_idx, 1);
 tf2 = tf1;
 

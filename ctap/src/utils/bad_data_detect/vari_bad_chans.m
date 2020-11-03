@@ -71,6 +71,7 @@ else
     nmad = NaN;
 end
 
+
 Res = thresholdNplot(chanVarNorm, th, nmad, Arg.plot);
 
 %if user wants to kill worst n channels, or set n as limit of bad channels

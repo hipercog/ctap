@@ -1,11 +1,16 @@
 %% Clean SCCN data CTAP script
 % Runtime options for CTAP:
+
 STOP_ON_ERROR = true;
 OVERWRITE_OLD_RESULTS = true;
 
 
 %% Setup
-data_dir_in = '/home/ben/Benslab/CTAP/hydra/SEED_DATA/SCCN';
+FILE_ROOT = mfilename('fullpath');
+REPO_ROOT = FILE_ROOT(1:strfind(FILE_ROOT, fullfile(...
+    'ctap', 'templates', 'paramsweep_example', 'example_data_prepro_scripts','cleanSCCNdata')) - 1);
+data_dir_in = append(REPO_ROOT,'ctap/data');
+
 
 % Define step sets and their parameters
 [Cfg, ctap_args] = sbf_cfg(data_dir_in);
@@ -15,7 +20,7 @@ data_dir_in = '/home/ben/Benslab/CTAP/hydra/SEED_DATA/SCCN';
 Cfg.MC = path2measconf(data_dir_in, '*.bdf');
 % Select measurements to process
 clear('Filt')
-Filt.subject = 'eeg_recording_8';
+Filt.subject = 'eeg_recording_1';
 Cfg.pipe.runMeasurements = get_measurement_id(Cfg.MC, Filt);
 
 
@@ -29,32 +34,30 @@ Cfg = ctap_auto_config(Cfg, ctap_args);
 
 
 %% Run the pipe
-%{
+
 tic;
 CTAP_pipeline_looper(Cfg,...
                     'debug', STOP_ON_ERROR,...
                     'overwrite', OVERWRITE_OLD_RESULTS);
 toc;
 
-%clean workspace
-clear STOP_ON_ERROR OVERWRITE_OLD_RESULTS Filt ctap_args data_dir_in
-%}
+
 
 
 %% Cleanup saved .sets
-%{
+
 %USE THIS CODE TO SELECT A 128 CHAN SUBSET OF THE 252 CHANS SAVED BY LOOPER
-setpths = fullfile(Cfg.env.paths.projectRoot, Cfg.pipe.runSets);
-fname = [Cfg.pipe.runMeasurements{1} '.set'];
-savename = strrep(fname, 'session_meas', '128ch');
-for i = 1:numel(setpths)
-    eeg = ctapeeg_load_data(fullfile(setpths{i}, fname) );    
-    eeg = pop_select(eeg, 'channel', [1:8 10:2:248]);
-    pop_saveset(eeg, 'filename', savename, 'filepath', setpths{i});
-end
-clear setpths fname savename eeg abcdfh escalp gscalp keepchans
-    
-    % Build an index of channels to keep, leaving only 128 scalp sites
+% setpths = fullfile(Cfg.env.paths.projectRoot, Cfg.pipe.runSets);
+% fname = [Cfg.pipe.runMeasurements{1} '.set'];
+% savename = strrep(fname, 'session_meas', '128ch');
+% for i = 1:numel(setpths)
+%     eeg = ctapeeg_load_data(fullfile(setpths{i}, fname) );    
+%     eeg = pop_select(eeg, 'channel', [1:8 10:2:248]);
+%     pop_saveset(eeg, 'filename', savename, 'filepath', setpths{i});
+% end
+% clear setpths fname savename eeg abcdfh escalp gscalp keepchans
+%     
+%     Build an index of channels to keep, leaving only 128 scalp sites
 %     abcdfh = find(ismember({eeg.chanlocs.type}, 'EEG') &...
 %              contains({eeg.chanlocs.labels}, {'A' 'B' 'C' 'D' 'F' 'H'}));
 %     escalp = find(ismember({eeg.chanlocs.type}, 'EEG') &...
@@ -62,7 +65,7 @@ clear setpths fname savename eeg abcdfh escalp gscalp keepchans
 %     gscalp = find(ismember({eeg.chanlocs.type}, 'EEG') &...
 %              contains({eeg.chanlocs.labels}, {'G'}));
 %     keepchans = [abcdfh escalp([1:10 31 32]) gscalp([18 20:28 31])];
-%}
+
 
 
 %% Subfunctions
@@ -83,7 +86,7 @@ Cfg.env.paths.ctapRoot = project_root_folder;
 Cfg.env.paths.analysisRoot = Cfg.env.paths.ctapRoot;
 
 % Channel location file
-Cfg.eeg.chanlocs = fullfile(project_root_folder, 'channel_locations_8.elp');
+Cfg.eeg.chanlocs = fullfile(project_root_folder, 'channel_locations.elp');
 Channels = readlocs(Cfg.eeg.chanlocs);
 
 

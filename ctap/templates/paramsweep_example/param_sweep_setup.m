@@ -40,7 +40,7 @@ PARAM.path.projectRoot = projectRoot;
 
 % Seed data source folder (from ctap -repo)
 % This one assumes that working directory is ctap_dev repo root:
-PARAM.path.seedDataSrc = fullfile(cd(),'/ctap/data');
+PARAM.path.seedDataSrc = fullfile(cd(),'/ctap/data/clean_seed');
 
 % Synthetic dataset storage folder
 PARAM.path.synDataRoot = fullfile(PARAM.path.projectRoot, 'syndata');
