@@ -31,10 +31,7 @@ if ~Cfg.HYDRA.ifapply
 end
 
 
-BRANCH_NAME = 'ctap_synthetic_pre';
-FILE_ROOT = mfilename('fullpath');
-PROJECT_ROOT = FILE_ROOT(1:strfind(FILE_ROOT, fullfile(...
-    'CTAP_hydra_chan')) - 1);
+BRANCH_NAME = 'ctap_synthetic_pre_badchan';
 
 
 RERUN_PREPRO = true;
@@ -43,7 +40,7 @@ RERUN_SWEEP = true;
 STOP_ON_ERROR = true;
 OVERWRITE_OLD_RESULTS = true;
 
-PARAM = param_sweep_setup(PROJECT_ROOT);
+PARAM = Cfg.HYDRA.PARAM;
 PARAM.path.sweepresDir = fullfile(PARAM.path.projectRoot, 'sweepres_channels');
 mkdir(PARAM.path.sweepresDir);
 
@@ -62,7 +59,7 @@ Arg.grfx.on = true;
 
 % Create measurement config (MC) based on folder
 % Measurement config based on synthetic source files
-MC = path2measconf(PARAM.path.synDataRoot, '*.set');
+MC = path2measconf(PARAM.path.synDataRoot, '*_bad_channels_syndata.set');
 Arg.MC = MC;
 
 %--------------------------------------------------------------------------
@@ -70,10 +67,10 @@ Arg.MC = MC;
 clear Pipe;
 
 i = 1;
-Pipe(i).funH = Cfg.HYDRA.funH;
+Pipe(i).funH = {@CTAP_load_data};
 Pipe(i).id = [num2str(i) '_loaddata'];
 
-PipeParams = Cfg.HYDRA.ctapArgs;
+PipeParams = struct([]);
 
 Arg.pipe.runSets = {'all'};
 Arg.pipe.stepSets = Pipe;
