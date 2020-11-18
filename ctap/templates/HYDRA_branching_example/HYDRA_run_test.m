@@ -19,48 +19,23 @@
 
 FILE_ROOT = mfilename('fullpath');
 REPO_ROOT = FILE_ROOT(1:strfind(FILE_ROOT, fullfile(...
-    'ctap', 'templates', 'hydra_branch_example', 'HYDRA_run_test')) - 1);
+    'ctap', 'templates', 'HYDRA_branching_example', 'HYDRA_run_test')) - 1);
 PROJECT_ROOT = FILE_ROOT(1:strfind(FILE_ROOT, fullfile(...
     'HYDRA_run_test')) - 1);
 CH_FILE = 'chanlocs128_biosemi_withEOG.elp'; % channel location file for generating synthetic data, comment it if not using HYDRA
 PARAM = param_sweep_setup(PROJECT_ROOT);
+
+
+%% Basic config
 HYDRA = true;
-
-%% Generate synthetic data
-
-% only generating synthetic data when applying HYDRA
-if HYDRA
-    
-    OVERWRITE_SYNDATA = false;
-    HAVE_FULL_CLEAN_SEED = false;
-    HAVE_CLEAN_SEED = true;
-    seed_data_name = 'BCICIV_calib_ds1a.set';
-    % first synthetic dataset
-    if HAVE_FULL_CLEAN_SEED % FULL clean seed means seed data provided includes at least 128 channels and is clean
-        % if already have clean eeg segment, then put it to ctap/ctap/data/clean_seed folder, set the corresponding data_name
-        chanlocs = readlocs(CH_FILE);
-        if ( isempty(dir(fullfile(PROJECT_ROOT,'syndata','*.set'))) || OVERWRITE_SYNDATA)
-            % Normally this is run only once
-            param_sweep_sdgen(seed_data_name, chanlocs, PARAM, ~HAVE_FULL_CLEAN_SEED);
-        end
-    else
-        if HAVE_CLEAN_SEED
-            % if already have clean eeg segment, then put it to ctap/ctap/data/clean_seed folder, set the corresponding data_name
-            chanlocs = readlocs(CH_FILE);
-            if ( isempty(dir(fullfile(PROJECT_ROOT,'syndata','*.set'))) || OVERWRITE_SYNDATA)
-                % Normally this is run only once
-                param_sweep_sdgen(seed_data_name, chanlocs, PARAM, HAVE_CLEAN_SEED);
-            end
-        else
-            %if doesn't have clean eeg segment, user need to pick from the original
-            % data, set the channel range to be removed and pick time window to keep.
-            time_window = [] ;
-            channel_remove = [];
-            seedEEG = POP_SELECT('timerange', time_window, 'channels', channel_remove)
-        end
-    end
-  
+provide_seed_timerange = false;
+if provide_seed_timerange   
+    cleanseed_timerange = [14 18];
+else
+    seed_fname = 'BCICIV_calib_ds1a.set';
 end
+FULL_CLEAN_SEED = false;
+
 
 %% parameter sweep pipeline
 % Create the CONFIGURATION struct
@@ -101,10 +76,19 @@ Cfg = get_meas_cfg_MC(Cfg, data_dir_seed, 'eeg_ext', data_type, 'sbj_filt', sbj_
 if HYDRA
     Cfg.HYDRA.ifapply = HYDRA;
     Cfg.HYDRA.chanloc = CH_FILE;
+    Cfg.HYDRA.provide_seed_timerange = provide_seed_timerange;
+    if provide_seed_timerange
+        Cfg.HYDRA.cleanseed_timerange = cleanseed_timerange;
+    else
+        Cfg.HYDRA.seed_fname = seed_fname;
+    end
+    
+    Cfg.HYDRA.PARAM = PARAM;
+    Cfg.HYDRA.FULL_CLEAN_SEED = FULL_CLEAN_SEED;
 end
 % Select pipe array and first and last pipe to run
 pipeArr = {@sbf_pipe1,...
-    @sbf_pipe3,...
+    @sbf_pipe2,...
     @sbf_pipe3n,...
     @sbf_pipe4,...
     @sbf_pipe4n
@@ -210,7 +194,8 @@ function [Cfg, out] = sbf_pipe2(Cfg)
     %%%%%%%% Define pipeline %%%%%%%%
     % IC correction
     i = 1;  %stepSet
-    stepSet(i).funH = { @CTAP_hydra_blink,...                      
+    stepSet(i).funH = { @CTAP_hydra_prepare,...
+                        @CTAP_hydra_blink,...                      
                         @CTAP_detect_bad_comps,...         
                         @CTAP_reject_data,...
                         @CTAP_peek_data
@@ -257,7 +242,8 @@ function [Cfg, out] = sbf_pipe3(Cfg)
     %%%%%%%% Define pipeline %%%%%%%%
    
     i = 1;  %stepSet
-    stepSet(i).funH = { @CTAP_hydra_badseg,...
+    stepSet(i).funH = { @CTAP_hydra_prepare,...
+                        @CTAP_hydra_badseg,...
                         @CTAP_detect_bad_segments,...
                         @CTAP_reject_data,...
                         @CTAP_peek_data
@@ -305,6 +291,7 @@ function [Cfg, out] = sbf_pipe4(Cfg)
     i = 1;  
     
     stepSet(i).funH = {
+        @CTAP_hydra_prepare,...
         @CTAP_hydra_chan,...
         @CTAP_detect_bad_channels,...
         @CTAP_reject_data,...

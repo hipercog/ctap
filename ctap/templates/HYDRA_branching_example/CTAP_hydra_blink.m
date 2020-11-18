@@ -28,38 +28,37 @@ function [EEG,Cfg] = CTAP_hydra_blink(EEG, Cfg)
 % ;
 
 %% General setup
-FILE_ROOT = mfilename('fullpath');
-PROJECT_ROOT = FILE_ROOT(1:strfind(FILE_ROOT, fullfile(...
-    'CTAP_hydra_blink')) - 1);
+if ~Cfg.HYDRA.ifapply
+    return
+end
 
-
-BRANCH_NAME = 'ctap_hydra_blink';
+BRANCH_NAME = 'ctap_synthetic_pre_blinks';
 
 RERUN_PREPRO = true;
 RERUN_SWEEP = true;
 STOP_ON_ERROR = true;
 OVERWRITE_OLD_RESULTS = true;
 
-PARAM = param_sweep_setup(PROJECT_ROOT);
-
+PARAM = Cfg.HYDRA.PARAM;
 PARAM.path.sweepresDir = fullfile(PARAM.path.projectRoot, 'sweepres_blinks');
 mkdir(PARAM.path.sweepresDir);
 
 
 %% CTAP config
-CH_FILE = 'chanlocs128_biesemi.elp';
+CH_FILE = Cfg.HYDRA.chanloc;
 
 Arg.env.paths = cfg_create_paths(PARAM.path.projectRoot, BRANCH_NAME, {''}, 1);
 Arg.eeg.chanlocs = CH_FILE;
+chanlocs = readlocs(CH_FILE);
 
-Arg.eeg.reference = {'L_MASTOID' 'R_MASTOID'};
-Arg.eeg.veogChannelNames = {'C17'}; %'C17' has highest blink amplitudes
-Arg.eeg.heogChannelNames = {'HEOG1','HEOG2'};
+Arg.eeg.reference = Cfg.eeg.reference;
+Arg.eeg.veogChannelNames = Cfg.eeg.veogChannelNames; %'C17' has highest blink amplitudes
+Arg.eeg.heogChannelNames = Cfg.eeg.heogChannelNames;
 Arg.grfx.on = false;
 
 % Create measurement config (MC) based on folder
 % Measurement config based on synthetic source files
-MC = path2measconf(PARAM.path.synDataRoot, '*.set');
+MC = path2measconf(PARAM.path.synDataRoot, '*_bad_comps_syndata.set');
 Arg.MC = MC;
 
 %--------------------------------------------------------------------------
@@ -67,11 +66,15 @@ Arg.MC = MC;
 clear Pipe;
 
 i = 1; 
-Pipe(i).funH = Cfg.HYDRA.funH;
+Pipe(i).funH = {@CTAP_load_data,...
+                @CTAP_blink2event,...
+                @CTAP_generate_cseg,...
+                @CTAP_run_ica};
 Pipe(i).id = [num2str(i) '_loaddata'];
 
-PipeParams = Cfg.HYDRA.ctapArgs;
-
+PipeParams.run_ica.method = 'fastica';
+PipeParams.run_ica.overwrite = true;
+PipeParams.run_ica.channels = {'EEG' 'EOG'};
 
 Arg.pipe.runSets = {'all'};
 Arg.pipe.stepSets = Pipe;
