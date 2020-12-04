@@ -1,6 +1,4 @@
-import React, { useState, useEffect, useReducer, useContext, useDebugValue } from "react";
-import PropTypes from "prop-types";
-import { Link } from "react-router-dom";
+import React, { useState, useEffect, useReducer, useContext } from "react";
 import { v4 as uuidv4 } from 'uuid';
 import { makeStyles } from '@material-ui/core/styles';
 import Container from '@material-ui/core/Container';
@@ -108,7 +106,7 @@ export default function Main() {
     const inputCheck = () => {
         let result = true;
         let newS = {};
-        if (activeStep == 0) {
+        if (activeStep === 0) {
             const values = { ...basicInfoInputCheck }
             for (const [key, value] of Object.entries(values)) {
                 if (basicInfoInput[key] === null || basicInfoInput[key].length === 0) {
@@ -124,6 +122,20 @@ export default function Main() {
             }
             result = Object.values(newS).every((value) => value === false);
             setBasicInfoInputCheck({ ...basicInfoInputCheck, ...newS });
+        }else if(activeStep === 1){
+            const value = {...inputStates}
+            const newInputFields = inputStates.map(i => {
+                i.stepID.length ? i.stepIDCheck=false : ( ()=>{i.stepIDCheck=true; result=false})()
+                if(basicInfoInput.checkedBranch){
+                    i.subf_srcid.length ? i.subf_srcidCheck=false : ( ()=>{i.subf_srcidCheck=true; result=false})();
+                    i.subfID.length ? i.subfIDCheck=false : ( ()=>{i.subfIDCheck=true; result=false})()
+                }
+                i.funcsSettings.map(f=>{
+                    f.funcName.length ? f.funcNameCheck=false : ( ()=>{f.funcNameCheck=true; result=false})()
+                })
+                return i;
+            })
+            dispatch({ type: 'UPDATE_STEPSETS', data: newInputFields })
         }
 
         return result;
@@ -157,6 +169,7 @@ export default function Main() {
         const newInputFields = inputStates.map(i => {
             if (id === i.id) {
                 i[event.target.name] = event.target.value
+                i[event.target.name + 'Check'] = false;
             }
             return i;
         })

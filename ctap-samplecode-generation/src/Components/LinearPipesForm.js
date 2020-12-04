@@ -30,10 +30,11 @@ const LinearPipesForm = ({ handleLinearPipesInput }) => {
                     <div key={inputField.id}>
                         <h4>stepSet {index + 1}</h4>
                         <TextField
+                            error={inputField.stepIDCheck}
                             name="stepID"
                             label="stepID"
                             variant="filled"
-                            helperText="describe main work in this stepSet, eg.'_load'"
+                            helperText={inputField.stepIDCheck ? 'The field cannot be empty. Please enter a value' :"describe main work in this stepSet, eg.'_load'"}
                             value={inputField.stepID}
                             onChange={event => handleLinearPipesInput(inputField.id, event)}
                         />

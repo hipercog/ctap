@@ -20,7 +20,8 @@ const FuncsSettingForm = ({ indexm, funcsSettings, classes, mid }) => {
         let index = values.findIndex(x => x.id === mid);
         const newInputStates = values[index].funcsSettings.map(i => {
             if (id === i.fid) {
-                i[name] = newV
+                i[name] = newV;
+                i[name+'Check'] = false;
             }
             return i;
         })
@@ -31,7 +32,7 @@ const FuncsSettingForm = ({ indexm, funcsSettings, classes, mid }) => {
     const handleAddFuncFields = () =>{
         const values = [...inputStates];
         let index = values.findIndex(x => x.id === mid);
-        values[index].funcsSettings.push({ fid: uuidv4(), functionName: '', functionP: '' });
+        values[index].funcsSettings.push({ fid: uuidv4(), funcName: '', functionP: '' });
         dispatch({ type: 'UPDATE_STEPSETS', data: values })
     }
 
@@ -56,7 +57,7 @@ const FuncsSettingForm = ({ indexm, funcsSettings, classes, mid }) => {
                         }}
                         id="controllable-states-demo"
                         options={CTAP_funcs}
-                        renderInput={(params) => <TextField {...params} label="Function Name" variant="outlined" />}
+                        renderInput={(params) => <TextField {...params} error={funcsSetting.funcNameCheck} label="Function Name" variant="outlined" helperText={funcsSetting.funcNameCheck ? 'The field cannot be empty. Please select a function' : ''} />}
                     />
                     <TextField
                         id = {"funcP"+index}

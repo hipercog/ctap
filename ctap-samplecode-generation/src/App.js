@@ -1,4 +1,4 @@
-import React, { useReducer, createContext } from 'react';
+import React from 'react';
 import { Route } from 'react-router-dom';
 
 import './App.css';
@@ -10,7 +10,8 @@ function App() {
   return (
     <ContextProvider>
       <div className="App">
-        <Route exact path="/" component={Main} />
+        {/* <Route exact path="/" component={Main} /> */}
+        <Main/>
       </div>
     </ContextProvider>
 
