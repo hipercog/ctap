@@ -5,9 +5,18 @@
 
 % Add EEGLAB
 % eeglab_path = '/home/your/path/to/EEGLAB/eeglab14_1_1b';
-% addpath(genpath(eeglab_path), '-end');
+% sbf_addrepopath(eeglab_path, '-end');
 
 % Add CTAP
 [ctap_path, ~, ~] = fileparts(mfilename('fullpath'));
-addpath(genpath(fullfile(ctap_path, 'ctap')), '-end');
-addpath(genpath(fullfile(ctap_path, 'dependencies')), '-end');
+sbf_addrepopath(fullfile(ctap_path, 'ctap'), '-end');
+sbf_addrepopath(fullfile(ctap_path, 'dependencies'), '-end');
+
+    function sbf_addrepopath(pin)
+        if ~isfolder(pin)
+            error 'Repo path does not exist!'
+        end
+        ptharr = strsplit(genpath(pin), ':');
+        excl = cellfun(@(x) [filesep x], {'.Rproj' '.git'}, 'Unif', false);
+        addpath(strjoin(ptharr(~contains(ptharr, excl)), ':'), '-end');
+    end

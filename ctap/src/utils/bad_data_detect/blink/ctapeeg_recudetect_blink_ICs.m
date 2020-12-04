@@ -116,11 +116,12 @@ method_data.blinkERP = blERPdf;
         %Compute blinkIC-subtracted ERP for comparison
         EEGcl = pop_subcomp(EEG, blinkIC);
         EEGcl = pop_select(EEGcl, 'channel', Arg.veog);
+
+        EEGcl = pop_epoch(EEGcl, {'blink'}, [-els, els]);
+        EEGcl = pop_rmbase(EEGcl, [-els * 1000, 0]);
         if sum(veogidx) == 2
             EEGcl.data = diff(EEGcl.data);
         end
-        EEGcl = pop_epoch(EEGcl, {'blink'}, [-els, els]);
-        EEGcl = pop_rmbase(EEGcl, [-els * 1000, 0]);
         cleanERP = ...
             sbf_make_ERPband(mean(EEGcl.data, 3), squeeze(EEGcl.data), 0.025);
 
@@ -140,7 +141,7 @@ method_data.blinkERP = blERPdf;
         % working with [3 n] vectors of big quantiles, mean, little quantiles,
         % e.g. [2.5% M 97.5%]
         % measure how much erq2 moves the quantile band toward 0, i.e. denoises
-        erqdiff = abs(diff([abs(erq1(1, :)); abs(erq1(3, :))])) -...
+        erqdiff = abs(diff([abs(erq1(1, :)); abs(erq1(3, :))])) - ...
             abs(diff([abs(erq2(1, :)); abs(erq2(3, :))]));
         [h, p, ci] = ttest(erqdiff, 0, 'Alpha', 0.00005);
         %MAYBEDO - USE A TEST THAT ACCOMMODATES THE AUTOCORRELATION OF THIS

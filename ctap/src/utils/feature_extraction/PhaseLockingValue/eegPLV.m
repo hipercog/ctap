@@ -24,10 +24,12 @@ function [plv, plvCI] = eegPLV(eegData, srate, filtSpec, varargin)
 %
 % 
 % Output parameters:
-%   plv 	4D matrix [numTimePoints numChannels numChannels numConditions]
+%   plv 	3/4-D matrix [numTimePoints numChannels numChannels numConditions]
 %           If 'condIdx' is not specified, then we assume that there is
-%           only one condition and all trials belong to that condition.
-%   plvCI   
+%           only one condition and all trials belong to that condition:
+%           then plv is a 3D matrix
+%   plvCI   4/5-D matrix [numTimePoints numChannels numChannels numConditions lo-hi-CI]
+%           As plv, but last dimension are lower (1) and upper (2) bounds of CI
 % 
 %--------------------------------------------------------------------------
 % Example: Consider a 28 channel EEG data sampled @ 500 Hz with 231 trials,
