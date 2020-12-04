@@ -46,6 +46,8 @@ One option to accomplish this is to set the Matlab working directory to the CTAP
 
 You need to have EEGLAB added to your Matlab path ([instructions here](https://sccn.ucsd.edu/eeglab/downloadtoolbox.php)). `ctap_set_path.m` can also accomplish this, if you edit to match the setup on your machine and run.
 
+To have your preferred path configuration loaded every time Matlab starts, edit your `startup.m` script by copying the contents of `ctap_set_path.m`. See ([Matlab's instructions here] (https://www.mathworks.com/help/matlab/ref/startup.html)) regarding the `startup.m` script.
+
 
 ## Getting started using CTAP ##
 A minimalistic working example can be found in `~/ctap/templates/minimalistic_example/`. Try running script
