@@ -1,4 +1,4 @@
-import React, { useContext } from "react";
+import React, { useContext, useEffect, useState } from "react";
 
 import TextField from '@material-ui/core/TextField';
 import IconButton from '@material-ui/core/IconButton';
@@ -8,49 +8,88 @@ import Autocomplete from '@material-ui/lab/Autocomplete';
 import { v4 as uuidv4 } from 'uuid';
 
 
-import { Context } from './ContextProvider'
+import { ContextBranch, ContextLinear } from './ContextProvider'
 import { CTAP_funcs } from '../data/CTAP_funcs'
 
-const FuncsSettingForm = ({ indexm, funcsSettings, classes, mid }) => {
-    const [inputStates, dispatch] = useContext(Context);
+const FuncsSettingForm = ({ ifLinear, index, indexm, funcsSettings, classes, mid }) => {
+
+    const [inputBranchStates, dispatchB] = useContext(ContextBranch);
+    const [inputLinearStates, dispatchL] = useContext(ContextLinear);
     const [value, setValue] = React.useState(null);
+    const [inputStates, setInputStates] = useState(() => {
+        if (ifLinear) {
+            return inputLinearStates;
+        } else {
+            return inputBranchStates[index].lindearSetting;
+        }
+    });
+
+    useEffect(() => {
+        if (ifLinear) {
+            setInputStates(inputLinearStates);
+        } else {
+            setInputStates(inputBranchStates[index].lindearSetting);
+        }
+    }, [inputLinearStates, inputBranchStates])
 
     const handleInputChange = (id, name, newV) => {
         const values = [...inputStates];
-        let index = values.findIndex(x => x.id === mid);
-        const newInputStates = values[index].funcsSettings.map(i => {
+        let index_ = values.findIndex(x => x.id === mid);
+        const newInputStates = values[index_].funcsSettings.map(i => {
             if (id === i.fid) {
                 i[name] = newV;
-                i[name+'Check'] = false;
+                i[name + 'Check'] = false;
             }
             return i;
         })
-        values[index].funcsSettings = newInputStates;
-        dispatch({ type: 'UPDATE_STEPSETS', data: values })
+        values[index_].funcsSettings = newInputStates;
+        if (ifLinear) {
+            dispatchL({ type: 'UPDATE_STEPSETS', data: values })
+        } else {
+            let newState = [...inputBranchStates];
+            newState[index].lindearSetting = values;
+            dispatchB({ type: 'UPDATE_STEPSETS', data: newState })
+        }
+
     }
 
-    const handleAddFuncFields = () =>{
+    const handleAddFuncFields = () => {
         const values = [...inputStates];
-        let index = values.findIndex(x => x.id === mid);
-        values[index].funcsSettings.push({ fid: uuidv4(), funcName: '', functionP: '' });
-        dispatch({ type: 'UPDATE_STEPSETS', data: values })
+        let index_ = values.findIndex(x => x.id === mid);
+        values[index_].funcsSettings.push({ fid: uuidv4(), funcName: '', functionP: '' });
+        if (ifLinear) {
+            dispatchL({ type: 'UPDATE_STEPSETS', data: values })
+        } else {
+            let newState = [...inputBranchStates];
+            newState[index].lindearSetting = values;
+            dispatchB({ type: 'UPDATE_STEPSETS', data: newState });
+        }
+
     }
 
-    const handleRemoveFuncFields = (id) =>{
+    const handleRemoveFuncFields = (id) => {
         const values = [...inputStates];
-        let index = values.findIndex(x => x.id === mid);
-        let indexf = values[index].funcsSettings.findIndex(x => x.fid === id);
-        values[index].funcsSettings.splice(indexf, 1);
-        dispatch({ type: 'UPDATE_STEPSETS', data: values })
+        let index_ = values.findIndex(x => x.id === mid);
+        let indexf = values[index_].funcsSettings.findIndex(x => x.fid === id);
+        values[index_].funcsSettings.splice(indexf, 1);
+        if (ifLinear) {
+            dispatchL({ type: 'UPDATE_STEPSETS', data: values });
+        } else {
+            let newState = [...inputBranchStates];
+            newState[index].lindearSetting = values;
+            dispatchB({ type: 'UPDATE_STEPSETS', data: newState });
+        }
+
     }
+
 
     return (
         <form className={classes.root}>
-            {funcsSettings.map((funcsSetting, index) => (
+            {funcsSettings.map((funcsSetting, indexff) => (
                 <div key={funcsSetting.fid}>
                     <Autocomplete
-                        id={'funcName'+index}
-                        value = {inputStates[indexm].funcsSettings[index].funcName}
+                        id={'funcName' + indexff}
+                        value={inputStates[indexm].funcsSettings[indexff].funcName}
                         onChange={(event, newValue) => {
                             setValue(newValue);
                             handleInputChange(funcsSetting.fid, 'funcName', newValue);
@@ -60,11 +99,11 @@ const FuncsSettingForm = ({ indexm, funcsSettings, classes, mid }) => {
                         renderInput={(params) => <TextField {...params} error={funcsSetting.funcNameCheck} label="Function Name" variant="outlined" helperText={funcsSetting.funcNameCheck ? 'The field cannot be empty. Please select a function' : ''} />}
                     />
                     <TextField
-                        id = {"funcP"+index}
+                        id={"funcP" + indexff}
                         name="funcP"
                         label="Function Parameters"
                         variant="filled"
-                        value = {inputStates[indexm].funcsSettings[index].funcP}
+                        value={inputStates[indexm].funcsSettings[indexff].funcP}
                         helperText="check docs for parameters supported for each func, input in 'pName', p, eg.('method', 'fastica', 'overwrite', true). All the string input need single-quote:'input' "
                         onChange={event => handleInputChange(funcsSetting.fid, event.target.name, event.target.value)}
                     />

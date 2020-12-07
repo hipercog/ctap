@@ -1,4 +1,5 @@
 export const CTAP_chanlocs = [
+    '',
     'chanlocs128_biosemi.elp',
     'chanlocs128_biosemi_withEOG.elp',
     'chanlocs128_cent.elp',

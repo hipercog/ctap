@@ -1,4 +1,5 @@
 export const CTAP_funcs = [
+    '',
     'CTAP_load_data',
     'CTAP_load_chanlocs',
     'CTAP_reref_data',

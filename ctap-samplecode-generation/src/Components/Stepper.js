@@ -79,12 +79,14 @@ const useStyles = makeStyles((theme) => ({
         width: "100%"
     },
     button: {
-        marginRight: theme.spacing(1)
+        marginRight: theme.spacing(1),
+        marginBottom: theme.spacing(2),
     },
     instructions: {
         marginTop: theme.spacing(1),
         marginBottom: theme.spacing(1)
-    }
+    },
+   
 }));
 
 function getSteps() {

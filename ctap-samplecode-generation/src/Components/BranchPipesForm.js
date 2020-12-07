@@ -1,8 +1,8 @@
 import React, { useContext } from "react";
 import TextField from '@material-ui/core/TextField';
 import Container from '@material-ui/core/Container';
-import FuncsSettingForm from "./FuncsSettingForm"
-import { Context } from './ContextProvider'
+import LinearPipesForm from "./LinearPipesForm";
+import { ContextBranch } from './ContextProvider'
 import { makeStyles } from '@material-ui/core/styles';
 
 const useStyles = makeStyles((theme) => ({
@@ -15,11 +15,22 @@ const useStyles = makeStyles((theme) => ({
 
 }))
 
-const BranchPipesForm = ({ handleLinearPipesInput }) => {
+const BranchPipesForm = ( ) => {
     const classes = useStyles()
-    const [inputStates, dispatch] = useContext(Context);
+    const [inputStates, dispatch] = useContext(ContextBranch);
 
+    const handleLinearPipesInput = (id, event) => {
+        const newInputFields = inputStates.map(i => {
+            if (id === i.id) {
+                i[event.target.name] = event.target.value
+                i[event.target.name + 'Check'] = false;
+            }
+            return i;
+        })
+        dispatch({ type: 'UPDATE_STEPSETS', data: newInputFields })
+    }
 
+  //  console.log(inputStates)
     return (
         <Container maxWidth="sm">
             <form className={classes.root}>
@@ -55,11 +66,10 @@ const BranchPipesForm = ({ handleLinearPipesInput }) => {
                             onChange={event => handleLinearPipesInput(inputField.id, event)}
                         />
                         <h5>Define pipeline</h5>
-                        <FuncsSettingForm
-                            indexm={index}
-                            classes={classes}
-                            mid={inputField.id}
-                            funcsSettings={inputField.funcsSettings} />
+                        <LinearPipesForm
+                            ifLinear={false}
+                            index={index}
+                            mid={inputField.id}/>
                     </div>
                 ))}
             </form>

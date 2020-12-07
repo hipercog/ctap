@@ -13,7 +13,7 @@ import LinearPipesForm from "./LinearPipesForm";
 import BranchPipesForm from "./BranchPipesForm";
 import BranchTemplate from "./BranchTemplate"
 
-import { Context } from './ContextProvider'
+import { ContextBranch, ContextLinear } from './ContextProvider'
 
 const useStyles = makeStyles((theme) => ({
     formControl: {
@@ -32,7 +32,8 @@ const useStyles = makeStyles((theme) => ({
 export default function Main() {
     const classes = useStyles();
 
-    const [inputStates, dispatch] = useContext(Context);
+    const [inputLinearStates, dispatchL] = useContext(ContextLinear);
+    const [inputBranchStates, dispatchB] = useContext(ContextBranch);
     const [activeStep, setActiveStep] = useState(0);
     const [downloadLink, setDownloadLink] = useState('');
     const [stepNum, setStepNum] = useState(1);
@@ -73,6 +74,23 @@ export default function Main() {
         }
     );
 
+    const [inputStates, setInputStates] = useState(() => {
+        if (basicInfoInput.checkedLinear) {
+            return inputLinearStates;
+        } else {
+            return inputBranchStates;
+        }
+    });
+
+
+    useEffect(() => {
+        if (basicInfoInput.checkedLinear) {
+            setInputStates(inputLinearStates);
+        } else {
+            setInputStates(inputBranchStates);
+        }
+    }, [basicInfoInput.checkedLinear, inputLinearStates, inputBranchStates])
+
     useEffect(() => {
         setDownloadLink('');
         setIsReadyDownload(false);
@@ -110,32 +128,36 @@ export default function Main() {
             const values = { ...basicInfoInputCheck }
             for (const [key, value] of Object.entries(values)) {
                 if (basicInfoInput[key] === null || basicInfoInput[key].length === 0) {
-                    if (key === 'checkHydraTimeRange' && basicInfoInput.HydraOptionB) {
-                        newS = { ...newS, [key]: false };
-                    } else if (key === 'checkHydraCleanSeed' && basicInfoInput.HydraOptionA) {
-                        newS = { ...newS, [key]: false };
-                    }
-                    else {
-                        newS = { ...newS, [key]: true };
+                    if (basicInfoInput.checkedHYDRA) {
+                        if (key === 'checkHydraTimeRange' && basicInfoInput.HydraOptionB) {
+                            newS = { ...newS, [key]: false };
+                        } else if (key === 'checkHydraCleanSeed' && basicInfoInput.HydraOptionA) {
+                            newS = { ...newS, [key]: false };
+                        }
+                    } else {
+                        if (key === 'checkHydraTimeRange' || key === 'checkHydraCleanSeed') {
+                            newS = { ...newS, [key]: false };
+                        } else {
+                            newS = { ...newS, [key]: true };
+                        }
                     }
                 }
             }
             result = Object.values(newS).every((value) => value === false);
             setBasicInfoInputCheck({ ...basicInfoInputCheck, ...newS });
-        }else if(activeStep === 1){
-            const value = {...inputStates}
+        } else if (activeStep === 1) {
             const newInputFields = inputStates.map(i => {
-                i.stepID.length ? i.stepIDCheck=false : ( ()=>{i.stepIDCheck=true; result=false})()
-                if(basicInfoInput.checkedBranch){
-                    i.subf_srcid.length ? i.subf_srcidCheck=false : ( ()=>{i.subf_srcidCheck=true; result=false})();
-                    i.subfID.length ? i.subfIDCheck=false : ( ()=>{i.subfIDCheck=true; result=false})()
+                i.stepID.length ? i.stepIDCheck = false : (() => { i.stepIDCheck = true; result = false })()
+                if (basicInfoInput.checkedBranch) {
+                    i.subf_srcid.length ? i.subf_srcidCheck = false : (() => { i.subf_srcidCheck = true; result = false })();
+                    i.subfID.length ? i.subfIDCheck = false : (() => { i.subfIDCheck = true; result = false })()
                 }
-                i.funcsSettings.map(f=>{
-                    f.funcName.length ? f.funcNameCheck=false : ( ()=>{f.funcNameCheck=true; result=false})()
+                i.funcsSettings.forEach(f => {
+                    f.funcName.length ? f.funcNameCheck = false : (() => { f.funcNameCheck = true; result = false })()
                 })
                 return i;
             })
-            dispatch({ type: 'UPDATE_STEPSETS', data: newInputFields })
+            dispatchL({ type: 'UPDATE_STEPSETS', data: newInputFields })
         }
 
         return result;
@@ -165,46 +187,47 @@ export default function Main() {
         setIsReadyDownload(true);
     };
 
-    const handleLinearPipesInput = (id, event) => {
-        const newInputFields = inputStates.map(i => {
-            if (id === i.id) {
-                i[event.target.name] = event.target.value
-                i[event.target.name + 'Check'] = false;
-            }
-            return i;
-        })
-        dispatch({ type: 'UPDATE_STEPSETS', data: newInputFields })
-    }
+    console.log(inputStates)
 
     const handleChangeStepSets = (e) => {
-        const { name, value } = e.target;
-
+        const { value } = e.target;
         if (stepNum < value) {
             let form = [...inputStates];
-            for (let i = stepNum; i < value; i++) {
-                form.push({ id: uuidv4(), subf_srcid: '', subfID: '', stepID: '', funcsSettings: [{ fid: uuidv4(), funcName: '', funcP: '' }] });
+            if (basicInfoInput.checkedLinear) {
+                for (let i = stepNum; i < value; i++) {
+                    form.push({ id: uuidv4(), stepID: '', stepIDCheck: false, funcsSettings: [{ fid: uuidv4(), funcName: '', funcP: '', funcNameCheck: false }] });
+                }
+                dispatchL({ type: 'UPDATE_STEPSETS', data: form })
+            } else { 
+                for (let i = stepNum; i < value; i++) {
+                    form.push({ id: uuidv4(), subf_srcid: '', subfID: '', stepID: '', subf_srcidCheck:false, subfIDCheck:false, stepIDCheck:false, lindearSetting:[{ id: uuidv4(), stepID: '', stepIDCheck:false, funcsSettings: [{ fid: uuidv4(), funcName: '', funcP: '', funcNameCheck:false}] }] });
+                }
+                console.log(form)
+                dispatchB({ type: 'UPDATE_STEPSETS', data: form })
             }
-            dispatch({ type: 'UPDATE_STEPSETS', data: form })
             setStepNum(value);
         } else if (stepNum > value && value >= 1) {
-            console.log(value);
-            console.log(stepNum)
             console.log(inputStates)
             let form = [...inputStates];
             for (let i = 0; i < stepNum - value; i++) {
                 form.pop();
             }
-            console.log(form)
-            dispatch({ type: 'UPDATE_STEPSETS', data: form })
+            if(basicInfoInput.checkedLinear){
+                dispatchL({ type: 'UPDATE_STEPSETS', data: form });
+            }else{
+                dispatchB({ type: 'UPDATE_STEPSETS', data: form })
+            }
             setStepNum(value);
         }
     }
+
+    
 
 
     return (
         <div>
             <div>
-                <span>CTAP Code Generation Tool</span>
+                <h2>CTAP Code Generation Tool</h2>
 
                 {activeStep === 0 ? (
                     <BasicInfo
@@ -216,9 +239,9 @@ export default function Main() {
                 ) : activeStep === 1 ? (
                     <Container>
                         {basicInfoInput.checkedLinear ?
-                            <h1>Linear Pipeline Setting</h1>
+                            <h3>Linear Pipeline Setting</h3>
                             :
-                            <h1>Branch Pipeline Setting</h1>}
+                            <h3>Branch Pipeline Setting</h3>}
 
                         <FormControl variant="outlined" className={classes.formControl}>
                             <InputLabel >stepSet number</InputLabel>
@@ -240,12 +263,11 @@ export default function Main() {
                         </FormControl>
                         {basicInfoInput.checkedLinear ?
                             <LinearPipesForm
-                                handleLinearPipesInput={handleLinearPipesInput}
-                                handleSubmit={handleSubmit} />
+                                ifLinear={true}
+                                index={0}
+                                mid={0} />
                             :
-                            <BranchPipesForm
-                                handleLinearPipesInput={handleLinearPipesInput}
-                                handleSubmit={handleSubmit} />}
+                            <BranchPipesForm />}
 
                     </Container>
                 ) : activeStep === 2 ? (
