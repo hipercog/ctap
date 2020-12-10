@@ -15,6 +15,8 @@ import MoreOutlinedIcon from '@material-ui/icons/MoreOutlined';
 
 import { CTAP_chanlocs } from '../data/CTAP_chanlocs'
 import CTAP_Linear_diagram from '../Styles/CTAP_Linear.png'
+import CTAP_Branch_diagram from '../Styles/CTAP_Branch.png'
+
 const useStyles = makeStyles((theme) => ({
     root: {
         '& .MuiTextField-root': {
@@ -98,9 +100,9 @@ const BasicInfo = ({ inputValue, setBasicInfoInput, basicInfoInputCheck, setBasi
     // console.log(inputValue)
     return (
         <form className={classes.root} noValidate autoComplete="off">
-            <Container maxWidth="md" style={{marginTop:'3rem'}}>
+            <Container maxWidth="md" style={{ marginTop: '3rem' }}>
                 <h4 >What type of pipeline* you would like to generate?</h4>
-                <Accordion style={{ width: 750, margin: '0 auto'}}>
+                <Accordion style={{ width: 750, margin: '0 auto' }}>
                     <AccordionSummary
                         expandIcon={<MoreOutlinedIcon />}
                         aria-label="Expand"
@@ -119,7 +121,7 @@ const BasicInfo = ({ inputValue, setBasicInfoInput, basicInfoInputCheck, setBasi
                         <img src={CTAP_Linear_diagram} width="700" />
                     </AccordionDetails>
                 </Accordion>
-                <Accordion style={{ width: 750, margin: '0 auto'}}>
+                <Accordion style={{ width: 750, margin: '0 auto' }}>
                     <AccordionSummary
                         expandIcon={<MoreOutlinedIcon />}
                         aria-label="Expand"
@@ -135,12 +137,10 @@ const BasicInfo = ({ inputValue, setBasicInfoInput, basicInfoInputCheck, setBasi
                         />
                     </AccordionSummary>
                     <AccordionDetails>
-                        <Typography color="textSecondary">
-                            The click event of the nested action will propagate up and expand the accordion unless
-                            you explicitly stop it.
-                        </Typography>
+                        <img src={CTAP_Branch_diagram} width="700" />
                     </AccordionDetails>
                 </Accordion>
+                <h5 className={classes.words}>* Click Linear and Brach tabs to see diagrams describe these two different pipelines. </h5>
 
                 <h5 className={classes.words}>* linear pipeline using different setpSets to group CTAP functions, the processing sequence depends on setpSets order. Branch pipeline generates sub-functions including predefined executable CTAP functions, which provides a more clear and flexible modular way to group functions. </h5>
                 <div>
