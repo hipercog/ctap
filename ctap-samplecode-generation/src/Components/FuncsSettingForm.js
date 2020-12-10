@@ -5,6 +5,8 @@ import IconButton from '@material-ui/core/IconButton';
 import RemoveIcon from '@material-ui/icons/Remove';
 import AddIcon from '@material-ui/icons/Add';
 import Autocomplete from '@material-ui/lab/Autocomplete';
+import Tooltip from '@material-ui/core/Tooltip';
+import Typography from "@material-ui/core/Typography";
 import { v4 as uuidv4 } from 'uuid';
 
 
@@ -20,7 +22,7 @@ const FuncsSettingForm = ({ ifLinear, index, indexm, funcsSettings, classes, mid
         if (ifLinear) {
             return inputLinearStates;
         } else {
-            return inputBranchStates[index].lindearSetting;
+            return inputBranchStates[index].linearSetting;
         }
     });
 
@@ -28,7 +30,7 @@ const FuncsSettingForm = ({ ifLinear, index, indexm, funcsSettings, classes, mid
         if (ifLinear) {
             setInputStates(inputLinearStates);
         } else {
-            setInputStates(inputBranchStates[index].lindearSetting);
+            setInputStates(inputBranchStates[index].linearSetting);
         }
     }, [inputLinearStates, inputBranchStates])
 
@@ -47,7 +49,7 @@ const FuncsSettingForm = ({ ifLinear, index, indexm, funcsSettings, classes, mid
             dispatchL({ type: 'UPDATE_STEPSETS', data: values })
         } else {
             let newState = [...inputBranchStates];
-            newState[index].lindearSetting = values;
+            newState[index].linearSetting = values;
             dispatchB({ type: 'UPDATE_STEPSETS', data: newState })
         }
 
@@ -61,7 +63,7 @@ const FuncsSettingForm = ({ ifLinear, index, indexm, funcsSettings, classes, mid
             dispatchL({ type: 'UPDATE_STEPSETS', data: values })
         } else {
             let newState = [...inputBranchStates];
-            newState[index].lindearSetting = values;
+            newState[index].linearSetting = values;
             dispatchB({ type: 'UPDATE_STEPSETS', data: newState });
         }
 
@@ -76,7 +78,7 @@ const FuncsSettingForm = ({ ifLinear, index, indexm, funcsSettings, classes, mid
             dispatchL({ type: 'UPDATE_STEPSETS', data: values });
         } else {
             let newState = [...inputBranchStates];
-            newState[index].lindearSetting = values;
+            newState[index].linearSetting = values;
             dispatchB({ type: 'UPDATE_STEPSETS', data: newState });
         }
 
@@ -84,7 +86,7 @@ const FuncsSettingForm = ({ ifLinear, index, indexm, funcsSettings, classes, mid
 
 
     return (
-        <form className={classes.root}>
+        <div className={classes.root}>
             {funcsSettings.map((funcsSetting, indexff) => (
                 <div key={funcsSetting.fid}>
                     <Autocomplete
@@ -98,15 +100,17 @@ const FuncsSettingForm = ({ ifLinear, index, indexm, funcsSettings, classes, mid
                         options={CTAP_funcs}
                         renderInput={(params) => <TextField {...params} error={funcsSetting.funcNameCheck} label="Function Name" variant="outlined" helperText={funcsSetting.funcNameCheck ? 'The field cannot be empty. Please select a function' : ''} />}
                     />
-                    <TextField
-                        id={"funcP" + indexff}
-                        name="funcP"
-                        label="Function Parameters"
-                        variant="filled"
-                        value={inputStates[indexm].funcsSettings[indexff].funcP}
-                        helperText="check docs for parameters supported for each func, input in 'pName', p, eg.('method', 'fastica', 'overwrite', true). All the string input need single-quote:'input' "
-                        onChange={event => handleInputChange(funcsSetting.fid, event.target.name, event.target.value)}
-                    />
+                    <Tooltip title={<Typography variant='body2'>{"check docs for parameters supported for each func, input in 'pName', p, eg.('method', 'fastica', 'overwrite', true). All the string input need single-quote:'input' "}</Typography>} classes={{ tooltip: classes.customWidth }}>
+                        <TextField
+                            id={"funcP" + indexff}
+                            name="funcP"
+                            label="Function Parameters"
+                            variant="filled"
+                            value={inputStates[indexm].funcsSettings[indexff].funcP}
+                            onChange={event => handleInputChange(funcsSetting.fid, event.target.name, event.target.value)}
+                        />
+                    </Tooltip>
+
                     <IconButton disabled={funcsSettings.length === 1} onClick={() => handleRemoveFuncFields(funcsSetting.fid)}>
                         <RemoveIcon />
                     </IconButton>
@@ -115,7 +119,7 @@ const FuncsSettingForm = ({ ifLinear, index, indexm, funcsSettings, classes, mid
                     </IconButton>
                 </div>
             ))}
-        </form>
+        </div>
 
     );
 }

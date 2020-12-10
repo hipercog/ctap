@@ -148,14 +148,23 @@ export default function Main() {
             result = Object.values(newS).every((value) => value === false);
             setBasicInfoInputCheck({ ...basicInfoInputCheck, ...newS });
         } else if (activeStep === 1) {
-            const newInputFields = inputStates.map(i => {
+            const newInputFields = inputStates.map((i,index) => {
+                console.log(i);
                 i.stepID.length ? i.stepIDCheck = false : (() => { i.stepIDCheck = true; result = false })()
                 if (basicInfoInput.checkedBranch) {
-                    i.subf_srcid.length ? i.subf_srcidCheck = false : (() => { i.subf_srcidCheck = true; result = false })();
-                    i.subfID.length ? i.subfIDCheck = false : (() => { i.subfIDCheck = true; result = false })()
+                    if(index === 0){
+                        i.pipeSegment_srcidCheck = false;
+                        result = true;
+                        i.pipeSegmentID.length ? i.pipeSegmentIDCheck = false : (() => { i.pipeSegmentIDCheck = true; result = false })()
+                    }else{
+                        i.pipeSegment_srcid.length ? i.pipeSegment_srcidCheck = false : (() => { i.pipeSegment_srcidCheck = true; result = false })();
+                        i.pipeSegmentID.length ? i.pipeSegmentIDCheck = false : (() => { i.pipeSegmentIDCheck = true; result = false })()
+                    }
                 }
-                i.funcsSettings.forEach(f => {
-                    f.funcName.length ? f.funcNameCheck = false : (() => { f.funcNameCheck = true; result = false })()
+                i.linearSetting.forEach(l => {
+                    l.funcsSettings.forEach(f => {
+                        f.funcName.length ? f.funcNameCheck = false : (() => { f.funcNameCheck = true; result = false })()
+                    })
                 })
                 return i;
             })
@@ -201,7 +210,7 @@ export default function Main() {
                 dispatchL({ type: 'UPDATE_STEPSETS', data: form })
             } else { 
                 for (let i = stepNum; i < value; i++) {
-                    form.push({ id: uuidv4(), subf_srcid: '', subfID: '', stepID: '', subf_srcidCheck:false, subfIDCheck:false, stepIDCheck:false, lindearSetting:[{ id: uuidv4(), stepID: '', stepIDCheck:false, funcsSettings: [{ fid: uuidv4(), funcName: '', funcP: '', funcNameCheck:false}] }] });
+                    form.push({ id: uuidv4(), pipeSegment_srcid: '', pipeSegmentID: '', stepID: '', pipeSegment_srcidCheck:false, pipeSegmentIDCheck:false, stepIDCheck:false, linearSetting:[{ id: uuidv4(), stepID: '', stepIDCheck:false, funcsSettings: [{ fid: uuidv4(), funcName: '', funcP: '', funcNameCheck:false}] }] });
                 }
                 console.log(form)
                 dispatchB({ type: 'UPDATE_STEPSETS', data: form })
@@ -245,7 +254,7 @@ export default function Main() {
                             <h3>Branch Pipeline Setting</h3>}
 
                         <FormControl variant="outlined" className={classes.formControl}>
-                            <InputLabel >stepSet number</InputLabel>
+                        <InputLabel > {basicInfoInput.checkedBranch ? 'pipeSegments' : 'stepSet number' }</InputLabel>
                             <Select
                                 native
                                 value={stepNum}
