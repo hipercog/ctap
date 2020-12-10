@@ -133,6 +133,8 @@ export default function Main() {
                             newS = { ...newS, [key]: false };
                         } else if (key === 'checkHydraCleanSeed' && basicInfoInput.HydraOptionA) {
                             newS = { ...newS, [key]: false };
+                        }else{
+                            newS = { ...newS, [key]: true };
                         }
                     } else {
                         if (key === 'checkHydraTimeRange' || key === 'checkHydraCleanSeed') {
@@ -165,6 +167,7 @@ export default function Main() {
 
     //steppers handler
     const handleNext = () => {
+        //first run input check
         let p = inputCheck();
         if (p) {
             setActiveStep((prevActiveStep) => prevActiveStep + 1);
@@ -186,8 +189,6 @@ export default function Main() {
         setDownloadLink(downloadlink);
         setIsReadyDownload(true);
     };
-
-    console.log(inputStates)
 
     const handleChangeStepSets = (e) => {
         const { value } = e.target;
@@ -227,7 +228,7 @@ export default function Main() {
     return (
         <div>
             <div>
-                <h2>CTAP Code Generation Tool</h2>
+                
 
                 {activeStep === 0 ? (
                     <BasicInfo
