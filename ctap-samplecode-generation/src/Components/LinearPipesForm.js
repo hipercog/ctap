@@ -1,4 +1,4 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useState, useEffect } from "react";
 import TextField from '@material-ui/core/TextField';
 import Container from '@material-ui/core/Container';
 import Tooltip from '@material-ui/core/Tooltip';
@@ -35,6 +35,15 @@ const LinearPipesForm = ({ ifLinear, index, mid }) => {
             return inputBranchStates[index].linearSetting;
         }
     });
+
+    useEffect(() => {
+        if (ifLinear) {
+            setInputStates(inputLinearStates);
+        } else {
+            setInputStates(inputBranchStates[index].linearSetting);
+        }
+    }, [inputLinearStates, inputBranchStates])
+
 
     const handleLinearPipesInput = (id, event) => {
         const newInputFields = inputStates.map(i => {

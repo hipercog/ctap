@@ -89,7 +89,20 @@ export default function Main() {
         } else {
             setInputStates(inputBranchStates);
         }
-    }, [basicInfoInput.checkedLinear, inputLinearStates, inputBranchStates])
+    }, [inputLinearStates, inputBranchStates])
+
+    useEffect(()=>{
+        setStepNum(1);
+        if (basicInfoInput.checkedLinear) {
+            let initialLinear = [{ id: uuidv4(), stepID: '', stepIDCheck:false, funcsSettings: [{ fid: uuidv4(), funcName: '', funcP: '', funcNameCheck:false}] }];
+            dispatchL({ type: 'UPDATE_STEPSETS', data:initialLinear });
+            setInputStates(initialLinear);
+        } else {
+            let initialBranch = [{ id: uuidv4(), pipeSegment_srcid: '', pipeSegmentID: '', stepID: '', pipeSegment_srcidCheck:false, pipeSegmentIDCheck:false, stepIDCheck:false, linearSetting:[{ id: uuidv4(), stepID: '', stepIDCheck:false, funcsSettings: [{ fid: uuidv4(), funcName: '', funcP: '', funcNameCheck:false}] }] }];
+            dispatchB({ type: 'UPDATE_STEPSETS', data: initialBranch });
+            setInputStates(initialBranch);
+        }
+    },[basicInfoInput.checkedLinear])
 
     useEffect(() => {
         setDownloadLink('');
@@ -133,7 +146,7 @@ export default function Main() {
                             newS = { ...newS, [key]: false };
                         } else if (key === 'checkHydraCleanSeed' && basicInfoInput.HydraOptionA) {
                             newS = { ...newS, [key]: false };
-                        }else{
+                        } else {
                             newS = { ...newS, [key]: true };
                         }
                     } else {
@@ -148,24 +161,31 @@ export default function Main() {
             result = Object.values(newS).every((value) => value === false);
             setBasicInfoInputCheck({ ...basicInfoInputCheck, ...newS });
         } else if (activeStep === 1) {
-            const newInputFields = inputStates.map((i,index) => {
-                console.log(i);
-                i.stepID.length ? i.stepIDCheck = false : (() => { i.stepIDCheck = true; result = false })()
+            const newInputFields = inputStates.map((i, index) => {
+                i.stepID.length ? i.stepIDCheck = false : (() => { i.stepIDCheck = true; result = false })();
                 if (basicInfoInput.checkedBranch) {
-                    if(index === 0){
+                    if (index === 0) {
                         i.pipeSegment_srcidCheck = false;
                         result = true;
-                        i.pipeSegmentID.length ? i.pipeSegmentIDCheck = false : (() => { i.pipeSegmentIDCheck = true; result = false })()
-                    }else{
+                        i.pipeSegmentID.length ? i.pipeSegmentIDCheck = false : (() => { i.pipeSegmentIDCheck = true; result = false })();
+                    } else {
                         i.pipeSegment_srcid.length ? i.pipeSegment_srcidCheck = false : (() => { i.pipeSegment_srcidCheck = true; result = false })();
-                        i.pipeSegmentID.length ? i.pipeSegmentIDCheck = false : (() => { i.pipeSegmentIDCheck = true; result = false })()
+                        i.pipeSegmentID.length ? i.pipeSegmentIDCheck = false : (() => { i.pipeSegmentIDCheck = true; result = false })();
                     }
-                }
-                i.linearSetting.forEach(l => {
-                    l.funcsSettings.forEach(f => {
-                        f.funcName.length ? f.funcNameCheck = false : (() => { f.funcNameCheck = true; result = false })()
+                    i.linearSetting.forEach(l => {
+                        console.log(l.stepID.length);
+                        l.stepID.length ? l.stepIDCheck = false : (() => { l.stepIDCheck = true; result = false })();
+                        l.funcsSettings.forEach(f => {
+                            let funcEmpty = f.funcName == null || f.funcName.length;
+                            funcEmpty ? f.funcNameCheck = false : (() => { f.funcNameCheck = true; result = false })();
+                        });
+                    });
+                } else {
+                    i.funcsSettings.forEach(f => {
+                        f.funcName.length ? f.funcNameCheck = false : (() => { f.funcNameCheck = true; result = false })();
                     })
-                })
+                }
+
                 return i;
             })
             dispatchL({ type: 'UPDATE_STEPSETS', data: newInputFields })
@@ -206,14 +226,15 @@ export default function Main() {
             if (basicInfoInput.checkedLinear) {
                 for (let i = stepNum; i < value; i++) {
                     form.push({ id: uuidv4(), stepID: '', stepIDCheck: false, funcsSettings: [{ fid: uuidv4(), funcName: '', funcP: '', funcNameCheck: false }] });
-                }
-                dispatchL({ type: 'UPDATE_STEPSETS', data: form })
-            } else { 
+                };
+                dispatchL({ type: 'UPDATE_STEPSETS', data: form });
+                setInputStates(form);
+            } else {
                 for (let i = stepNum; i < value; i++) {
-                    form.push({ id: uuidv4(), pipeSegment_srcid: '', pipeSegmentID: '', stepID: '', pipeSegment_srcidCheck:false, pipeSegmentIDCheck:false, stepIDCheck:false, linearSetting:[{ id: uuidv4(), stepID: '', stepIDCheck:false, funcsSettings: [{ fid: uuidv4(), funcName: '', funcP: '', funcNameCheck:false}] }] });
+                    form.push({ id: uuidv4(), pipeSegment_srcid: '', pipeSegmentID: '', stepID: '', pipeSegment_srcidCheck: false, pipeSegmentIDCheck: false, stepIDCheck: false, linearSetting: [{ id: uuidv4(), stepID: '', stepIDCheck: false, funcsSettings: [{ fid: uuidv4(), funcName: '', funcP: '', funcNameCheck: false }] }] });
                 }
-                console.log(form)
-                dispatchB({ type: 'UPDATE_STEPSETS', data: form })
+                dispatchB({ type: 'UPDATE_STEPSETS', data: form });
+                setInputStates(form);
             }
             setStepNum(value);
         } else if (stepNum > value && value >= 1) {
@@ -222,23 +243,22 @@ export default function Main() {
             for (let i = 0; i < stepNum - value; i++) {
                 form.pop();
             }
-            if(basicInfoInput.checkedLinear){
+            if (basicInfoInput.checkedLinear) {
                 dispatchL({ type: 'UPDATE_STEPSETS', data: form });
-            }else{
-                dispatchB({ type: 'UPDATE_STEPSETS', data: form })
+                setInputStates(form);
+            } else {
+                dispatchB({ type: 'UPDATE_STEPSETS', data: form });
+                setInputStates(form);
             }
             setStepNum(value);
+
         }
     }
-
-    
 
 
     return (
         <div>
             <div>
-                
-
                 {activeStep === 0 ? (
                     <BasicInfo
                         inputValue={basicInfoInput}
@@ -254,7 +274,7 @@ export default function Main() {
                             <h3>Branch Pipeline Setting</h3>}
 
                         <FormControl variant="outlined" className={classes.formControl}>
-                        <InputLabel > {basicInfoInput.checkedBranch ? 'pipeSegments' : 'stepSet number' }</InputLabel>
+                            <InputLabel > {basicInfoInput.checkedBranch ? 'pipeSegments' : 'stepSet number'}</InputLabel>
                             <Select
                                 native
                                 value={stepNum}

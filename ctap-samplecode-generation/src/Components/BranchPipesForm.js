@@ -45,11 +45,9 @@ const BranchPipesForm = () => {
             for (let i = stepNum; i < value; i++) {
                 form[index].linearSetting.push({ id: uuidv4(), stepID: '', stepIDCheck: false, funcsSettings: [{ fid: uuidv4(), funcName: '', funcP: '', funcNameCheck: false }] });
             }
-            console.log(form)
             dispatch({ type: 'UPDATE_STEPSETS', data: form })
             setStepNum(value);
         } else if (stepNum > value && value >= 1) {
-            console.log(inputStates)
             let form = [...inputStates];
             for (let i = 0; i < stepNum - value; i++) {
                 form[index].linearSetting.pop();
