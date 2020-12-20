@@ -226,7 +226,7 @@ const BasicInfo = ({ inputValue, setBasicInfoInput, basicInfoInputCheck, setBasi
                         error={basicInfoInputCheck.projectRoot}
                         id="projectRoot"
                         name="projectRoot"
-                        label="Project Root"
+                        label="Project Root Folder Name"
                         value={inputValue.projectRoot}
                         onChange={e => handleInput(e)}
                         type="text"

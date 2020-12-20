@@ -6,7 +6,6 @@ import Stepper from "@material-ui/core/Stepper";
 import Step from "@material-ui/core/Step";
 import StepLabel from "@material-ui/core/StepLabel";
 import Check from "@material-ui/icons/Check";
-import Typography from "@material-ui/core/Typography";
 
 
 export const QontoConnector = withStyles({
@@ -29,7 +28,7 @@ export const QontoConnector = withStyles({
         borderColor: "#eaeaf0",
         borderTopWidth: 3,
         borderRadius: 1
-    }
+    },
 })(StepConnector);
 
 export const useQontoStepIconStyles = makeStyles({
@@ -76,7 +75,8 @@ function QontoStepIcon(props) {
 
 const useStyles = makeStyles((theme) => ({
     root: {
-        width: "100%"
+        width: "100%",
+        marginTop: 50
     },
     button: {
         marginRight: theme.spacing(1),
@@ -86,19 +86,56 @@ const useStyles = makeStyles((theme) => ({
         marginTop: theme.spacing(1),
         marginBottom: theme.spacing(1)
     },
-   
+
 }));
 
 function getSteps() {
     return ["Basic settings", "Pipe config", "Review and download"];
 }
 
-const Steppers = ({activeStep, handleReset, handleBack, handleNext}) =>{
+const Steppers = ({ activeStep, handleSubmit, handleReset, handleBack, handleNext, isReadyDownload, downloadLink }) => {
     const classes = useStyles();
     const steps = getSteps();
 
+
     return (
         <div className={classes.root}>
+            <div>
+                {activeStep === steps.length ? (
+                    <div>
+                        {isReadyDownload ?
+                            <div>
+                                <div style={{ margin: 50 }}>
+                                    <Button download='ctap_linear_template.m' href={downloadLink} variant="outlined" color="primary">Download</Button>
+                                </div>
+                                <Button variant="outlined" color="secondary" onClick={handleReset} className={classes.button}>
+                                    Reset
+                                    </Button>
+                                <Button variant="contained" onClick={handleBack} className={classes.button} color="primary">
+                                    Back
+                                    </Button>
+                            </div> : null}
+                    </div>
+                ) : (
+                        <div>
+                            <Button
+                                disabled={activeStep === 0}
+                                onClick={handleBack}
+                                className={classes.button}
+                            >
+                                Back
+                                </Button>
+                            <Button
+                                variant="contained"
+                                color="primary"
+                                onClick={handleNext}
+                                className={classes.button}
+                            >
+                                {activeStep === steps.length - 1 ? "Finish and Generate Code" : "Next"}
+                            </Button>
+                        </div>
+                    )}
+            </div>
             <Stepper
                 alternativeLabel
                 activeStep={activeStep}
@@ -110,39 +147,6 @@ const Steppers = ({activeStep, handleReset, handleBack, handleNext}) =>{
                     </Step>
                 ))}
             </Stepper>
-
-            <div>
-                {activeStep === steps.length ? (
-                    <div>
-                        <Typography className={classes.instructions}>
-                            All steps completed - you&apos;re finished
-                        </Typography>
-                        <Button onClick={handleReset} className={classes.button}>
-                            Reset
-                        </Button>
-                    </div>
-                ) : (
-                        <div>
-                            <div>
-                                <Button
-                                    disabled={activeStep === 0}
-                                    onClick={handleBack}
-                                    className={classes.button}
-                                >
-                                    Back
-                                </Button>
-                                <Button
-                                    variant="contained"
-                                    color="primary"
-                                    onClick={handleNext}
-                                    className={classes.button}
-                                >
-                                    {activeStep === steps.length - 1 ? "Finish" : "Next"}
-                                </Button>
-                            </div>
-                        </div>
-                    )}
-            </div>
         </div>
     );
 }

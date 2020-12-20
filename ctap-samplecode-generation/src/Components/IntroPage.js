@@ -26,6 +26,11 @@ const useStyles = makeStyles((theme) => ({
     },
     resetContainer: {
         padding: theme.spacing(3),
+    },
+    nav:{ 
+        color: 'inherit', 
+        textDecoration: "underline",
+        fontStyle:"italic"
     }
 }));
 
@@ -87,7 +92,6 @@ function getStepContent(step) {
             return (
                 <div style={{ marginLeft: '2rem', marginTop: '1rem' }}>
                     <Typography variant="body1" align="left">You need to have latest EEGLAB added to your Matlab path (<a rel="noreferrer" target="_blank" href='https://sccn.ucsd.edu/eeglab/downloadtoolbox.php'>instructions here</a>).</Typography>
-                    <Typography variant="body1" align="left">Everytime before run CTAP scripts, type <i><b>eeglab</b></i> and press enter on the Matlab command line.</Typography>
                 </div>
             );
         case 2:
@@ -122,6 +126,11 @@ const IntroPage = () => {
 
     return (
         <Container maxWidth="sm">
+            <div style={{ float:'center', margin: 30}} >
+                    <Link className={classes.nav} to="/">Intro Page ᐊ</Link>
+                    <a>  /  </a>
+                    <Link className={classes.nav} to="/start"> Info Form ᐊ</Link>
+            </div>
             <div style={{ marginTop: 70 }}>
                 <Typography variant='h5'>The CTAP Code Generation Tool is used to show users how CTAP code works and some core ideas of CTAP programming.</Typography>
             </div>
@@ -147,7 +156,7 @@ const IntroPage = () => {
                                             onClick={handleNext}
                                             className={classes.button}
                                         >
-                                            {activeStep === steps.length - 1 ? 'Finish' : 'Next'}
+                                            { 'Next'}
                                         </Button>
                                     </div>
                                 </div>

@@ -1,24 +1,26 @@
 import React, { useState, useEffect, useReducer, useContext } from "react";
 import { v4 as uuidv4 } from 'uuid';
+import { Link } from "react-router-dom"
+
 import { makeStyles } from '@material-ui/core/styles';
 import Container from '@material-ui/core/Container';
 import Select from '@material-ui/core/Select';
 import InputLabel from '@material-ui/core/InputLabel';
 import FormControl from '@material-ui/core/FormControl';
-import Button from '@material-ui/core/Button';
 import BasicInfo from "./BasicInfo";
 import LinearTemplate from "./LinearTemplate";
 import Steppers from "./Stepper";
 import LinearPipesForm from "./LinearPipesForm";
 import BranchPipesForm from "./BranchPipesForm";
 import BranchTemplate from "./BranchTemplate"
-
-import { ContextBranch, ContextLinear } from './ContextProvider'
+import ReviewPage from "./ReviewPage"
+import { ContextBranch, ContextLinear } from '../Reducers/ContextProvider'
+import {initialLinearInputState, initialBranchInputState} from '../Reducers/Reducer'
 
 const useStyles = makeStyles((theme) => ({
     formControl: {
         margin: theme.spacing(1),
-        minWidth: 200,
+        width:'25ch'
     },
     selectEmpty: {
         marginTop: theme.spacing(2),
@@ -26,8 +28,31 @@ const useStyles = makeStyles((theme) => ({
 
     button: {
         margin: theme.spacing(2),
+    },
+    nav: {
+        color: 'inherit',
+        textDecoration: "underline",
+        fontStyle: "italic"
     }
 }));
+
+const defaultBasicInfoInput = {
+    checkedLinear: true,
+    checkedBranch: false,
+    checkedHYDRA: true,
+    HydraOptionA: true,
+    HydraOptionB: false,
+    checkHydraTimeRange: "",
+    checkHydraCleanSeed: "",
+    pipelineName: "",
+    projectRoot: "",
+    sbj_filt: "",
+    eegType: "",
+    eegChanloc: "",
+    eegReference: "",
+    eegVeogChannelNames: "",
+    eegHeogChannelNames: ""
+};
 
 export default function Main() {
     const classes = useStyles();
@@ -38,25 +63,9 @@ export default function Main() {
     const [downloadLink, setDownloadLink] = useState('');
     const [stepNum, setStepNum] = useState(1);
     const [isReadyDownload, setIsReadyDownload] = useState(false);
+    const [codeString, setCodeString] = useState('');
     const [basicInfoInput, setBasicInfoInput] = useReducer(
-        (state, newState) => ({ ...state, ...newState }),
-        {
-            checkedLinear: true,
-            checkedBranch: false,
-            checkedHYDRA: true,
-            HydraOptionA: true,
-            HydraOptionB: false,
-            checkHydraTimeRange: "",
-            checkHydraCleanSeed: "",
-            pipelineName: "",
-            projectRoot: "",
-            sbj_filt: "",
-            eegType: "",
-            eegChanloc: "",
-            eegReference: "",
-            eegVeogChannelNames: "",
-            eegHeogChannelNames: ""
-        }
+        (state, newState) => ({ ...state, ...newState }), defaultBasicInfoInput
     );
     const [basicInfoInputCheck, setBasicInfoInputCheck] = useReducer(
         (state, newState) => ({ ...state, ...newState }),
@@ -91,18 +100,18 @@ export default function Main() {
         }
     }, [inputLinearStates, inputBranchStates])
 
-    useEffect(()=>{
+    useEffect(() => {
         setStepNum(1);
         if (basicInfoInput.checkedLinear) {
-            let initialLinear = [{ id: uuidv4(), stepID: '', stepIDCheck:false, funcsSettings: [{ fid: uuidv4(), funcName: '', funcP: '', funcNameCheck:false}] }];
-            dispatchL({ type: 'UPDATE_STEPSETS', data:initialLinear });
+            let initialLinear = [{ id: uuidv4(), stepID: '', stepIDCheck: false, funcsSettings: [{ fid: uuidv4(), funcName: '', funcP: '', funcNameCheck: false }] }];
+            dispatchL({ type: 'UPDATE_STEPSETS', data: initialLinear });
             setInputStates(initialLinear);
         } else {
-            let initialBranch = [{ id: uuidv4(), pipeSegment_srcid: '', pipeSegmentID: '', stepID: '', pipeSegment_srcidCheck:false, pipeSegmentIDCheck:false, stepIDCheck:false, linearSetting:[{ id: uuidv4(), stepID: '', stepIDCheck:false, funcsSettings: [{ fid: uuidv4(), funcName: '', funcP: '', funcNameCheck:false}] }] }];
+            let initialBranch = [{ id: uuidv4(), pipeSegment_srcid: '', pipeSegmentID: '', stepID: '', pipeSegment_srcidCheck: false, pipeSegmentIDCheck: false, stepIDCheck: false, linearSetting: [{ id: uuidv4(), stepID: '', stepIDCheck: false, funcsSettings: [{ fid: uuidv4(), funcName: '', funcP: '', funcNameCheck: false }] }] }];
             dispatchB({ type: 'UPDATE_STEPSETS', data: initialBranch });
             setInputStates(initialBranch);
         }
-    },[basicInfoInput.checkedLinear])
+    }, [basicInfoInput.checkedLinear])
 
     useEffect(() => {
         setDownloadLink('');
@@ -127,7 +136,9 @@ export default function Main() {
         } else {
             list = BranchTemplate(basicInfoInput, inputStates);
         };
+
         const data = new Blob([list.join('\n')], { type: 'text/plain' });
+        setCodeString(list.join('\n'));
         if (downloadLink !== '') window.URL.revokeObjectURL(downloadLink);
         return window.URL.createObjectURL(data);
 
@@ -199,20 +210,33 @@ export default function Main() {
         //first run input check
         let p = inputCheck();
         if (p) {
-            setActiveStep((prevActiveStep) => prevActiveStep + 1);
+            let prevActiveStep = activeStep;
+            setActiveStep(prevActiveStep + 1);
+            if (prevActiveStep === 1) {
+                handleSubmit();
+            }
         } else {
             alert("check your input");
         }
 
     };
     const handleBack = () => {
-        setActiveStep((prevActiveStep) => prevActiveStep - 1);
+        let prevActiveStep = activeStep;
+        if(prevActiveStep === 3){
+            setActiveStep((prevActiveStep) => prevActiveStep - 2);
+        }else{
+            setActiveStep((prevActiveStep) => prevActiveStep - 1);
+        }
+        
     };
     const handleReset = () => {
         setActiveStep(0);
+        setBasicInfoInput(defaultBasicInfoInput);
+        dispatchB({ type: 'UPDATE_STEPSETS', data: initialBranchInputState });
+        dispatchL({ type: 'UPDATE_STEPSETS', data: initialLinearInputState });
     };
 
-    // LinearPipesForm handles
+    // 
     async function handleSubmit() {
         let downloadlink = await makeTextFile(basicInfoInput, inputStates);
         setDownloadLink(downloadlink);
@@ -258,6 +282,11 @@ export default function Main() {
 
     return (
         <div>
+            <div style={{ float: 'center', margin: 30 }} >
+                <Link className={classes.nav} to="/">Intro Page ᐊ</Link>
+                <a>  /  </a>
+                <Link className={classes.nav} to="/start"> Info Form ᐊ</Link>
+            </div>
             <div>
                 {activeStep === 0 ? (
                     <BasicInfo
@@ -301,34 +330,30 @@ export default function Main() {
 
                     </Container>
                 ) : activeStep === 2 ? (
+
                     <div>
-                        <Button
-                            className={classes.button}
-                            variant="contained"
-                            color="primary"
-                            type="submit"
-                            onClick={handleSubmit}
-                        >Generate</Button>
-                        <div>
-                            {isReadyDownload ?
-                                <a download='ctap_linear_template.m' href={downloadLink} className={classes.downloadButton}> download </a> : null
-                            }
-                        </div>
-
-
+                        <h4>Code Preview</h4>                       
+                        {isReadyDownload ? <ReviewPage codeString={codeString} /> : null}
                     </div>
 
 
-                ) : null
+
+                ) : <div>
+                        <h4>Code Preview</h4>
+                        {isReadyDownload ? <ReviewPage codeString={codeString} /> : null}
+                    </div>
 
                 }
 
             </div>
             <Steppers
                 activeStep={activeStep}
+                handleSubmit={handleSubmit}
                 handleBack={handleBack}
                 handleNext={handleNext}
                 handleReset={handleReset}
+                isReadyDownload={isReadyDownload}
+                downloadLink={downloadLink}
             />
 
         </div>

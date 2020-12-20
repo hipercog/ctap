@@ -1,5 +1,5 @@
 import React, { useReducer, createContext } from "react";
-import { initialLinearInputState, initialBranchInputState, Reducer } from "../Reducer.js";
+import { initialLinearInputState, initialBranchInputState, Reducer } from "./Reducer.js";
 
 const ContextProvider = ({ children }) => {
     const [inputLinearState, dispatchL] = useReducer(Reducer, initialLinearInputState);
