@@ -23,7 +23,7 @@ const FuncsSettingForm = ({ ifLinear, index, indexm, funcsSettings, classes, mid
         if (ifLinear) {
             return inputLinearStates;
         } else {
-            return inputBranchStates[index].linearSetting;
+            return inputBranchStates[index].linearSettings;
         }
     });
 
@@ -31,7 +31,7 @@ const FuncsSettingForm = ({ ifLinear, index, indexm, funcsSettings, classes, mid
         if (ifLinear) {
             setInputStates(inputLinearStates);
         } else {
-            setInputStates(inputBranchStates[index].linearSetting);
+            setInputStates(inputBranchStates[index].linearSettings);
         }
     }, [inputLinearStates, inputBranchStates])
 
@@ -47,11 +47,11 @@ const FuncsSettingForm = ({ ifLinear, index, indexm, funcsSettings, classes, mid
         })
         values[index_].funcsSettings = newInputStates;
         if (ifLinear) {
-            dispatchL({ type: 'UPDATE_STEPSETS', data: values })
+            dispatchL({ type: 'UPDATE', data: values })
         } else {
             let newState = [...inputBranchStates];
-            newState[index].linearSetting = values;
-            dispatchB({ type: 'UPDATE_STEPSETS', data: newState })
+            newState[index].linearSettings = values;
+            dispatchB({ type: 'UPDATE', data: newState })
         }
 
     }
@@ -61,11 +61,11 @@ const FuncsSettingForm = ({ ifLinear, index, indexm, funcsSettings, classes, mid
         let index_ = values.findIndex(x => x.id === mid);
         values[index_].funcsSettings.push({ fid: uuidv4(), funcName: '', functionP: '' });
         if (ifLinear) {
-            dispatchL({ type: 'UPDATE_STEPSETS', data: values })
+            dispatchL({ type: 'UPDATE', data: values })
         } else {
             let newState = [...inputBranchStates];
-            newState[index].linearSetting = values;
-            dispatchB({ type: 'UPDATE_STEPSETS', data: newState });
+            newState[index].linearSettings = values;
+            dispatchB({ type: 'UPDATE', data: newState });
         }
 
     }
@@ -76,11 +76,11 @@ const FuncsSettingForm = ({ ifLinear, index, indexm, funcsSettings, classes, mid
         let indexf = values[index_].funcsSettings.findIndex(x => x.fid === id);
         values[index_].funcsSettings.splice(indexf, 1);
         if (ifLinear) {
-            dispatchL({ type: 'UPDATE_STEPSETS', data: values });
+            dispatchL({ type: 'UPDATE', data: values });
         } else {
             let newState = [...inputBranchStates];
-            newState[index].linearSetting = values;
-            dispatchB({ type: 'UPDATE_STEPSETS', data: newState });
+            newState[index].linearSettings = values;
+            dispatchB({ type: 'UPDATE', data: newState });
         }
 
     }

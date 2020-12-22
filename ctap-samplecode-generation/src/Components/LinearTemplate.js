@@ -21,6 +21,13 @@ const LinearTemplate = (basicInfo, inputFields) => {
         }
     }
 
+    let data_dir = '';
+    if(basicInfo.checkOwnDataPath){
+        data_dir = `data_dir = '${basicInfo.inputdatapath}';`
+    }else{
+        data_dir = `data_dir = append(reporoot,'ctap/data/test_data');`
+    }
+    
     inputFields.forEach((inputField, index) => {
         let funcs = ``;
         inputField.funcsSettings.forEach(funcsSetting => {
@@ -37,11 +44,12 @@ const LinearTemplate = (basicInfo, inputFields) => {
 
 
     return new Array(
+        `%% Basic setting`,
         `pipeline_name = '${basicInfo.pipelineName}';`,
         "FILE_ROOT = mfilename('fullpath');",
         `reporoot = FILE_ROOT(1:strfind(FILE_ROOT, fullfile('ctap', 'templates', '${basicInfo.projectRoot}', 'ctap_linear_template')) - 1);`,
         `project_dir = FILE_ROOT(1:strfind(FILE_ROOT, fullfile('ctap_linear_template')) - 1);`,
-        `data_dir = append(reporoot,'ctap/data/test_data');`,
+        `${data_dir}`,
         `Cfg.env.paths = cfg_create_paths(project_dir, pipeline_name, {''}, 1);`,
         `Cfg.eeg.chanlocs = '${basicInfo.eegChanloc}';`,
         `Cfg.eeg.reference = ${basicInfo.eegReference};`,
@@ -50,12 +58,15 @@ const LinearTemplate = (basicInfo, inputFields) => {
         `Cfg.grfx.on = false;`,
         `Cfg.MC = get_meas_cfg_MC(Cfg, data_dir, 'eeg_ext', '${basicInfo.eegType}', 'sbj_filt', ${basicInfo.sbj_filt});`,
         `${HYDRA_presetting.join('\n')}`,
+        ``,
+        `%% Pipeline setting`,
         `clear Pipe;`,
         `${stepSetsArray.join('\n')}`,
         `${[ctap_args.join('\n')]}`,
         `Cfg.pipe.stepSets = stepSet;`,
         `Cfg.pipe.runSets = {stepSet(1).id};`,
         `Cfg = ctap_auto_config(Cfg, out);`,
+        ` `,
         `%% Run the pipe`,
         `CTAP_pipeline_looper(Cfg, 'debug', DEBUG, 'overwrite', true);`,
         `clear i stepSet Filt ctap_args`

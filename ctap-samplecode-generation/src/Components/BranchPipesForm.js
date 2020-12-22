@@ -47,7 +47,7 @@ const BranchPipesForm = () => {
             }
             return i;
         })
-        dispatch({ type: 'UPDATE_STEPSETS', data: newInputFields })
+        dispatch({ type: 'UPDATE', data: newInputFields })
     }
 
     const handleChangeStepSets = (e, index) => {
@@ -55,16 +55,16 @@ const BranchPipesForm = () => {
         if (stepNum < value) {
             let form = [...inputStates];
             for (let i = stepNum; i < value; i++) {
-                form[index].linearSetting.push({ id: uuidv4(), stepID: '', stepIDCheck: false, funcsSettings: [{ fid: uuidv4(), funcName: '', funcP: '', funcNameCheck: false }] });
+                form[index].linearSettings.push({ id: uuidv4(), stepID: '', stepIDCheck: false, funcsSettings: [{ fid: uuidv4(), funcName: '', funcP: '', funcNameCheck: false }] });
             }
-            dispatch({ type: 'UPDATE_STEPSETS', data: form })
+            dispatch({ type: 'UPDATE', data: form })
             setStepNum(value);
         } else if (stepNum > value && value >= 1) {
             let form = [...inputStates];
             for (let i = 0; i < stepNum - value; i++) {
-                form[index].linearSetting.pop();
+                form[index].linearSettings.pop();
             }
-            dispatch({ type: 'UPDATE_STEPSETS', data: form })
+            dispatch({ type: 'UPDATE', data: form })
             setStepNum(value);
         }
     }

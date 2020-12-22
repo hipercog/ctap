@@ -98,7 +98,7 @@ function getStepContent(step) {
             return (
                 <div style={{ marginLeft: '2rem', marginTop: '1rem' }}>
                     <Typography variant="body1" align="left">To generate CTAP example script, you need create a new project folder under <i><b>~/ctap/templates</b></i>.</Typography>
-                    <Typography variant="body1" align="left">After that, copy/cut your test data to <i><b>~/ctap/data/test_data</b></i></Typography>
+                    <Typography variant="body1" align="left">After that, copy/cut your test data to <i><b>~/ctap/data/test_data</b></i> (You can also define your own data path later)</Typography>
                     <Typography variant="body1" align="left">If you have a corrsponding channel location file, please copy it to <i><b>~/ctap/res</b></i>, and add its name manually in the later process</Typography>
                 </div>
             );

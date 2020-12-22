@@ -14,8 +14,8 @@ import LinearPipesForm from "./LinearPipesForm";
 import BranchPipesForm from "./BranchPipesForm";
 import BranchTemplate from "./BranchTemplate"
 import ReviewPage from "./ReviewPage"
-import { ContextBranch, ContextLinear } from '../Reducers/ContextProvider'
-import {initialLinearInputState, initialBranchInputState} from '../Reducers/Reducer'
+import { ContextBranch, ContextLinear, ContextBasic } from '../Reducers/ContextProvider'
+import {initialLinearInputState, initialBranchInputState, defaultBasicInfoInput} from '../Reducers/Reducer'
 
 const useStyles = makeStyles((theme) => ({
     formControl: {
@@ -36,43 +36,26 @@ const useStyles = makeStyles((theme) => ({
     }
 }));
 
-const defaultBasicInfoInput = {
-    checkedLinear: true,
-    checkedBranch: false,
-    checkedHYDRA: true,
-    HydraOptionA: true,
-    HydraOptionB: false,
-    checkHydraTimeRange: "",
-    checkHydraCleanSeed: "",
-    pipelineName: "",
-    projectRoot: "",
-    sbj_filt: "",
-    eegType: "",
-    eegChanloc: "",
-    eegReference: "",
-    eegVeogChannelNames: "",
-    eegHeogChannelNames: ""
-};
 
 export default function Main() {
     const classes = useStyles();
 
     const [inputLinearStates, dispatchL] = useContext(ContextLinear);
     const [inputBranchStates, dispatchB] = useContext(ContextBranch);
+    const [basicInfoInput, dispatch] = useContext(ContextBasic);
+
     const [activeStep, setActiveStep] = useState(0);
     const [downloadLink, setDownloadLink] = useState('');
     const [stepNum, setStepNum] = useState(1);
     const [isReadyDownload, setIsReadyDownload] = useState(false);
     const [codeString, setCodeString] = useState('');
-    const [basicInfoInput, setBasicInfoInput] = useReducer(
-        (state, newState) => ({ ...state, ...newState }), defaultBasicInfoInput
-    );
     const [basicInfoInputCheck, setBasicInfoInputCheck] = useReducer(
         (state, newState) => ({ ...state, ...newState }),
         {
             checkHydraTimeRange: false,
             checkHydraCleanSeed: false,
             pipelineName: false,
+            inputdatapath: false,
             projectRoot: false,
             sbj_filt: false,
             eegType: false,
@@ -104,11 +87,11 @@ export default function Main() {
         setStepNum(1);
         if (basicInfoInput.checkedLinear) {
             let initialLinear = [{ id: uuidv4(), stepID: '', stepIDCheck: false, funcsSettings: [{ fid: uuidv4(), funcName: '', funcP: '', funcNameCheck: false }] }];
-            dispatchL({ type: 'UPDATE_STEPSETS', data: initialLinear });
+            dispatchL({ type: 'UPDATE', data: initialLinear });
             setInputStates(initialLinear);
         } else {
-            let initialBranch = [{ id: uuidv4(), pipeSegment_srcid: '', pipeSegmentID: '', stepID: '', pipeSegment_srcidCheck: false, pipeSegmentIDCheck: false, stepIDCheck: false, linearSetting: [{ id: uuidv4(), stepID: '', stepIDCheck: false, funcsSettings: [{ fid: uuidv4(), funcName: '', funcP: '', funcNameCheck: false }] }] }];
-            dispatchB({ type: 'UPDATE_STEPSETS', data: initialBranch });
+            let initialBranch = [{ id: uuidv4(), pipeSegment_srcid: '', pipeSegmentID: '', stepID: '', pipeSegment_srcidCheck: false, pipeSegmentIDCheck: false, stepIDCheck: false, linearSettings: [{ id: uuidv4(), stepID: '', stepIDCheck: false, funcsSettings: [{ fid: uuidv4(), funcName: '', funcP: '', funcNameCheck: false }] }] }];
+            dispatchB({ type: 'UPDATE', data: initialBranch });
             setInputStates(initialBranch);
         }
     }, [basicInfoInput.checkedLinear])
@@ -121,7 +104,7 @@ export default function Main() {
     // use localstorage save last edit  
     useEffect(() => {
         if (localStorage.getItem("basicInfoInput")) {
-            setBasicInfoInput(JSON.parse(localStorage.getItem("basicInfoInput")));
+            dispatch({ type: 'UPDATE', data: JSON.parse(localStorage.getItem("basicInfoInput")) });
         }
     }, [])
     useEffect(() => {
@@ -183,7 +166,7 @@ export default function Main() {
                         i.pipeSegment_srcid.length ? i.pipeSegment_srcidCheck = false : (() => { i.pipeSegment_srcidCheck = true; result = false })();
                         i.pipeSegmentID.length ? i.pipeSegmentIDCheck = false : (() => { i.pipeSegmentIDCheck = true; result = false })();
                     }
-                    i.linearSetting.forEach(l => {
+                    i.linearSettings.forEach(l => {
                         console.log(l.stepID.length);
                         l.stepID.length ? l.stepIDCheck = false : (() => { l.stepIDCheck = true; result = false })();
                         l.funcsSettings.forEach(f => {
@@ -199,7 +182,7 @@ export default function Main() {
 
                 return i;
             })
-            dispatchL({ type: 'UPDATE_STEPSETS', data: newInputFields })
+            dispatchL({ type: 'UPDATE', data: newInputFields })
         }
 
         return result;
@@ -231,9 +214,9 @@ export default function Main() {
     };
     const handleReset = () => {
         setActiveStep(0);
-        setBasicInfoInput(defaultBasicInfoInput);
-        dispatchB({ type: 'UPDATE_STEPSETS', data: initialBranchInputState });
-        dispatchL({ type: 'UPDATE_STEPSETS', data: initialLinearInputState });
+        dispatch({ type: 'UPDATE', data: defaultBasicInfoInput });
+        dispatchB({ type: 'UPDATE', data: initialBranchInputState });
+        dispatchL({ type: 'UPDATE', data: initialLinearInputState });
     };
 
     // 
@@ -251,13 +234,13 @@ export default function Main() {
                 for (let i = stepNum; i < value; i++) {
                     form.push({ id: uuidv4(), stepID: '', stepIDCheck: false, funcsSettings: [{ fid: uuidv4(), funcName: '', funcP: '', funcNameCheck: false }] });
                 };
-                dispatchL({ type: 'UPDATE_STEPSETS', data: form });
+                dispatchL({ type: 'UPDATE', data: form });
                 setInputStates(form);
             } else {
                 for (let i = stepNum; i < value; i++) {
-                    form.push({ id: uuidv4(), pipeSegment_srcid: '', pipeSegmentID: '', stepID: '', pipeSegment_srcidCheck: false, pipeSegmentIDCheck: false, stepIDCheck: false, linearSetting: [{ id: uuidv4(), stepID: '', stepIDCheck: false, funcsSettings: [{ fid: uuidv4(), funcName: '', funcP: '', funcNameCheck: false }] }] });
+                    form.push({ id: uuidv4(), pipeSegment_srcid: '', pipeSegmentID: '', stepID: '', pipeSegment_srcidCheck: false, pipeSegmentIDCheck: false, stepIDCheck: false, linearSettings: [{ id: uuidv4(), stepID: '', stepIDCheck: false, funcsSettings: [{ fid: uuidv4(), funcName: '', funcP: '', funcNameCheck: false }] }] });
                 }
-                dispatchB({ type: 'UPDATE_STEPSETS', data: form });
+                dispatchB({ type: 'UPDATE', data: form });
                 setInputStates(form);
             }
             setStepNum(value);
@@ -268,10 +251,10 @@ export default function Main() {
                 form.pop();
             }
             if (basicInfoInput.checkedLinear) {
-                dispatchL({ type: 'UPDATE_STEPSETS', data: form });
+                dispatchL({ type: 'UPDATE', data: form });
                 setInputStates(form);
             } else {
-                dispatchB({ type: 'UPDATE_STEPSETS', data: form });
+                dispatchB({ type: 'UPDATE', data: form });
                 setInputStates(form);
             }
             setStepNum(value);
@@ -290,8 +273,6 @@ export default function Main() {
             <div>
                 {activeStep === 0 ? (
                     <BasicInfo
-                        inputValue={basicInfoInput}
-                        setBasicInfoInput={setBasicInfoInput}
                         basicInfoInputCheck={basicInfoInputCheck}
                         setBasicInfoInputCheck={setBasicInfoInputCheck}
                     />

@@ -36,7 +36,7 @@ const LinearPipesForm = ({ ifLinear, index, mid }) => {
         if (ifLinear) {
             return inputLinearStates;
         } else {
-            return inputBranchStates[index].linearSetting;
+            return inputBranchStates[index].linearSettings;
         }
     });
 
@@ -44,7 +44,7 @@ const LinearPipesForm = ({ ifLinear, index, mid }) => {
         if (ifLinear) {
             setInputStates(inputLinearStates);
         } else {
-            setInputStates(inputBranchStates[index].linearSetting);
+            setInputStates(inputBranchStates[index].linearSettings);
         }
     }, [inputLinearStates, inputBranchStates])
 
@@ -59,11 +59,11 @@ const LinearPipesForm = ({ ifLinear, index, mid }) => {
         })
 
         if (ifLinear) {
-            dispatchL({ type: 'UPDATE_STEPSETS', data: newInputFields });
+            dispatchL({ type: 'UPDATE', data: newInputFields });
         } else {
             const newValue = inputBranchStates;
-            newValue[index].linearSetting = newInputFields;
-            dispatchB({ type: 'UPDATE_STEPSETS', data: newValue });
+            newValue[index].linearSettings = newInputFields;
+            dispatchB({ type: 'UPDATE', data: newValue });
         }
         setInputStates(newInputFields);
     }

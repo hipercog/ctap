@@ -17,7 +17,7 @@ const ReviewPage = (codeString) => {
     const classes = useStyles();
 
     return (
-        <Container maxWidth='md' classes={classes.root}>
+        <Container maxWidth='md' className={classes.root}>
             <SyntaxHighlighter language="matlab" 
                 style={vs}
                 showLineNumbers={true}

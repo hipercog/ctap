@@ -3,7 +3,7 @@ const BranchTemplate = (basicInfo, inputFields) => {
     let HYDRA_presetting = new Array([]);
     let pipeArr = '';
     let branchSrcInfo = {};
-    let subfuncs = new Array([]);
+    let pipeSegments = new Array([]);
 
     if (basicInfo.checkedHYDRA) {
         HYDRA_presetting.push(`HYDRA = true;`);
@@ -13,78 +13,84 @@ const BranchTemplate = (basicInfo, inputFields) => {
         HYDRA_presetting.push(`Cfg.HYDRA.PARAM = PARAM;`);
         HYDRA_presetting.push(`Cfg.HYDRA.FULL_CLEAN_SEED = false;`);
         if (basicInfo.checkHydraTimeRange && !basicInfo.checkHydraCleanSeed) {
-            HYDRA_presetting.push(`Cfg.HYDRA.provide_seed_timerange = true;`)
+            HYDRA_presetting.push(`Cfg.HYDRA.provide_seed_timerange = true;`);
             HYDRA_presetting.push(`Cfg.HYDRA.cleanseed_timerange = ${basicInfo.checkHydraTimeRange};`);
         } else if (basicInfo.checkHydraCleanSeed && !basicInfo.checkHydraTimeRange) {
-            HYDRA_presetting.push(`Cfg.HYDRA.provide_seed_timerange = false;`)
+            HYDRA_presetting.push(`Cfg.HYDRA.provide_seed_timerange = false;`);
             HYDRA_presetting.push(`Cfg.HYDRA.seed_fname = ${basicInfo.checkHydraCleanSeed};`);
         }
     }
 
-    inputFields.forEach((inputField, index) => {
+    let data_dir = '';
+    if(basicInfo.checkOwnDataPath){
+        data_dir = `data_dir = '${basicInfo.inputdatapath}';`;
+    }else{
+        data_dir = `data_dir = append(reporoot,'ctap/data/test_data');`;
+    }
+
+    inputFields.map((inputField, index) => {
         let stepSetsArray = new Array([]);
         let ctap_args = new Array([]);
         let funcs = ``;
-        let subpipe = "@sbf_" + inputField.subfID + ", ";
-        console.log(subpipe);
+        let subpipe = "@sbf_" + inputField.pipeSegmentID + ", ";
         pipeArr = pipeArr + subpipe;
 
         let srcid;
-        if (index == 0) {
-            branchSrcInfo[inputField.subfID] = {
+        if (index === 0) {
+            branchSrcInfo[inputField.pipeSegmentID] = {
                 '0': "".concat(1, inputField.stepID),
                 '1': ""
             };
             srcid = "";
         } else {
-            branchSrcInfo[inputField.subfID] = {
+            branchSrcInfo[inputField.pipeSegmentID] = {
                 '0': "".concat(1, inputField.stepID),
-                '1': "".concat(branchSrcInfo[inputField.subf_srcid]['1'], inputField.subf_srcid, '#')
+                '1': "".concat(branchSrcInfo[inputField.pipeSegment_srcid]['1'], inputField.pipeSegment_srcid, '#')
             };
-            srcid = "".concat(branchSrcInfo[inputField.subfID]['1'], branchSrcInfo[inputField.subf_srcid]['0']);
+            srcid = "".concat(branchSrcInfo[inputField.pipeSegmentID]['1'], branchSrcInfo[inputField.pipeSegment_srcid]['0']);
         };
 
-        console.log(srcid);
-
-        inputField.funcsSettings.forEach(funcsSetting => {
-            funcs = funcs + `@${funcsSetting.funcName}, `;
-            let funcN = funcsSetting.funcName;
-            if (funcN) {
-                funcN = funcN.slice(5, funcN.length)
-            }
-            ctap_args.push(`out.${funcN}=struct(${funcsSetting.funcP})`)
+        inputField.linearSettings.map(linearSetting => {
+            let funcs = ``;
+            linearSetting.funcsSettings.forEach(funcsSetting => {
+                funcs = funcs + `@${funcsSetting.funcName}, `;
+                let funcN = funcsSetting.funcName;
+                if(funcN){
+                    funcN = funcN.slice(5,funcN.length)
+                }
+                ctap_args.push(`   out.${funcN}=struct(${funcsSetting.funcP});`)
+            });
+            stepSetsArray.push(`   stepSet(${index + 1}).id = [num2str(${index + 1}), '${inputField.stepID}'];`);
+            stepSetsArray.push(`   stepSet(${index + 1}).funH{${funcs}};`);
         });
 
-        stepSetsArray.push(`stepSet(${index + 1}).id = [num2str(${index + 1}), '${inputField.stepID}'];`);
-        stepSetsArray.push(`stepSet(${index + 1}).funH{${funcs}};`);
-        console.log([stepSetsArray.join('\n')]);
-        console.log(ctap_args);
-        //sub_func
-        let subfunc = new Array(
-            `function [Cfg, out] = sbf_${inputField.subfID}(Cfg)`,
+        //pipeSegments
+        let pipeSegment = new Array(
+            `function [Cfg, out] = pipeSegment_${inputField.pipeSegmentID}(Cfg)`,
             `   %%%%%%%% Define hierarchy %%%%%%%%`,
-            `   Cfg.id = '${inputField.subfID}';`,
+            `   Cfg.id = '${inputField.pipeSegmentID}';`,
             `   Cfg.srcid = {${srcid}};`,
             `   %%%%%%%% Define pipeline %%%%%%%%`,
             `   i = 1; %stepSet 1`,
-            `   ${stepSetsArray.join('\n')}`,
-            `   `,
-            `   ${[ctap_args.join('\n')]}`,
+            `${stepSetsArray.join('\n')}`,
+            `${[ctap_args.join('\n')]}`,
             `   Cfg.pipe.runSets = {stepSet(:).id};`,
             `   Cfg.pipe.stepSets = stepSet;`,
-            `end`
+            `end`,
+            ``
         )
-        subfuncs.push(`${subfunc.join('\n')}`);
+        pipeSegments.push(`${pipeSegment.join('\n')}`);
     })
 
     pipeArr = `pipeArr = {${pipeArr}};`
 
     let results = new Array(
+        `%% Basic setting`,
         `pipeline_name = '${basicInfo.pipelineName}';`,
         `FILE_ROOT = mfilename('fullpath');`,
         `reporoot = FILE_ROOT(1:strfind(FILE_ROOT, fullfile('ctap', 'templates', '${basicInfo.projectRoot}', 'ctap_linear_template')) - 1);`,
         `project_dir = FILE_ROOT(1:strfind(FILE_ROOT, fullfile('ctap_linear_template')) - 1);`,
-        `data_dir = append(reporoot,'ctap/data/test_data');`,
+        `${data_dir}`,
         `PREPRO = true;`,
         `STOP_ON_ERROR = false;`,
         `OVERWRITE_OLD_RESULTS = true;`,
@@ -92,13 +98,16 @@ const BranchTemplate = (basicInfo, inputFields) => {
         `Cfg.grfx.on = false;`,
         `Cfg.MC = get_meas_cfg_MC(Cfg, data_dir, 'eeg_ext', '${basicInfo.eegType}', 'sbj_filt', ${basicInfo.sbj_filt});`,
         `${HYDRA_presetting.join('\n')}`,
+        ``,
+        `%% run pipe`,
         `clear Pipe;`,
         `${pipeArr}`,
         `runps = 1:length(pipeArr);`,
         `if PREPRO`,
         `   CTAP_pipeline_brancher(Cfg, pipeArr, 'runPipes', runps, 'dbg', STOP_ON_ERROR, 'ovw', OVERWRITE_OLD_RESULTS);`,
         `end`,
-        `%% Subfunctions`,
+        ` `,
+        `%% PipeSegments`,
         `function [Cfg, out] = sbf_cfg(project_root_folder, ID)`,
         `   Cfg.id = ID;`,
         `   Cfg.srcid = {''};`,
@@ -113,7 +122,8 @@ const BranchTemplate = (basicInfo, inputFields) => {
         `   Cfg.eeg.heogChannelNames = ${basicInfo.eegHeogChannelNames};`,
         `   out = struct([]);`,
         `end`,
-        `${subfuncs.join('\n')}`,
+        ``,
+        `${pipeSegments.join('\n')}`,
     );
     return results;
 
