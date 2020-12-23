@@ -18,7 +18,12 @@ if ~isfield(Cfg.eeg, 'chanlocs') || islogical(Cfg.eeg.chanlocs)
     locstr = '-UNSPECIFIED-';
 
 elseif exist(Cfg.eeg.chanlocs, 'file') == 2
-    locstr = Cfg.eeg.chanlocs; 
+    [p, ~, ~] = fileparts(Cfg.eeg.chanlocs);
+    if isempty(p)
+        locstr = which(Cfg.eeg.chanlocs);
+    else
+        locstr = Cfg.eeg.chanlocs;
+    end
 
 elseif isfolder(Cfg.eeg.chanlocs)
     % Find chanlocs from directory, as filename closest matching to EEG filename
@@ -29,7 +34,8 @@ elseif isfolder(Cfg.eeg.chanlocs)
 elseif iscell(Cfg.eeg.chanlocs) 
     % If all chanlocs filepaths have been provided separately, as cell str array
     % Indexing by .subjectnr which should be same as 1:num_subjs
-    locstr = Cfg.eeg.chanlocs{Cfg.subject.subjectnr};
+    Cfg.eeg.chanlocs = Cfg.eeg.chanlocs{Cfg.subject.subjectnr};
+    locstr = ctap_eeg_find_chlocs(Cfg);
     
 end
 
