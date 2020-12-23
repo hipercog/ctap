@@ -35,6 +35,7 @@ Clone the GitHub repository to your machine using
     git clone https://github.com/bwrc/ctap.git <destination dir>
     
 NOTE 1: you can clone wherever you like, but on Unix-based systems we recommend to clone in the home directory, to be compatible with the [CTAP code generation tool](https://ruoyanmeng.github.io/ctap/#/)
+
 NOTE 2: we have used git LFS to track/manage large data files (in \*.mat and  \*.set format). This implies that you need to set up LFS by
 
     git lfs install
