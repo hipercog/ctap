@@ -1,4 +1,4 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useState, useEffect } from "react";
 import clsx from 'clsx';
 import TextField from '@material-ui/core/TextField';
 import Container from '@material-ui/core/Container';
@@ -31,24 +31,54 @@ const useStyles = makeStyles((theme) => ({
 const helperText = {
     stepID: "describe main work in this pipeSegment, eg.'_load'",
     pipeSegmentID: "ID of this pipeSegment, eg.'pipe2'",
-    pipeSegment_srcid: "Describe the hierarchy relationship between other pipeSegment, you should input [Set Function ID] of the previously executed pipe, for example, if the current pipeSegment runs after pipe2, then the input should be 'pipe2', the first pipeSegment doesn't need this, leave it empty is ok."
+    pipeSegment_srcid: "Describe the hierarchy relationship between other pipeSegment, you should input [pipeSegment ID] of the previously executed pipe, for example, if the current pipeSegment runs after pipe2, then the input should be pipe2. The first pipeSegment doesn't need this, leave it empty is ok."
 };
 
 const BranchPipesForm = () => {
     const classes = useStyles()
     const [inputStates, dispatch] = useContext(ContextBranch);
     const [stepNum, setStepNum] = useState(1);
+    const [pipeSegmentSrcIDs, setPipeSegmentSrcIDs] = useState({ 0: '' });
+    const [checkPipeSegmentSrcID, setCheckPipeSegmentSrcID] = useState(false);
+
+    useEffect(() => {
+        inputStates.forEach(i => {
+            setPipeSegmentSrcIDs({ ...pipeSegmentSrcIDs, ...{ [i.id]: i.pipeSegmentID } });
+        })
+    }, [])
+
+    const debounce = (fn, wait) => {
+        let timeout;
+        if (timeout !== null) clearTimeout(timeout);
+        timeout = setTimeout(fn, wait);
+    }
 
     const handleLinearPipesInput = (id, event) => {
+        const { value, name } = event.target;
         const newInputFields = inputStates.map(i => {
             if (id === i.id) {
-                i[event.target.name] = event.target.value
-                i[event.target.name + 'Check'] = false;
+                i[name] = value;
+                i[name + 'Check'] = false;
+                if (name === 'pipeSegmentID') {
+                    // console.log(Object.values({...pipeSegmentSrcIDs, ...{[id]:value}}))
+                    setPipeSegmentSrcIDs({ ...pipeSegmentSrcIDs, ...{ [id]: value } });
+                } else if (name === 'pipeSegment_srcid') {
+                    console.log(value)
+                    if (Object.values(pipeSegmentSrcIDs).includes(value)) {
+                        setCheckPipeSegmentSrcID(false)
+                    } else {
+                        setCheckPipeSegmentSrcID(true)
+                    }
+                }
             }
             return i;
         })
-        dispatch({ type: 'UPDATE', data: newInputFields })
+
+        dispatch({ type: 'UPDATE', data: newInputFields });
+
     }
+
+
 
     const handleChangeStepSets = (e, index) => {
         const { value } = e.target;
@@ -57,6 +87,7 @@ const BranchPipesForm = () => {
             for (let i = stepNum; i < value; i++) {
                 form[index].linearSettings.push({ id: uuidv4(), stepID: '', stepIDCheck: false, funcsSettings: [{ fid: uuidv4(), funcName: '', funcP: '', funcNameCheck: false }] });
             }
+            form[index].stepNum = value;
             dispatch({ type: 'UPDATE', data: form })
             setStepNum(value);
         } else if (stepNum > value && value >= 1) {
@@ -64,12 +95,13 @@ const BranchPipesForm = () => {
             for (let i = 0; i < stepNum - value; i++) {
                 form[index].linearSettings.pop();
             }
+            form[index].stepNum = value;
             dispatch({ type: 'UPDATE', data: form })
             setStepNum(value);
         }
     }
 
-    //  console.log(inputStates)
+   // console.log(inputStates)
     return (
         <Container maxWidth="md">
             {inputStates.map((inputField, index) => (
@@ -107,11 +139,11 @@ const BranchPipesForm = () => {
                     <FormControl className={clsx(classes.margin, classes.textField, classes.withoutLabel,)}>
                         <Tooltip title={<Typography variant='body2'>{helperText.pipeSegment_srcid}</Typography>} classes={{ tooltip: classes.customWidth }}>
                             <TextField
-                                error={inputField.pipeSegment_srcidCheck}
+                                error={(inputField.pipeSegment_srcidCheck || checkPipeSegmentSrcID)}
                                 name="pipeSegment_srcid"
                                 label="pipeSegment Srcid"
                                 variant="outlined"
-                                helperText={inputField.pipeSegment_srcidCheck ? 'The field cannot be empty. Please enter a value' : null}
+                                helperText={inputField.pipeSegment_srcidCheck ? 'The field cannot be empty. Please enter a value' : (checkPipeSegmentSrcID ? 'there is no such pipe' : null)}
                                 value={inputField.pipeSegment_srcid}
                                 onChange={event => handleLinearPipesInput(inputField.id, event)}
                             />
@@ -124,7 +156,7 @@ const BranchPipesForm = () => {
                         <InputLabel > {'stepSet number'}</InputLabel>
                         <Select
                             native
-                            value={stepNum}
+                            value={inputField.stepNum}
                             onChange={e => handleChangeStepSets(e, index)}
                             label="stepSet number"
                             inputProps={{

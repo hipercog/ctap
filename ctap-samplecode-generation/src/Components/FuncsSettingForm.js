@@ -98,13 +98,12 @@ const FuncsSettingForm = ({ ifLinear, index, indexm, funcsSettings, classes, mid
                                 setValue(newValue);
                                 handleInputChange(funcsSetting.fid, 'funcName', newValue);
                             }}
-                            id="controllable-states-demo"
                             options={CTAP_funcs}
                             renderInput={(params) => <TextField {...params} error={funcsSetting.funcNameCheck} label="Function Name" variant="outlined" helperText={funcsSetting.funcNameCheck ? 'The field cannot be empty. Please select a function' : ''} />}
                         />
                     </FormControl>
                     <FormControl className={clsx(classes.margin, classes.textField, classes.withoutLabel)}>
-                        <Tooltip title={<Typography variant='body2'>{"check docs for parameters supported for each func, input in 'pName', p, eg.('method', 'fastica', 'overwrite', true). All the string input need single-quote:'input' "}</Typography>} classes={{ tooltip: classes.customWidth }}>
+                        <Tooltip title={<Typography variant='body2'>{"check docs for parameters supported for each func, input in 'pName', p, eg.('method', 'fastica', 'overwrite', true)."}</Typography>} classes={{ tooltip: classes.customWidth }}>
                             <TextField
                                 id={"funcP" + indexff}
                                 name="funcP"

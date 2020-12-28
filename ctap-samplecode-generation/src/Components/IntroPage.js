@@ -77,7 +77,7 @@ function QontoStepIcon(props) {
 }
 
 function getSteps() {
-    return ['Get CTAP Ready', 'Get EEGLAB Ready', 'Create Execution Folder'];
+    return ['Get CTAP Ready', 'Create Execution Folder', 'Instructions on Required Files'];
 }
 
 function getStepContent(step) {
@@ -85,21 +85,23 @@ function getStepContent(step) {
         case 0:
             return (
                 <div style={{ marginLeft: '2rem', marginTop: '1rem' }}>
-                    <Typography variant="body1" align="left">Follow the instruction of <a rel="noreferrer" target="_blank" href="https://github.com/bwrc/ctap">the CTAP repo</a>, download CTAP and setup your MATLAB work environment</Typography>
+                    <Typography variant="body1" align="left">1. Follow the instruction of <a rel="noreferrer" target="_blank" href="https://github.com/bwrc/ctap">the CTAP repo</a>, download CTAP and setup your MATLAB work environment</Typography>
+                    <Typography variant="body1" align="left">2. You also need to have latest EEGLAB added to your Matlab path (<a rel="noreferrer" target="_blank" href='https://sccn.ucsd.edu/eeglab/downloadtoolbox.php'>instructions here</a>).</Typography>
                 </div>
             );
         case 1:
             return (
                 <div style={{ marginLeft: '2rem', marginTop: '1rem' }}>
-                    <Typography variant="body1" align="left">You need to have latest EEGLAB added to your Matlab path (<a rel="noreferrer" target="_blank" href='https://sccn.ucsd.edu/eeglab/downloadtoolbox.php'>instructions here</a>).</Typography>
+                    <Typography variant="body1" align="left">Create a new project folder under <i><b>~/ctap/templates</b></i> as execution folder. Later after code generation, put the generated executable .m file into this folder.</Typography>
                 </div>
             );
         case 2:
             return (
                 <div style={{ marginLeft: '2rem', marginTop: '1rem' }}>
-                    <Typography variant="body1" align="left">To generate CTAP example script, you need create a new project folder under <i><b>~/ctap/templates</b></i>.</Typography>
-                    <Typography variant="body1" align="left">After that, copy/cut your test data to <i><b>~/ctap/data/test_data</b></i> (You can also define your own data path later)</Typography>
-                    <Typography variant="body1" align="left">If you have a corrsponding channel location file, please copy it to <i><b>~/ctap/res</b></i>, and add its name manually in the later process</Typography>
+                    <Typography variant="body1" align="left">1. The default data source path is <i><b>~/ctap/data/test_data</b></i>.</Typography>
+                    <Typography variant="body2" align="left">You can use defalut path by copying your data into default folder, or you can also define your own data path later</Typography>
+                    <Typography variant="body1" align="left">2. CTAP provides various choices on channel location files, you can find them at <i><b>~/ctap/res</b></i>.</Typography>
+                    <Typography variant="body2" align="left">You can also specify your own channel location file, please copy it to  <i><b>~/ctap/res</b></i>, and add its name manually in the later process.</Typography>
                 </div>
             );
         default:

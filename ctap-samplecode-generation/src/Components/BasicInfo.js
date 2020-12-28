@@ -44,9 +44,9 @@ const helperText = {
     checkHydraCleanSeed: "Name of the clean seed data file extract from test data",
     pipelineName: "Name a folder which contains outputs of pipes",
     inputdatapath: 'Input path of test data',
-    projectRoot: "The root directory of the current analysis.",
+    projectRoot: "The root folder name of the current analysis.",
     sbj_filt: "The unique sequence number in EEG dataset name(sbj_filt)",
-    eegType: "EEG Data Type, eg, *.set/*.bdf",
+    eegType: "EEG Data Type, eg, .set/.bdf",
     eegChanloc: "Channel Location of testing EEG data ",
     eegReference: "Reference channel of testing EEG data,  eg, {'L_MASTOID' 'R_MASTOID'}",
     eegVeogChannelNames: "VEOG Channel Names of testing EEG data, required if performing blinks detection, eg, {'VEOG1','VEOG2'}",
@@ -339,7 +339,7 @@ const BasicInfo = ({ basicInfoInputCheck, setBasicInfoInputCheck }) => {
                                 {...params}
                                 error={basicInfoInputCheck.eegChanloc}
                                 helperText={basicInfoInputCheck.eegChanloc ? 'The field cannot be empty. Please enter a value' : null}
-                                label="EEG Data Channel Location"
+                                label="EEG Channel Locations File"
                                 variant="outlined" />}
                         />
                     </Tooltip>

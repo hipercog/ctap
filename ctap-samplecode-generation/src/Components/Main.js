@@ -90,7 +90,7 @@ export default function Main() {
             dispatchL({ type: 'UPDATE', data: initialLinear });
             setInputStates(initialLinear);
         } else {
-            let initialBranch = [{ id: uuidv4(), pipeSegment_srcid: '', pipeSegmentID: '', stepID: '', pipeSegment_srcidCheck: false, pipeSegmentIDCheck: false, stepIDCheck: false, linearSettings: [{ id: uuidv4(), stepID: '', stepIDCheck: false, funcsSettings: [{ fid: uuidv4(), funcName: '', funcP: '', funcNameCheck: false }] }] }];
+            let initialBranch = [{ id: uuidv4(), stepNum: 1, pipeSegment_srcid: '', pipeSegmentID: '', stepID: '', pipeSegment_srcidCheck: false, pipeSegmentIDCheck: false, stepIDCheck: false, linearSettings: [{ id: uuidv4(), stepID: '', stepIDCheck: false, funcsSettings: [{ fid: uuidv4(), funcName: '', funcP: '', funcNameCheck: false }] }] }];
             dispatchB({ type: 'UPDATE', data: initialBranch });
             setInputStates(initialBranch);
         }
@@ -167,7 +167,6 @@ export default function Main() {
                         i.pipeSegmentID.length ? i.pipeSegmentIDCheck = false : (() => { i.pipeSegmentIDCheck = true; result = false })();
                     }
                     i.linearSettings.forEach(l => {
-                        console.log(l.stepID.length);
                         l.stepID.length ? l.stepIDCheck = false : (() => { l.stepIDCheck = true; result = false })();
                         l.funcsSettings.forEach(f => {
                             let funcEmpty = f.funcName == null || f.funcName.length;
@@ -238,7 +237,7 @@ export default function Main() {
                 setInputStates(form);
             } else {
                 for (let i = stepNum; i < value; i++) {
-                    form.push({ id: uuidv4(), pipeSegment_srcid: '', pipeSegmentID: '', stepID: '', pipeSegment_srcidCheck: false, pipeSegmentIDCheck: false, stepIDCheck: false, linearSettings: [{ id: uuidv4(), stepID: '', stepIDCheck: false, funcsSettings: [{ fid: uuidv4(), funcName: '', funcP: '', funcNameCheck: false }] }] });
+                    form.push({ id: uuidv4(), stepNum: 1, pipeSegment_srcid: '', pipeSegmentID: '', stepID: '', pipeSegment_srcidCheck: false, pipeSegmentIDCheck: false, stepIDCheck: false, linearSettings: [{ id: uuidv4(), stepID: '', stepIDCheck: false, funcsSettings: [{ fid: uuidv4(), funcName: '', funcP: '', funcNameCheck: false }] }] });
                 }
                 dispatchB({ type: 'UPDATE', data: form });
                 setInputStates(form);
