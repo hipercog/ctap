@@ -50,3 +50,23 @@ update_matlab_path_ctap_jkor.m
 sccn-clean-20min/
 
 untitled.m
+
+
+/ctap/templates/HYDRA_branching_example/ctap_hydra_badseg/
+/ctap/templates/HYDRA_branching_example/ctap_synthetic_pre/
+/ctap/templates/HYDRA_branching_example/hydra_pipe_test_test/
+/ctap/templates/HYDRA_branching_example/syndata/
+/ctap/templates/HYDRA_branching_example/data/
+/ctap/templates/Copy_of_HYDRA_branching_example/cleanSCCNdataHYDRA.m
+/ctap/templates/Copy_of_HYDRA_branching_example/ctap_synthetic_pre/
+/ctap/templates/Copy_of_HYDRA_branching_example/ctap_synthetic_pre_badseg/
+/ctap/templates/Copy_of_HYDRA_branching_example/data/
+/ctap/templates/Copy_of_HYDRA_branching_example/hydra_pipe_test_test/
+/ctap/templates/Copy_of_HYDRA_branching_example/sweepres_channels/
+/ctap/templates/Copy_of_HYDRA_branching_example/sweepres_segments/
+/ctap/templates/Copy_of_HYDRA_branching_example/syndata/
+
+
+looplog.txt
+
+/ctap-samplecode-generation
