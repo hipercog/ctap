@@ -19,6 +19,7 @@ import { ContextBasic } from '../Reducers/ContextProvider'
 import { CTAP_chanlocs } from '../data/CTAP_chanlocs'
 import CTAP_Linear_diagram from '../Styles/CTAP_Linear.png'
 import CTAP_Branch_diagram from '../Styles/CTAP_Branch.png'
+import CTAP_HYDRA_diagram from '../Styles/CTAP_HYDRA.png';
 
 const filter = createFilterOptions();
 const useStyles = makeStyles((theme) => ({
@@ -41,7 +42,7 @@ const useStyles = makeStyles((theme) => ({
 
 const helperText = {
     checkHydraTimeRange: "Set clean segment time range [start end] in seconds from test data",
-    checkHydraCleanSeed: "Name of the clean seed data file extract from test data",
+    checkHydraCleanSeed: "Name of the clean seed data file extract from test data, or clean seed data path (if not in default path)",
     pipelineName: "Name a folder which contains outputs of pipes",
     inputdatapath: 'Input path of test data',
     projectRoot: "The root folder name of the current analysis.",
@@ -85,6 +86,13 @@ const BasicInfo = ({ basicInfoInputCheck, setBasicInfoInputCheck }) => {
                 setBasicInfoInputCheck({ ...basicInfoInputCheck, inputdatapath: false });
                 dispatch({ type: 'UPDATE', data: { ...basicInfoInput, [name]: checked, inputdatapath: "ctap/data/test_data" } });
             }
+        } else if(name === 'checkOwnHydraDataPath'){
+            dispatch({ type: 'UPDATE', data: { ...basicInfoInput, [name]: checked } });
+            // initialize data path if disable own path option
+            if (!checked) {
+                setBasicInfoInputCheck({ ...basicInfoInputCheck, checkHydraCleanSeed: false });
+                dispatch({ type: 'UPDATE', data: { ...basicInfoInput, [name]: checked, checkHydraCleanSeed: "ctap/data/clean_seed" } });
+            }
         }
         else {
             dispatch({ type: 'UPDATE', data: { ...basicInfoInput, [name]: checked } });
@@ -98,15 +106,14 @@ const BasicInfo = ({ basicInfoInputCheck, setBasicInfoInputCheck }) => {
             p = { ...p, HydraOptionA: e.target.checked, HydraOptionB: !e.target.checked };
             if (e.target.checked) {
                 console.log(e.target.checked);
-                p = { ...p, 'checkHydraCleanSeed': '' };
-                setBasicInfoInputCheck({ ...basicInfoInputCheck, 'checkHydraCleanSeed': false })
+                p = { ...p, 'checkHydraCleanSeed': "ctap/data/clean_seed" };
+                setBasicInfoInputCheck({ ...basicInfoInputCheck, 'checkHydraCleanSeed': "ctap/data/clean_seed" })
             }
             dispatch({ type: 'UPDATE', data: { ...basicInfoInput, ...p } });
 
         } else {
             let p = {};
             p = { ...p, HydraOptionB: e.target.checked, HydraOptionA: !e.target.checked };
-            //setBasicInfoInput({ ...basicInfoInput, HydraOptionB: e.target.checked, HydraOptionA:!e.target.checked });
             if (e.target.checked) {
                 p = { ...p, 'checkHydraTimeRange': '' }
                 setBasicInfoInputCheck({ ...basicInfoInputCheck, 'checkHydraTimeRange': false })
@@ -116,7 +123,7 @@ const BasicInfo = ({ basicInfoInputCheck, setBasicInfoInputCheck }) => {
     }
 
     // console.log(basicInfoInputCheck);
-    // console.log(basicInfoInput)
+     console.log(basicInfoInput)
     return (
         <div className={classes.root} noValidate autoComplete="off">
             <Container maxWidth="md" style={{ marginTop: '3rem' }}>
@@ -137,7 +144,7 @@ const BasicInfo = ({ basicInfoInputCheck, setBasicInfoInputCheck }) => {
                         />
                     </AccordionSummary>
                     <AccordionDetails>
-                        <img src={CTAP_Linear_diagram} width="700" />
+                        <img src={CTAP_Linear_diagram} alt='' width="700" />
                     </AccordionDetails>
                 </Accordion>
                 <Accordion style={{ width: 750, margin: '0 auto' }}>
@@ -156,13 +163,27 @@ const BasicInfo = ({ basicInfoInputCheck, setBasicInfoInputCheck }) => {
                         />
                     </AccordionSummary>
                     <AccordionDetails>
-                        <img src={CTAP_Branch_diagram} width="700" />
+                        <img src={CTAP_Branch_diagram} alt='' width="700" />
                     </AccordionDetails>
                 </Accordion>
                 <h5 className={classes.words}>* Click Linear and Brach tabs to see diagrams describe these two different pipelines. </h5>
-
                 <h5 className={classes.words}>* linear pipeline using different setpSets to group CTAP functions, the processing sequence depends on setpSets order. Branch pipeline generates sub-functions including predefined executable CTAP functions, which provides a more clear and flexible modular way to group functions. </h5>
+                <hr></hr>
                 <div>
+                    <h4>HYDRA?</h4>
+                    <Accordion style={{ width: 750, margin: '0 auto' }}>
+                        <AccordionSummary
+                            expandIcon={<MoreOutlinedIcon />}
+                            aria-controls="panel1a-content"
+                            id="panel1a-header"
+                        >
+                            <Typography className={classes.heading}>Diagram explanation</Typography>
+                        </AccordionSummary>
+                        <AccordionDetails>
+                            <img src={CTAP_HYDRA_diagram} alt='' width="700" />
+                        </AccordionDetails>
+                    </Accordion>
+                    <h5 className={classes.words}>* The Handler for sYnthetic Data Repeated Analysis of EEG artifact-detection routines (HYDRA) method is a data-driven approach for EEG preprocessing optimum. The HYDRA generates synthetic EEG data as ground-truth, furnishes a fully automated method to evaluate the artifact detection performance under different parameters by numerical analysis. </h5>
                     <FormControlLabel
                         control={<Checkbox checked={basicInfoInput.checkedHYDRA} onChange={handleCheckboxChange} name="checkedHYDRA" />}
                         label="Implementing HYDRA for artifacts parameter optimization or not?"
@@ -196,21 +217,30 @@ const BasicInfo = ({ basicInfoInputCheck, setBasicInfoInputCheck }) => {
                                 </div> : null}
 
                             {basicInfoInput.HydraOptionB ?
-                                <div>
-                                    <Tooltip title={<Typography variant='body2'>{helperText.checkHydraCleanSeed}</Typography>} classes={{ tooltip: classes.customWidth }}>
-                                        <TextField
-                                            error={basicInfoInputCheck.checkHydraCleanSeed}
-                                            id="checkHydraCleanSeed"
-                                            name="checkHydraCleanSeed"
-                                            label="Seed Data Name"
-                                            value={basicInfoInput.checkHydraCleanSeed}
-                                            onChange={e => handleInput(e)}
-                                            type="text"
-                                            helperText={basicInfoInputCheck.checkHydraCleanSeed ? 'The field cannot be empty. Please enter a value' : null}
-                                            variant="outlined"
-                                        />
-                                    </Tooltip>
-                                </div> : null}
+                                <div style={{ marginTop: '0.8rem' }}>
+                                    <FormControlLabel
+                                        className={clsx(classes.margin, classes.textField, classes.withoutLabel)}
+                                        control={<Checkbox checked={basicInfoInput.checkOwnHydraDataPath} onChange={handleCheckboxChange} name="checkOwnHydraDataPath" />}
+                                        label={<Typography variant='body2'> Edit your own data input path?</Typography>}
+                                    />
+                                    <FormControl className={clsx(classes.margin, classes.textField, classes.withoutLabel)}>
+                                        <Tooltip title={<Typography variant='body2'>{helperText.checkHydraCleanSeed}</Typography>} classes={{ tooltip: classes.customWidth }}>
+                                            <TextField
+                                                disabled={!basicInfoInput.checkOwnHydraDataPath}
+                                                error={basicInfoInputCheck.checkOwnHydraDataPath}
+                                                id="checkHydraCleanSeed"
+                                                name="checkHydraCleanSeed"
+                                                label="Seed Data Name"
+                                                value={basicInfoInput.checkHydraCleanSeed}
+                                                onChange={e => handleInput(e)}
+                                                type="text"
+                                                helperText={basicInfoInputCheck.checkOwnHydraDataPath ? 'The field cannot be empty. Please enter a value' : ('Default Input clean seed data source path: ~/ctap/data/clean_seed')}
+                                                variant="outlined"
+                                            />
+                                        </Tooltip>
+                                    </FormControl>
+                                </div>
+                                : null}
                         </div>
                     </div> : null}
                     <hr></hr>
@@ -273,9 +303,6 @@ const BasicInfo = ({ basicInfoInputCheck, setBasicInfoInputCheck }) => {
                         />
                     </Tooltip>
                 </FormControl>
-
-
-
             </div>
             <div style={{ marginTop: '0.8rem' }}>
                 <FormControl className={clsx(classes.margin, classes.textField, classes.withoutLabel)}>

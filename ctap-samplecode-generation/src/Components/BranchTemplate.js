@@ -18,19 +18,27 @@ const BranchTemplate = (basicInfo, inputFields) => {
     let pipeSegments = new Array([]);
 
     if (basicInfo.checkedHYDRA) {
+        HYDRA_presetting.push(`%% HYDRA setting`);
         HYDRA_presetting.push(`HYDRA = true;`);
         HYDRA_presetting.push(`PARAM = param_sweep_setup(project_dir);`);
         HYDRA_presetting.push(`Cfg.HYDRA.ifapply = HYDRA;`);
         HYDRA_presetting.push(`Cfg.HYDRA.chanloc = '${basicInfo.eegChanloc}';`);
-        HYDRA_presetting.push(`Cfg.HYDRA.PARAM = PARAM;`);
         HYDRA_presetting.push(`Cfg.HYDRA.FULL_CLEAN_SEED = false;`);
         if (basicInfo.checkHydraTimeRange && !basicInfo.checkHydraCleanSeed) {
-            HYDRA_presetting.push(`Cfg.HYDRA.provide_seed_timerange = true;`);
+            HYDRA_presetting.push(`Cfg.HYDRA.provide_seed_timerange = true;`)
             HYDRA_presetting.push(`Cfg.HYDRA.cleanseed_timerange = ${basicInfo.checkHydraTimeRange};`);
         } else if (basicInfo.checkHydraCleanSeed && !basicInfo.checkHydraTimeRange) {
-            HYDRA_presetting.push(`Cfg.HYDRA.provide_seed_timerange = false;`);
-            HYDRA_presetting.push(`Cfg.HYDRA.seed_fname = ${basicInfo.checkHydraCleanSeed};`);
+            HYDRA_presetting.push(`Cfg.HYDRA.provide_seed_timerange = false;`)
+            if(basicInfo.checkOwnHydraDataPath){
+                let fileName = basicInfo.checkHydraCleanSeed.split('/').pop();
+                let fileFolder = basicInfo.checkHydraCleanSeed.split('/').slice(0,-1).join('/');
+                HYDRA_presetting.push(`Cfg.HYDRA.seed_fname = '${fileName}';`);
+                HYDRA_presetting.push(`PARAM.path.seedDataSrc = '${fileFolder}';`);
+            }else{
+                HYDRA_presetting.push(`Cfg.HYDRA.seed_fname = ${basicInfo.checkHydraCleanSeed};`);
+            } 
         }
+        HYDRA_presetting.push(`Cfg.HYDRA.PARAM = PARAM;`);
     }
 
     let data_dir = '';
@@ -104,7 +112,7 @@ const BranchTemplate = (basicInfo, inputFields) => {
         `%% Runtime options for CTAP:`,
         `PREPRO = true;`,
         `STOP_ON_ERROR = true;`,
-        `OVERWRITE_OLD_RESULTS = true;`
+        `OVERWRITE_OLD_RESULTS = true;`,
         ``,
         `%% Basic setting`,
         `pipeline_name = '${basicInfo.pipelineName}';`,

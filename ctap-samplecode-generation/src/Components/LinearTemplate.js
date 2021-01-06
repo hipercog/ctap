@@ -7,19 +7,27 @@ const LinearTemplate = (basicInfo, inputFields) => {
     let HYDRA_presetting = new Array([]);
 
     if (basicInfo.checkedHYDRA) {
+        HYDRA_presetting.push(`%% HYDRA setting`);
         HYDRA_presetting.push(`HYDRA = true;`);
         HYDRA_presetting.push(`PARAM = param_sweep_setup(project_dir);`);
         HYDRA_presetting.push(`Cfg.HYDRA.ifapply = HYDRA;`);
         HYDRA_presetting.push(`Cfg.HYDRA.chanloc = '${basicInfo.eegChanloc}';`);
-        HYDRA_presetting.push(`Cfg.HYDRA.PARAM = PARAM;`);
         HYDRA_presetting.push(`Cfg.HYDRA.FULL_CLEAN_SEED = false;`);
         if (basicInfo.checkHydraTimeRange && !basicInfo.checkHydraCleanSeed) {
             HYDRA_presetting.push(`Cfg.HYDRA.provide_seed_timerange = true;`)
             HYDRA_presetting.push(`Cfg.HYDRA.cleanseed_timerange = ${basicInfo.checkHydraTimeRange};`);
         } else if (basicInfo.checkHydraCleanSeed && !basicInfo.checkHydraTimeRange) {
             HYDRA_presetting.push(`Cfg.HYDRA.provide_seed_timerange = false;`)
-            HYDRA_presetting.push(`Cfg.HYDRA.seed_fname = ${basicInfo.checkHydraCleanSeed};`);
+            if(basicInfo.checkOwnHydraDataPath){
+                let fileName = basicInfo.checkHydraCleanSeed.split('/').pop();
+                let fileFolder = basicInfo.checkHydraCleanSeed.split('/').slice(0,-1).join('/');
+                HYDRA_presetting.push(`Cfg.HYDRA.seed_fname = '${fileName}';`);
+                HYDRA_presetting.push(`PARAM.path.seedDataSrc = '${fileFolder}';`);
+            }else{
+                HYDRA_presetting.push(`Cfg.HYDRA.seed_fname = ${basicInfo.checkHydraCleanSeed};`);
+            } 
         }
+        HYDRA_presetting.push(`Cfg.HYDRA.PARAM = PARAM;`);
     }
 
     let data_dir = '';
@@ -37,7 +45,7 @@ const LinearTemplate = (basicInfo, inputFields) => {
             if(funcN){
                 funcN = funcN.slice(5,funcN.length)
             }
-            ctap_args.push(`out.${funcN}=struct(${inputCorrection(funcsSetting.funcP)})`)
+            ctap_args.push(`out.${funcN}=struct(${inputCorrection(funcsSetting.funcP)});`)
         });
         stepSetsArray.push(`stepSet(${index + 1}).id = [num2str(${index + 1}), '${inputField.stepID}'];`);
         stepSetsArray.push(`stepSet(${index + 1}).funH{${funcs}};`);
@@ -64,6 +72,7 @@ const LinearTemplate = (basicInfo, inputFields) => {
         `Cfg.grfx.on = false;`,
         `Cfg.MC = get_meas_cfg_MC(Cfg, data_dir, 'eeg_ext', '*${basicInfo.eegType}', 'sbj_filt', ${basicInfo.sbj_filt});`,
         `${HYDRA_presetting.join('\n')}`,
+        ``,
         `%% Pipeline setting`,
         `clear Pipe;`,
         `${stepSetsArray.join('\n')}`,
