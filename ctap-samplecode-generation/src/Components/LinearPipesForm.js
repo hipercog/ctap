@@ -7,30 +7,10 @@ import Typography from "@material-ui/core/Typography";
 import FormControl from '@material-ui/core/FormControl';
 import FuncsSettingForm from "./FuncsSettingForm"
 import { ContextBranch, ContextLinear } from '../Reducers/ContextProvider'
-import { makeStyles } from '@material-ui/core/styles';
-
-
-const useStyles = makeStyles((theme) => ({
-    margin: {
-        margin: theme.spacing(1),
-    },
-    withoutLabel: {
-        marginTop: theme.spacing(1),
-    },
-    textField: {
-        width: '25ch',
-    },
-    button: {
-        margin: theme.spacing(1),
-    },
-    customWidth: {
-        maxWidth: 500,
-    },
-
-}))
+import {FormControlStyles} from '../Styles/FormControlStyles'
 
 const LinearPipesForm = ({ ifLinear, index, mid }) => {
-    const classes = useStyles()
+    const classes = FormControlStyles()
     const [inputBranchStates, dispatchB] = useContext(ContextBranch);
     const [inputLinearStates, dispatchL] = useContext(ContextLinear);
     const [inputStates, setInputStates] = useState(() => {
@@ -38,18 +18,19 @@ const LinearPipesForm = ({ ifLinear, index, mid }) => {
             return inputLinearStates;
         } else {
             return inputBranchStates[index].linearSettings;
-        }
+        };
     });
 
+    // set current input states based on pipe type
     useEffect(() => {
         if (ifLinear) {
             setInputStates(inputLinearStates);
         } else {
             setInputStates(inputBranchStates[index].linearSettings);
         }
-    }, [inputLinearStates, inputBranchStates])
+    }, [inputLinearStates, inputBranchStates]); // eslint-disable-line react-hooks/exhaustive-deps
 
-
+    // manage input fields
     const handleLinearPipesInput = (id, event) => {
         const newInputFields = inputStates.map(i => {
             if (id === i.id) {
@@ -92,7 +73,6 @@ const LinearPipesForm = ({ ifLinear, index, mid }) => {
                             ifLinear={ifLinear}
                             index={index}
                             indexm={indexf}
-                            classes={classes}
                             mid={inputField.id}
                             funcsSettings={inputField.funcsSettings} />
                     </FormControl>

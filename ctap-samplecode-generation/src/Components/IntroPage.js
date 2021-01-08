@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import {Link} from "react-router-dom"
+
 import Container from '@material-ui/core/Container';
-import { makeStyles } from '@material-ui/core/styles';
 import Stepper from '@material-ui/core/Stepper';
 import Step from '@material-ui/core/Step';
 import StepLabel from '@material-ui/core/StepLabel';
@@ -12,50 +12,8 @@ import Check from "@material-ui/icons/Check";
 import clsx from "clsx";
 import Typography from "@material-ui/core/Typography";
 
-const useStyles = makeStyles((theme) => ({
-    root: {
-        width: '100%',
-        marginTop: 50
-    },
-    button: {
-        marginTop: theme.spacing(1),
-        marginRight: theme.spacing(1),
-    },
-    actionsContainer: {
-        marginBottom: theme.spacing(2),
-    },
-    resetContainer: {
-        padding: theme.spacing(3),
-    },
-    nav:{ 
-        color: 'inherit', 
-        textDecoration: "underline",
-        fontStyle:"italic"
-    }
-}));
+import {useStyles, useQontoStepIconStyles} from '../Styles/IntroStyle'
 
-export const useQontoStepIconStyles = makeStyles({
-    root: {
-        color: "#eaeaf0",
-        display: "flex",
-        height: 30,
-        alignItems: "center"
-    },
-    active: {
-        color: "#784af4"
-    },
-    circle: {
-        width: 24,
-        height: 24,
-        borderRadius: "50%",
-        backgroundColor: "currentColor"
-    },
-    completed: {
-        color: "#784af4",
-        zIndex: 1,
-        fontSize: 24
-    }
-});
 
 function QontoStepIcon(props) {
     const classes = useQontoStepIconStyles();
@@ -130,7 +88,7 @@ const IntroPage = () => {
         <Container maxWidth="sm">
             <div style={{ float:'center', margin: 30}} >
                     <Link className={classes.nav} to="/">Intro Page ᐊ</Link>
-                    <a>  /  </a>
+                    <i>  /  </i>
                     <Link className={classes.nav} to="/start"> Info Form ᐊ</Link>
             </div>
             <div style={{ marginTop: 70 }}>

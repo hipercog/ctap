@@ -1,6 +1,6 @@
 export const inputCorrection = (value) => {
     let result = [];
-    let v = value.replace(/[^A-Za-z0-9\,]/g,'');
+    let v = value.replace(/[^A-Za-z0-9,]/g,'');
     v = v.split(',');
     v.forEach(i=>{
         let field ;
@@ -36,7 +36,7 @@ const BranchTemplate = (basicInfo, inputFields) => {
                 HYDRA_presetting.push(`PARAM.path.seedDataSrc = '${fileFolder}';`);
             }else{
                 HYDRA_presetting.push(`Cfg.HYDRA.seed_fname = ${basicInfo.checkHydraCleanSeed};`);
-            } 
+            };
         }
         HYDRA_presetting.push(`Cfg.HYDRA.PARAM = PARAM;`);
     }
@@ -51,7 +51,6 @@ const BranchTemplate = (basicInfo, inputFields) => {
     inputFields.map((inputField, index) => {
         let stepSetsArray = new Array([]);
         let ctap_args = new Array([]);
-        let funcs = ``;
         let subpipe = "@sbf_" + inputField.pipeSegmentID + ", ";
         pipeArr = pipeArr + subpipe;
 
@@ -61,11 +60,8 @@ const BranchTemplate = (basicInfo, inputFields) => {
                 '0': "".concat(1, inputField.stepID),
                 '1': ""
             };
-            console.log(branchSrcInfo)
             srcid = "";
         } else {
-            console.log('2')
-            console.log(branchSrcInfo)
             branchSrcInfo[inputField.pipeSegmentID] = {
                 '0': "".concat(1, inputField.stepID),
                 '1': "".concat(branchSrcInfo[inputField.pipeSegment_srcid]['1'], inputField.pipeSegment_srcid, '#')
@@ -80,8 +76,7 @@ const BranchTemplate = (basicInfo, inputFields) => {
                 let funcN = funcsSetting.funcName;
                 if (funcN) {
                     funcN = funcN.slice(5, funcN.length)
-                }
-
+                };
                 ctap_args.push(`   out.${funcN}=struct(${inputCorrection(funcsSetting.funcP)});`)
             });
             stepSetsArray.push(`   stepSet(${indexl + 1}).id = [num2str(${index + 1}), '${linearSetting.stepID}'];`);

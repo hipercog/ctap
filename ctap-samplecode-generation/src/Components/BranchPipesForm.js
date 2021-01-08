@@ -11,22 +11,7 @@ import Typography from "@material-ui/core/Typography";
 import { v4 as uuidv4 } from 'uuid';
 
 import { ContextBranch } from '../Reducers/ContextProvider'
-import { makeStyles } from '@material-ui/core/styles';
-
-const useStyles = makeStyles((theme) => ({
-    margin: {
-        margin: theme.spacing(1),
-    },
-    withoutLabel: {
-        marginTop: theme.spacing(1),
-    },
-    textField: {
-        width: '25ch',
-    },
-    customWidth: {
-        maxWidth: 500,
-    },
-}));
+import {FormControlStyles} from '../Styles/FormControlStyles'
 
 const helperText = {
     stepID: "describe main work in this pipeSegment, eg.'_load'",
@@ -35,35 +20,29 @@ const helperText = {
 };
 
 const BranchPipesForm = () => {
-    const classes = useStyles()
+    const classes = FormControlStyles()
     const [inputStates, dispatch] = useContext(ContextBranch);
     const [stepNum, setStepNum] = useState(1);
     const [pipeSegmentSrcIDs, setPipeSegmentSrcIDs] = useState({ 0: '' });
     const [checkPipeSegmentSrcID, setCheckPipeSegmentSrcID] = useState(false);
 
+    // set pipeSegment srcIDs, to avoid error on 'no such id' 
     useEffect(() => {
         inputStates.forEach(i => {
             setPipeSegmentSrcIDs({ ...pipeSegmentSrcIDs, ...{ [i.id]: i.pipeSegmentID } });
         })
-    }, [])
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-    const debounce = (fn, wait) => {
-        let timeout;
-        if (timeout !== null) clearTimeout(timeout);
-        timeout = setTimeout(fn, wait);
-    }
-
-    const handleLinearPipesInput = (id, event) => {
+    // processing pipes info input
+    const handlePipesInput = (id, event) => {
         const { value, name } = event.target;
         const newInputFields = inputStates.map(i => {
             if (id === i.id) {
                 i[name] = value;
                 i[name + 'Check'] = false;
                 if (name === 'pipeSegmentID') {
-                    // console.log(Object.values({...pipeSegmentSrcIDs, ...{[id]:value}}))
                     setPipeSegmentSrcIDs({ ...pipeSegmentSrcIDs, ...{ [id]: value } });
                 } else if (name === 'pipeSegment_srcid') {
-                    console.log(value)
                     if (Object.values(pipeSegmentSrcIDs).includes(value)) {
                         setCheckPipeSegmentSrcID(false)
                     } else {
@@ -72,14 +51,11 @@ const BranchPipesForm = () => {
                 }
             }
             return i;
-        })
-
+        });
         dispatch({ type: 'UPDATE', data: newInputFields });
-
     }
 
-
-
+    // mange stepSets change under one pipeSegment
     const handleChangeStepSets = (e, index) => {
         const { value } = e.target;
         if (stepNum < value) {
@@ -101,7 +77,6 @@ const BranchPipesForm = () => {
         }
     }
 
-   // console.log(inputStates)
     return (
         <Container maxWidth="md">
             {inputStates.map((inputField, index) => (
@@ -116,7 +91,7 @@ const BranchPipesForm = () => {
                                 variant="outlined"
                                 helperText={inputField.stepIDCheck ? 'The field cannot be empty. Please enter a value' : null}
                                 value={inputField.stepID}
-                                onChange={event => handleLinearPipesInput(inputField.id, event)}
+                                onChange={event => handlePipesInput(inputField.id, event)}
                             />
                         </Tooltip>
                     </FormControl>
@@ -132,7 +107,7 @@ const BranchPipesForm = () => {
                                 variant="outlined"
                                 helperText={inputField.pipeSegmentIDCheck ? 'The field cannot be empty. Please enter a value' : null}
                                 value={inputField.pipeSegmentID}
-                                onChange={event => handleLinearPipesInput(inputField.id, event)}
+                                onChange={event => handlePipesInput(inputField.id, event)}
                             />
                         </Tooltip>
                     </FormControl>
@@ -145,7 +120,7 @@ const BranchPipesForm = () => {
                                 variant="outlined"
                                 helperText={inputField.pipeSegment_srcidCheck ? 'The field cannot be empty. Please enter a value' : (checkPipeSegmentSrcID ? 'there is no such pipe' : null)}
                                 value={inputField.pipeSegment_srcid}
-                                onChange={event => handleLinearPipesInput(inputField.id, event)}
+                                onChange={event => handlePipesInput(inputField.id, event)}
                             />
                         </Tooltip>
                     </FormControl>

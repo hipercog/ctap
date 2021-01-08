@@ -10,12 +10,12 @@ import Tooltip from '@material-ui/core/Tooltip';
 import Typography from "@material-ui/core/Typography";
 import { v4 as uuidv4 } from 'uuid';
 
-
 import { ContextBranch, ContextLinear } from '../Reducers/ContextProvider'
-import { CTAP_funcs } from '../data/CTAP_funcs'
+import { CTAP_funcs } from '../Data/CTAP_funcs'
+import {FormControlStyles} from '../Styles/FormControlStyles'
 
-const FuncsSettingForm = ({ ifLinear, index, indexm, funcsSettings, classes, mid }) => {
-
+const FuncsSettingForm = ({ ifLinear, index, indexm, funcsSettings, mid }) => {
+    const classes = FormControlStyles()
     const [inputBranchStates, dispatchB] = useContext(ContextBranch);
     const [inputLinearStates, dispatchL] = useContext(ContextLinear);
     const [value, setValue] = React.useState(null);
@@ -27,14 +27,16 @@ const FuncsSettingForm = ({ ifLinear, index, indexm, funcsSettings, classes, mid
         }
     });
 
+    // set current input states based on pipe type
     useEffect(() => {
         if (ifLinear) {
             setInputStates(inputLinearStates);
         } else {
             setInputStates(inputBranchStates[index].linearSettings);
         }
-    }, [inputLinearStates, inputBranchStates])
+    }, [inputLinearStates, inputBranchStates]); // eslint-disable-line react-hooks/exhaustive-deps
 
+    // manage input fields
     const handleInputChange = (id, name, newV) => {
         const values = [...inputStates];
         let index_ = values.findIndex(x => x.id === mid);
@@ -44,7 +46,7 @@ const FuncsSettingForm = ({ ifLinear, index, indexm, funcsSettings, classes, mid
                 i[name + 'Check'] = false;
             }
             return i;
-        })
+        });
         values[index_].funcsSettings = newInputStates;
         if (ifLinear) {
             dispatchL({ type: 'UPDATE', data: values })
@@ -52,10 +54,10 @@ const FuncsSettingForm = ({ ifLinear, index, indexm, funcsSettings, classes, mid
             let newState = [...inputBranchStates];
             newState[index].linearSettings = values;
             dispatchB({ type: 'UPDATE', data: newState })
-        }
-
+        };
     }
 
+    // manage adding function fields
     const handleAddFuncFields = () => {
         const values = [...inputStates];
         let index_ = values.findIndex(x => x.id === mid);
@@ -66,10 +68,10 @@ const FuncsSettingForm = ({ ifLinear, index, indexm, funcsSettings, classes, mid
             let newState = [...inputBranchStates];
             newState[index].linearSettings = values;
             dispatchB({ type: 'UPDATE', data: newState });
-        }
-
+        };
     }
-
+    
+    // manage removing function fields
     const handleRemoveFuncFields = (id) => {
         const values = [...inputStates];
         let index_ = values.findIndex(x => x.id === mid);
@@ -81,10 +83,8 @@ const FuncsSettingForm = ({ ifLinear, index, indexm, funcsSettings, classes, mid
             let newState = [...inputBranchStates];
             newState[index].linearSettings = values;
             dispatchB({ type: 'UPDATE', data: newState });
-        }
-
+        };
     }
-
 
     return (
         <div className={clsx(classes.margin, classes.withoutLabel)}>

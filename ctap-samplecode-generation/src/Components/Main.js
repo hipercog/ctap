@@ -2,7 +2,6 @@ import React, { useState, useEffect, useReducer, useContext } from "react";
 import { v4 as uuidv4 } from 'uuid';
 import { Link } from "react-router-dom"
 
-import { makeStyles } from '@material-ui/core/styles';
 import Container from '@material-ui/core/Container';
 import Select from '@material-ui/core/Select';
 import InputLabel from '@material-ui/core/InputLabel';
@@ -16,29 +15,11 @@ import BranchTemplate from "./BranchTemplate"
 import ReviewPage from "./ReviewPage"
 import { ContextBranch, ContextLinear, ContextBasic } from '../Reducers/ContextProvider'
 import {initialLinearInputState, initialBranchInputState, defaultBasicInfoInput} from '../Reducers/Reducer'
-
-const useStyles = makeStyles((theme) => ({
-    formControl: {
-        margin: theme.spacing(1),
-        width:'25ch'
-    },
-    selectEmpty: {
-        marginTop: theme.spacing(2),
-    },
-
-    button: {
-        margin: theme.spacing(2),
-    },
-    nav: {
-        color: 'inherit',
-        textDecoration: "underline",
-        fontStyle: "italic"
-    }
-}));
+import {MainStyles} from '../Styles/MainStyles'
 
 
 export default function Main() {
-    const classes = useStyles();
+    const classes = MainStyles();
 
     const [inputLinearStates, dispatchL] = useContext(ContextLinear);
     const [inputBranchStates, dispatchB] = useContext(ContextBranch);
@@ -65,24 +46,24 @@ export default function Main() {
             eegHeogChannelNames: false
         }
     );
-
     const [inputStates, setInputStates] = useState(() => {
         if (basicInfoInput.checkedLinear) {
             return inputLinearStates;
         } else {
             return inputBranchStates;
-        }
+        };
     });
 
-
+    // Listen if Linear or Branch pipeline
     useEffect(() => {
         if (basicInfoInput.checkedLinear) {
             setInputStates(inputLinearStates);
         } else {
             setInputStates(inputBranchStates);
-        }
-    }, [inputLinearStates, inputBranchStates])
+        };
+    }, [inputLinearStates, inputBranchStates]); // eslint-disable-line react-hooks/exhaustive-deps
 
+    // Reset pipeline states everytime Linear/Branch option change
     useEffect(() => {
         setStepNum(1);
         if (basicInfoInput.checkedLinear) {
@@ -93,25 +74,22 @@ export default function Main() {
             let initialBranch = [{ id: uuidv4(), stepNum: 1, pipeSegment_srcid: '', pipeSegmentID: '', stepID: '', pipeSegment_srcidCheck: false, pipeSegmentIDCheck: false, stepIDCheck: false, linearSettings: [{ id: uuidv4(), stepID: '', stepIDCheck: false, funcsSettings: [{ fid: uuidv4(), funcName: '', funcP: '', funcNameCheck: false }] }] }];
             dispatchB({ type: 'UPDATE', data: initialBranch });
             setInputStates(initialBranch);
-        }
-    }, [basicInfoInput.checkedLinear])
-
-    useEffect(() => {
+        };
         setDownloadLink('');
         setIsReadyDownload(false);
-    }, [basicInfoInput.checkedLinear])
+    }, [basicInfoInput.checkedLinear]); // eslint-disable-line react-hooks/exhaustive-deps
 
     // use localstorage save last edit  
     useEffect(() => {
         if (localStorage.getItem("basicInfoInput")) {
             dispatch({ type: 'UPDATE', data: JSON.parse(localStorage.getItem("basicInfoInput")) });
         }
-    }, [])
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps
     useEffect(() => {
         localStorage.setItem("basicInfoInput", JSON.stringify(basicInfoInput))
-    }, [basicInfoInput])
+    }, [basicInfoInput]); // eslint-disable-line react-hooks/exhaustive-deps
 
-    // make text file
+    // make downloadable text file
     const makeTextFile = (basicInfoInput, inputStates) => {
         let list;
         if (basicInfoInput.checkedLinear) {
@@ -124,7 +102,6 @@ export default function Main() {
         setCodeString(list.join('\n'));
         if (downloadLink !== '') window.URL.revokeObjectURL(downloadLink);
         return window.URL.createObjectURL(data);
-
     };
 
     //input check
@@ -132,8 +109,8 @@ export default function Main() {
         let result = true;
         let newS = {};
         if (activeStep === 0) {
-            const values = { ...basicInfoInputCheck }
-            for (const [key, value] of Object.entries(values)) {
+            const values = { ...basicInfoInputCheck };
+            for (const key of Object.keys(values)) {
                 if (basicInfoInput[key] === null || basicInfoInput[key].length === 0) {
                     if (basicInfoInput.checkedHYDRA) {
                         if (key === 'checkHydraTimeRange' && basicInfoInput.HydraOptionB) {
@@ -142,16 +119,16 @@ export default function Main() {
                             newS = { ...newS, [key]: false };
                         } else {
                             newS = { ...newS, [key]: true };
-                        }
+                        };
                     } else {
                         if (key === 'checkHydraTimeRange' || key === 'checkHydraCleanSeed') {
                             newS = { ...newS, [key]: false };
                         } else {
                             newS = { ...newS, [key]: true };
-                        }
-                    }
-                }
-            }
+                        };
+                    };
+                };
+            };
             result = Object.values(newS).every((value) => value === false);
             setBasicInfoInputCheck({ ...basicInfoInputCheck, ...newS });
         } else if (activeStep === 1) {
@@ -165,7 +142,7 @@ export default function Main() {
                     } else {
                         i.pipeSegment_srcid.length ? i.pipeSegment_srcidCheck = false : (() => { i.pipeSegment_srcidCheck = true; result = false })();
                         i.pipeSegmentID.length ? i.pipeSegmentIDCheck = false : (() => { i.pipeSegmentIDCheck = true; result = false })();
-                    }
+                    };
                     i.linearSettings.forEach(l => {
                         l.stepID.length ? l.stepIDCheck = false : (() => { l.stepIDCheck = true; result = false })();
                         l.funcsSettings.forEach(f => {
@@ -177,15 +154,13 @@ export default function Main() {
                     i.funcsSettings.forEach(f => {
                         f.funcName.length ? f.funcNameCheck = false : (() => { f.funcNameCheck = true; result = false })();
                     })
-                }
-
+                };
                 return i;
-            })
-            dispatchL({ type: 'UPDATE', data: newInputFields })
-        }
-
+            });
+            dispatchL({ type: 'UPDATE', data: newInputFields });
+        };
         return result;
-    }
+    };
 
     //steppers handler
     const handleNext = () => {
@@ -196,11 +171,10 @@ export default function Main() {
             setActiveStep(prevActiveStep + 1);
             if (prevActiveStep === 1) {
                 handleSubmit();
-            }
+            };
         } else {
             alert("check your input");
-        }
-
+        };
     };
     const handleBack = () => {
         let prevActiveStep = activeStep;
@@ -208,8 +182,7 @@ export default function Main() {
             setActiveStep((prevActiveStep) => prevActiveStep - 2);
         }else{
             setActiveStep((prevActiveStep) => prevActiveStep - 1);
-        }
-        
+        };
     };
     const handleReset = () => {
         setActiveStep(0);
@@ -218,13 +191,14 @@ export default function Main() {
         dispatchL({ type: 'UPDATE', data: initialLinearInputState });
     };
 
-    // 
+    // set downloadlink
     async function handleSubmit() {
         let downloadlink = await makeTextFile(basicInfoInput, inputStates);
         setDownloadLink(downloadlink);
         setIsReadyDownload(true);
     };
 
+    // Manage stepSets change
     const handleChangeStepSets = (e) => {
         const { value } = e.target;
         if (stepNum < value) {
@@ -241,32 +215,29 @@ export default function Main() {
                 }
                 dispatchB({ type: 'UPDATE', data: form });
                 setInputStates(form);
-            }
+            };
             setStepNum(value);
         } else if (stepNum > value && value >= 1) {
-            console.log(inputStates)
             let form = [...inputStates];
             for (let i = 0; i < stepNum - value; i++) {
                 form.pop();
-            }
+            };
             if (basicInfoInput.checkedLinear) {
                 dispatchL({ type: 'UPDATE', data: form });
                 setInputStates(form);
             } else {
                 dispatchB({ type: 'UPDATE', data: form });
                 setInputStates(form);
-            }
+            };
             setStepNum(value);
-
-        }
-    }
-
+        };
+    };
 
     return (
         <div>
             <div style={{ float: 'center', margin: 30 }} >
                 <Link className={classes.nav} to="/">Intro Page ᐊ</Link>
-                <a>  /  </a>
+                <em>  /  </em>
                 <Link className={classes.nav} to="/start"> Info Form ᐊ</Link>
             </div>
             <div>

@@ -2,7 +2,6 @@ import React, { useState, useEffect, useContext } from "react";
 import clsx from 'clsx';
 import FormControl from '@material-ui/core/FormControl';
 import TextField from '@material-ui/core/TextField';
-import { makeStyles } from '@material-ui/core/styles';
 import Autocomplete, { createFilterOptions } from '@material-ui/lab/Autocomplete';
 import Accordion from '@material-ui/core/Accordion';
 import AccordionSummary from '@material-ui/core/AccordionSummary';
@@ -15,30 +14,13 @@ import Typography from "@material-ui/core/Typography";
 import MoreOutlinedIcon from '@material-ui/icons/MoreOutlined';
 
 import { ContextBasic } from '../Reducers/ContextProvider'
-
-import { CTAP_chanlocs } from '../data/CTAP_chanlocs'
-import CTAP_Linear_diagram from '../Styles/CTAP_Linear.png'
-import CTAP_Branch_diagram from '../Styles/CTAP_Branch.png'
-import CTAP_HYDRA_diagram from '../Styles/CTAP_HYDRA.png';
+import {FormControlStyles} from '../Styles/FormControlStyles'
+import { CTAP_chanlocs } from '../Data/CTAP_chanlocs'
+import CTAP_Linear_diagram from '../Img/CTAP_Linear.png'
+import CTAP_Branch_diagram from '../Img/CTAP_Branch.png'
+import CTAP_HYDRA_diagram from '../Img/CTAP_HYDRA.png';
 
 const filter = createFilterOptions();
-const useStyles = makeStyles((theme) => ({
-    margin: {
-        margin: theme.spacing(1),
-    },
-    withoutLabel: {
-        marginTop: theme.spacing(1),
-    },
-    textField: {
-        width: '25ch',
-    },
-    words: {
-        textAlign: "center",
-    },
-    customWidth: {
-        maxWidth: 500,
-    },
-}));
 
 const helperText = {
     checkHydraTimeRange: "Set clean segment time range [start end] in seconds from test data",
@@ -55,7 +37,7 @@ const helperText = {
 };
 
 const BasicInfo = ({ basicInfoInputCheck, setBasicInfoInputCheck }) => {
-    let classes = useStyles();
+    let classes = FormControlStyles();
 
     const [basicInfoInput, dispatch] = useContext(ContextBasic);
     const [value, setValue] = useState(basicInfoInput.eegChanloc);
@@ -63,7 +45,7 @@ const BasicInfo = ({ basicInfoInputCheck, setBasicInfoInputCheck }) => {
     useEffect(() => {
         dispatch({ type: 'UPDATE', data: { ...basicInfoInput, eegChanloc: value } });
         setBasicInfoInputCheck({ ...basicInfoInputCheck, eegChanloc: false });
-    }, [value]);
+    }, [value]); // eslint-disable-line react-hooks/exhaustive-deps
 
     //handle input change
     const handleInput = event => {
@@ -105,7 +87,6 @@ const BasicInfo = ({ basicInfoInputCheck, setBasicInfoInputCheck }) => {
             let p = {};
             p = { ...p, HydraOptionA: e.target.checked, HydraOptionB: !e.target.checked };
             if (e.target.checked) {
-                console.log(e.target.checked);
                 p = { ...p, 'checkHydraCleanSeed': "ctap/data/clean_seed" };
                 setBasicInfoInputCheck({ ...basicInfoInputCheck, 'checkHydraCleanSeed': "ctap/data/clean_seed" })
             }
@@ -123,7 +104,7 @@ const BasicInfo = ({ basicInfoInputCheck, setBasicInfoInputCheck }) => {
     }
 
     // console.log(basicInfoInputCheck);
-     console.log(basicInfoInput)
+    // console.log(basicInfoInput)
     return (
         <div className={classes.root} noValidate autoComplete="off">
             <Container maxWidth="md" style={{ marginTop: '3rem' }}>
