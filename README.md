@@ -64,7 +64,7 @@ To start your own pipe, copy the `cfg_minimal.m` and `runctap_minimal.m` files a
 
 More examples are available under `~/ctap/templates/`.
 
-General documentation can be found in the [CTAP wiki](https://github.com/bwrc/ctap/wiki) pages.
+General documentation can be found in the [CTAP wiki](https://github.com/hipercog/ctap/wiki) pages.
 
 
 ## License information
