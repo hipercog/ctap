@@ -75,8 +75,15 @@ end
 for i = Arg.runPipes
     % Set Cfg
     [i_Cfg, i_ctap_args] = pipeArr{i}(Cfg);
+    % for hydra synthetic data preprocessing
+    % Also used for checking unneeded preprocessing steps here
+    
+    Cfg.HYDRA.funH.(strcat('a',num2str(i))) = i_Cfg.pipe.stepSets.funH;
+    Cfg.HYDRA.ctapArgs.(strcat('a',num2str(i))) = i_ctap_args;
+    Cfg.HYDRA.currentp = i;
     if ~iscell(i_Cfg.srcid), i_Cfg.srcid = {i_Cfg.srcid}; end
     Cfg.pipe.totalSets = sbf_get_total_sets(i_Cfg);
+    i_Cfg.HYDRA = Cfg.HYDRA;
     myReport(sprintf('Begin analysis run at %s with pipe:%s ''%s'''...
         , datestr(now), newline, i_Cfg.id));
 

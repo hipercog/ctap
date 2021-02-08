@@ -27,11 +27,12 @@ function [EEG,Cfg] = CTAP_hydra_chan(EEG, Cfg)
 %                  should be the best parameter picked.
 % ;
 
+%% General setup
+if ~Cfg.HYDRA.ifapply
+    return
+end
 
-BRANCH_NAME = 'ctap_hydra_badchan';
-FILE_ROOT = mfilename('fullpath');
-PROJECT_ROOT = FILE_ROOT(1:strfind(FILE_ROOT, fullfile(...
-    'CTAP_hydra_chan')) - 1);
+BRANCH_NAME = 'ctap_synthetic_pre_badchan';
 
 
 RERUN_PREPRO = true;
@@ -40,26 +41,26 @@ RERUN_SWEEP = true;
 STOP_ON_ERROR = true;
 OVERWRITE_OLD_RESULTS = true;
 
-PARAM = param_sweep_setup(PROJECT_ROOT);
+PARAM = Cfg.HYDRA.PARAM;
 PARAM.path.sweepresDir = fullfile(PARAM.path.projectRoot, 'sweepres_channels');
 mkdir(PARAM.path.sweepresDir);
 
 
 %% CTAP config
-CH_FILE = 'chanlocs128_biosemi.elp';
+CH_FILE = Cfg.HYDRA.chanloc;
 
 Arg.env.paths = cfg_create_paths(PARAM.path.projectRoot, BRANCH_NAME, {''}, 1);
 Arg.eeg.chanlocs = CH_FILE;
 chanlocs = readlocs(CH_FILE);
 
-Arg.eeg.reference = {'L_MASTOID' 'R_MASTOID'};
-Arg.eeg.veogChannelNames = {'C17'}; %'C17' has highest blink amplitudes
-Arg.eeg.heogChannelNames = {'HEOG1','HEOG2'};
+Arg.eeg.reference = Cfg.eeg.reference;
+Arg.eeg.veogChannelNames = Cfg.eeg.veogChannelNames; %'C17' has highest blink amplitudes
+Arg.eeg.heogChannelNames = Cfg.eeg.heogChannelNames;
 Arg.grfx.on = true;
 
 % Create measurement config (MC) based on folder
 % Measurement config based on synthetic source files
-MC = path2measconf(PARAM.path.synDataRoot, '*.set');
+MC = path2measconf(PARAM.path.synDataRoot, '*_bad_channels_syndata.set');
 Arg.MC = MC;
 
 %--------------------------------------------------------------------------
@@ -67,11 +68,8 @@ Arg.MC = MC;
 clear Pipe;
 
 i = 1;
-Pipe(i).funH = {@CTAP_load_data,...
-                @CTAP_blink2event,...
-                @CTAP_generate_cseg};
+Pipe(i).funH = {@CTAP_load_data};
 Pipe(i).id = [num2str(i) '_loaddata'];
-
 
 PipeParams = struct([]);
 
@@ -89,10 +87,7 @@ method = Cfg.ctap.detect_bad_channels.method;
 SWPipeParams.detect_bad_channels.method = method;
 SweepParams.funName = 'CTAP_detect_bad_channels';
 values = num2cell(1.5:0.3:7);
-switch method
-    case 'recufast'
-        
-         
+switch method         
     case 'maha_fast'
         SweepParams.paramName = 'factorVal';
         SweepParams.values =  values;
@@ -111,15 +106,15 @@ test_id = [method , '_o'];
 
 % Run preprocessing pipe
 if RERUN_PREPRO
-    %     clear('Filt')
-    %     Filt.subjectnr = 1;
-    %     Arg.pipe.runMeasurements = get_measurement_id(Arg.MC, Filt);
+
     
     Arg.pipe.runMeasurements = {Arg.MC.measurement.casename};
     
-    CTAP_pipeline_looper(Arg,...
-        'debug', STOP_ON_ERROR,...
-        'overwrite', OVERWRITE_OLD_RESULTS);
+    if (isempty(dir(fullfile(Arg.env.paths.analysisRoot, '1_loaddata'))))
+        CTAP_pipeline_looper(Arg,...
+            'debug', STOP_ON_ERROR,...
+            'overwrite', OVERWRITE_OLD_RESULTS);
+    end
 end
 
 

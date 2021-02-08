@@ -27,12 +27,14 @@ function [EEG,Cfg] = CTAP_hydra_badseg(EEG, Cfg)
 %                  should be the best parameter picked.
 % ;
 
-%% General setup
-FILE_ROOT = mfilename('fullpath');
-PROJECT_ROOT = FILE_ROOT(1:strfind(FILE_ROOT, fullfile(...
-    'CTAP_hydra_badseg')) - 1);
+%% IF execution HYDRA or not
+if ~Cfg.HYDRA.ifapply
+    return
+end
 
-BRANCH_NAME = 'ctap_hydra_badseg';
+%% General setup
+
+BRANCH_NAME = 'ctap_synthetic_pre_badseg';
 
 RERUN_PREPRO = true;
 RERUN_SWEEP = true;
@@ -40,27 +42,26 @@ RERUN_SWEEP = true;
 STOP_ON_ERROR = true;
 OVERWRITE_OLD_RESULTS = true;
 
-PARAM = param_sweep_setup(PROJECT_ROOT);
-
+PARAM = Cfg.HYDRA.PARAM;
 PARAM.path.sweepresDir = fullfile(PARAM.path.projectRoot, 'sweepres_segments');
 mkdir(PARAM.path.sweepresDir);
 
 
 %% CTAP config
-CH_FILE = 'chanlocs128_biosemi.elp';
+CH_FILE = Cfg.HYDRA.chanloc;
 
 Arg.env.paths = cfg_create_paths(PARAM.path.projectRoot, BRANCH_NAME, {''}, 1);
 Arg.eeg.chanlocs = CH_FILE;
 chanlocs = readlocs(CH_FILE);
 
-Arg.eeg.reference = {'L_MASTOID' 'R_MASTOID'};
-Arg.eeg.veogChannelNames = {'C17'}; %'C17' has highest blink amplitudes
-Arg.eeg.heogChannelNames = {'HEOG1','HEOG2'};
+Arg.eeg.reference = Cfg.eeg.reference;
+Arg.eeg.veogChannelNames = Cfg.eeg.veogChannelNames; %'C17' has highest blink amplitudes
+Arg.eeg.heogChannelNames = Cfg.eeg.heogChannelNames;
 Arg.grfx.on = false;
 
 % Create measurement config (MC) based on folder
 % Measurement config based on synthetic source files
-MC = path2measconf(PARAM.path.synDataRoot, '*.set');
+MC = path2measconf(PARAM.path.synDataRoot, '*_bad_segments_syndata.set');
 Arg.MC = MC;
 
 %--------------------------------------------------------------------------
@@ -71,7 +72,7 @@ i = 1;
 Pipe(i).funH = {@CTAP_load_data};
 Pipe(i).id = [num2str(i) '_loaddata'];
 
-PipeParams = struct([]);
+PipeParams = Cfg.HYDRA.ctapArgs;
 
 Arg.pipe.runSets = {'all'};
 Arg.pipe.stepSets = Pipe;
@@ -86,16 +87,9 @@ SWPipe(i).funH = { @CTAP_detect_bad_segments };
 SWPipe(i).id = [num2str(i) '_segment_detection'];
 
 SWPipeParams.detect_bad_segments.method = Cfg.ctap.detect_bad_segments.method;
-% SWPipeParams.detect_bad_segments.normalEEGAmpLimits = [-1, 1]; %disable
-% SWPipeParams.detect_bad_segments.coOcurrencePrc = 0.001; %disable
 
-% ampthChannels = setdiff(  {chanlocs.labels},...
-%                           {Arg.eeg.reference{:},...
-%                            Arg.eeg.heogChannelNames{:},...
-%                            Arg.eeg.veogChannelNames{:},...
-%                            'VEOG1', 'VEOG2', 'C16', 'C29'});
 SWPipeParams.detect_bad_segments.channels =  {'A4'};
-%SWPipeParams.detect_bad_segments.normalEEGAmpLimits = [-75, 75]; %in muV
+
 
 SweepParams.funName = 'CTAP_detect_bad_segments';
 SweepParams.paramName = 'tailPercentage';
@@ -109,15 +103,14 @@ SweepParams.values = ...
 %% Run preprocessing pipe for all datasets in Cfg.MC
 if RERUN_PREPRO
     
-    %     clear('Filt')
-    %     Filt.subjectnr = 1;
-    %     Cfg.pipe.runMeasurements = get_measurement_id(Cfg.MC, Filt);
-    
+
     Arg.pipe.runMeasurements = {Arg.MC.measurement.casename};
     
-    CTAP_pipeline_looper(Arg,...
-        'debug', STOP_ON_ERROR,...
-        'overwrite', OVERWRITE_OLD_RESULTS);
+    if (isempty(dir(fullfile(Arg.env.paths.analysisRoot, '1_loaddata'))))
+        CTAP_pipeline_looper(Arg,...
+            'debug', STOP_ON_ERROR,...
+            'overwrite', OVERWRITE_OLD_RESULTS);
+    end
 end
 
 
@@ -220,7 +213,7 @@ for k = 1:numel(Arg.MC.measurement)
     xlabel('Tail precentage [0,1]');
     ylabel('Cover [0,1]');
     title('The percentage of A4 EEG data covered');
-    legend('EMG','badseg');
+    legend('EMG','badseg','Location','southeast');
     saveas(figH, fullfile(PARAM.path.sweepresDir,...
         sprintf('sweep_segment-cover_%s.png', k_id)));
     close(figH);
@@ -231,7 +224,7 @@ for k = 1:numel(Arg.MC.measurement)
     xlabel('Tail precentage [0,1]');
     ylabel('Overlap percentage [0,1]');
     title('% of overlap between injected EMG and detected bad segs');
-    legend('EMG','badseg');
+    legend('EMG','badseg','Location','southeast');
     saveas(figH, fullfile(PARAM.path.sweepresDir,...
         sprintf('sweep_segment-overlap_%s.png', k_id)));
     close(figH);
