@@ -1,6 +1,6 @@
 {
   "name": "ctap-samplecode-generation",
-  "homepage": "https://ruoyanmeng.github.io/ctap/",
+  "homepage": "https://hipercog.github.io/ctap/",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
