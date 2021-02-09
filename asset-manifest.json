@@ -1,0 +1,25 @@
+{
+  "files": {
+    "main.css": "/ctap/static/css/main.8c8b27cf.chunk.css",
+    "main.js": "/ctap/static/js/main.1ae271cb.chunk.js",
+    "main.js.map": "/ctap/static/js/main.1ae271cb.chunk.js.map",
+    "runtime-main.js": "/ctap/static/js/runtime-main.d4178db6.js",
+    "runtime-main.js.map": "/ctap/static/js/runtime-main.d4178db6.js.map",
+    "static/js/2.c3123354.chunk.js": "/ctap/static/js/2.c3123354.chunk.js",
+    "static/js/2.c3123354.chunk.js.map": "/ctap/static/js/2.c3123354.chunk.js.map",
+    "static/js/3.64e2e7c6.chunk.js": "/ctap/static/js/3.64e2e7c6.chunk.js",
+    "static/js/3.64e2e7c6.chunk.js.map": "/ctap/static/js/3.64e2e7c6.chunk.js.map",
+    "index.html": "/ctap/index.html",
+    "static/css/main.8c8b27cf.chunk.css.map": "/ctap/static/css/main.8c8b27cf.chunk.css.map",
+    "static/js/2.c3123354.chunk.js.LICENSE.txt": "/ctap/static/js/2.c3123354.chunk.js.LICENSE.txt",
+    "static/media/CTAP_Branch.4d4e53a9.png": "/ctap/static/media/CTAP_Branch.4d4e53a9.png",
+    "static/media/CTAP_HYDRA.25f4ccdd.png": "/ctap/static/media/CTAP_HYDRA.25f4ccdd.png",
+    "static/media/CTAP_Linear.cab9b4e3.png": "/ctap/static/media/CTAP_Linear.cab9b4e3.png"
+  },
+  "entrypoints": [
+    "static/js/runtime-main.d4178db6.js",
+    "static/js/2.c3123354.chunk.js",
+    "static/css/main.8c8b27cf.chunk.css",
+    "static/js/main.1ae271cb.chunk.js"
+  ]
+}
