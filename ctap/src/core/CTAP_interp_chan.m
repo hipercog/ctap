@@ -49,7 +49,7 @@ function [EEG, Cfg] = CTAP_interp_chan(EEG, Cfg)
 %% Set optional arguments
 Arg.method = 'spherical';
 Arg.channels = [];
-Arg.select = 'missing';
+Arg.select = 'bad';
 Arg.missing_types = {'EEG','EOG','REF'};
 
 % Override defaults with user parameters
