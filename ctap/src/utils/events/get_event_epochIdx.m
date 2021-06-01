@@ -37,8 +37,12 @@ if isempty(EEG.epoch)
     error('get_event_epochIdx:bad_EEG', 'EEG must be epoched!')
 end
 
+if ischar(event)
+    event = struct('type', event);
+end
 event_fnames = fieldnames(event);
-% define 'match_fields' to index matched fields in request struct
+
+%% define 'match_fields' to index matched fields in request struct
 match_fields = ismember(event_fnames, fieldnames(EEG.event));
 if ~all(match_fields)
     error('get_event_epochIdx:bad_event'...
