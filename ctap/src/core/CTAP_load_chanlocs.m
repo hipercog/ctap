@@ -105,19 +105,21 @@ end
 
 
 %% CORE %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%load chanlocs
-if isfield(Arg, 'filetype') && strcmp(Arg.filetype, 'custom') == 1
-    try Arg.format;
-    catch ME
-        error('FAIL:: %s - no custom chanlocs format given', ME.message);
+if ~strcmp(Arg.file, '-UNSPECIFIED-')
+    %load chanlocs
+    if isfield(Arg, 'filetype') && strcmp(Arg.filetype, 'custom') == 1
+        try Arg.format;
+        catch ME
+            error('FAIL:: %s - no custom chanlocs format given', ME.message);
+        end
+        try Arg.skiplines; 
+        catch 
+            Arg.skiplines = 1;   
+        end
     end
-    try Arg.skiplines; 
-    catch 
-        Arg.skiplines = 1;   
-    end
+
+    [EEG, params, ~] = ctapeeg_load_chanlocs(EEG, struct2varargin(Arg));
 end
-    
-[EEG, params, ~] = ctapeeg_load_chanlocs(EEG, struct2varargin(Arg));
 
 
 %% MISCELLANEOUS %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

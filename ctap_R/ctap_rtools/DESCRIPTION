@@ -1,11 +1,11 @@
-Package: ctap_rtools
-Title: R functions related to the CTAP EEG analysis framework
+Package: ctapRtools
+Title: R Functions for EEG Analysis After CTAP Preprocessing
 Version: 0.1.0
-Authors@R: person("Jussi", "Korpela", email = "jussitapiokorpela@gmail.com", role = c("aut", "cre"))
+Authors@R: c(person("Jussi", "Korpela", email = "jussitapiokorpela@gmail.com", role = c("aut", "cre")), person("Ben", "Cowley", role = "aut",
+                     email = "ben.cowley@helsinki.fi"))
 Description: R functions related to the CTAP EEG analysis framework
-Depends:
-    R (>= 3.3.0)
-Imports: h5,
+Depends: R (>= 3.3.0)
+Imports: hdf5r,
     utils,
     reshape2,
     plyr,

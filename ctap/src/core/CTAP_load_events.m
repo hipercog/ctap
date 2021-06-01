@@ -79,7 +79,7 @@ end
 %% CORE
 switch Arg.method
     case 'handle'
-        EEG = Arg.handle(EEG, rmfield(Arg, {'method' 'src' 'handle'}));
+        EEG = Arg.handle(EEG, rmfield(Arg, {'method' 'handle'}));
         
     case 'presentation'
         EEG = pop_importpres(EEG, Arg.src);
@@ -95,7 +95,7 @@ end
 %% ERROR/REPORT
 Cfg.ctap.load_events = Arg;
 
-msg = myReport({msg 'Wrote events in <' EEG.setname '> from source = ' Arg.src}...
+msg = myReport({msg 'Wrote events in' EEG.setname 'from source = ' Arg.src}...
     , Cfg.env.logFile);
 
 EEG.CTAP.history(end+1) = create_CTAP_history_entry(msg, mfilename, Arg);
