@@ -87,7 +87,8 @@ end
 %% CORE
 if strcmpi(Arg.method, 'given')
     if isfield(Arg, 'badChanCsv')
-        gch = readtable(Arg.badChanCsv, 'delimiter', ',', 'ReadRowNames', 1);
+        gch = readtable(Arg.badChanCsv...
+            , 'delimiter', ',', 'ReadRowNames', 1, 'ReadVariableNames', 0);
     else
         error('CTAP_detect_bad_channels:insufficient_parameters'...
             , 'You must pass a valid CSV file of bad channels to this method')
