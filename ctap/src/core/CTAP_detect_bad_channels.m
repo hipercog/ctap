@@ -216,8 +216,8 @@ function sbf_report_bad_data
     else
         bdstr = strjoin(bdstr);
     end
-    rejfile =...
-        fullfile(Cfg.env.paths.qualityControlRoot, [Arg.method '_detections.mat']);
+    rejfile = fullfile(Cfg.env.paths.qualityControlRoot...
+            , [Arg.method '_badchan_detections.mat']);
 
     if exist(rejfile, 'file')
         tmp = load(rejfile, 'rejtab');
