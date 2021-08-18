@@ -4,8 +4,11 @@
 \alias{load_ctap_mc_measurement}
 \title{Load CTAP MC measurement sheet/table}
 \usage{
-load_ctap_mc_measurement(mc_file, measurement_sheet,
-  dateformat = "\%d.\%m.\%Y")
+load_ctap_mc_measurement(
+  mc_file,
+  measurement_sheet,
+  dateformat = "\%d.\%m.\%Y"
+)
 }
 \arguments{
 \item{mc_file}{character, Full path to the MC file}

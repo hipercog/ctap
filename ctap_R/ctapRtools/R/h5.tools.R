@@ -10,13 +10,13 @@
 #'
 #' @return Element 'element' from file as a numeric array
 #'
-#' @importFrom h5 h5file
-#' @importFrom h5 h5close
+#' @importFrom hdf5r h5file
+#' @importFrom hdf5r h5close
 #'
 #' @export
 load.h5.array <- function(infile, element){
 
-  f <- h5::h5file(infile, 'r')
+  f <- hdf5r::h5file(infile, 'r')
 
   ndim <- length(attr(f[element],'maxdim'))
   if (ndim==1){
@@ -27,7 +27,7 @@ load.h5.array <- function(infile, element){
     data = d3h5_to_array(f, element)
   } else (stop())
 
-  h5::h5close(f)
+  hdf5r::h5close(f)
 
   data
 }
@@ -44,18 +44,18 @@ load.h5.array <- function(infile, element){
 #'
 #' @return A list of erpavg data matrices
 #'
-#' @importFrom h5 h5file
-#' @importFrom h5 h5close
-#' @importFrom h5 list.groups
-#' @importFrom h5 list.datasets
+#' @importFrom hdf5r h5file
+#' @importFrom hdf5r h5close
+#' @importFrom hdf5r list.groups
+#' @importFrom hdf5r list.datasets
 #'
 #' @export
 load.h5.erpavg <- function(infile){
 
-  f <- h5::h5file(infile, 'r')
+  f <- hdf5r::h5file(infile, 'r')
 
-  if ('/erpavg' %in% h5::list.groups(f)){
-    ds.arr <- h5::list.datasets(f['/erpavg'])
+  if ('/erpavg' %in% hdf5r::list.groups(f)){
+    ds.arr <- hdf5r::list.datasets(f['/erpavg'])
   } else {
     ds.arr <- '/erpavg'
   }
@@ -67,7 +67,7 @@ load.h5.erpavg <- function(infile){
     rm(data)
   }
 
-  h5::h5close(f)
+  hdf5r::h5close(f)
 
   names(dlst) <- basename(ds.arr)
   dlst
@@ -85,18 +85,18 @@ load.h5.erpavg <- function(infile){
 #'
 #' @return A list of single-trial ERP data matrices
 #'
-#' @importFrom h5 h5file
-#' @importFrom h5 h5close
-#' @importFrom h5 list.groups
-#' @importFrom h5 list.datasets
+#' @importFrom hdf5r h5file
+#' @importFrom hdf5r h5close
+#' @importFrom hdf5r list.groups
+#' @importFrom hdf5r list.datasets
 #'
 #' @export
 load.h5.erp <- function(infile){
 
-  f <- h5::h5file(infile, 'r')
+  f <- hdf5r::h5file(infile, 'r')
 
-  if ('/erp' %in% h5::list.groups(f)){
-    ds.arr <- h5::list.datasets(f['/erp'])
+  if ('/erp' %in% hdf5r::list.groups(f)){
+    ds.arr <- hdf5r::list.datasets(f['/erp'])
   } else {
     ds.arr <- '/erp'
   }
@@ -108,7 +108,7 @@ load.h5.erp <- function(infile){
     rm(data)
   }
 
-  h5::h5close(f)
+  hdf5r::h5close(f)
 
   names(dlst) <- basename(ds.arr)
   dlst
@@ -224,7 +224,7 @@ loaddir.h5.erp <- function(indir, element, pattern = '*_ERPdata.h5'){
 #' @description
 #' Transform HDF5 numeric vector to array
 #'
-#' @param h5handle HDF5 file handle, Get handle using h5::h5file(infile, 'r')
+#' @param h5handle HDF5 file handle, Get handle using hdf5r::h5file(infile, 'r')
 #' @param dpath character, Path to the HDF5 vector like data element
 #'
 #' @return Data in 'dpath' as a numeric array
@@ -232,7 +232,7 @@ loaddir.h5.erp <- function(indir, element, pattern = '*_ERPdata.h5'){
 #' @export
 d1h5_to_array <- function(h5handle, dpath){
 
-  d1ID <-  h5attr2dimname( h5::h5attr(h5handle[dpath], 'd1ID') )
+  d1ID <-  h5attr2dimname( hdf5r::h5attr(h5handle[dpath], 'd1ID') )
 
   data <- h5handle[dpath][]
   dimnames(data) <- list(d1ID)
@@ -245,27 +245,27 @@ d1h5_to_array <- function(h5handle, dpath){
 #' @description
 #' Transform HDF5 numeric matrix to array
 #'
-#' @param h5handle HDF5 file handle, Get handle using h5::h5file(infile, 'r')
+#' @param h5handle HDF5 file handle, Get handle using hdf5r::h5file(infile, 'r')
 #' @param dpath character, Path to the HDF5 matrix like data element
 #'
 #' @return Data in 'dpath' as a numeric array
 #'
-#' @importFrom h5 list.attributes
-#' @importFrom h5 h5attr
+#' @importFrom hdf5r list.attributes
+#' @importFrom hdf5r h5attr
 #'
 #' @export
 d2h5_to_array <- function(h5handle, dpath){
 
-  attr.arr <- h5::list.attributes(h5handle[dpath])
+  attr.arr <- hdf5r::list.attributes(h5handle[dpath])
 
   if ('rowID' %in% attr.arr){
     # todo: legacy mode. Remove this in the future.
-    d1ID <-  h5attr2dimname( h5::h5attr(h5handle[dpath], 'rowID') )
-    d2ID <-  h5attr2dimname( h5::h5attr(h5handle[dpath], 'colID') )
+    d1ID <-  h5attr2dimname( hdf5r::h5attr(h5handle[dpath], 'rowID') )
+    d2ID <-  h5attr2dimname( hdf5r::h5attr(h5handle[dpath], 'colID') )
 
   } else {
-    d1ID <-  h5attr2dimname( h5::h5attr(h5handle[dpath], 'd1ID') )
-    d2ID <-  h5attr2dimname( h5::h5attr(h5handle[dpath], 'd2ID') )
+    d1ID <-  h5attr2dimname( hdf5r::h5attr(h5handle[dpath], 'd1ID') )
+    d2ID <-  h5attr2dimname( hdf5r::h5attr(h5handle[dpath], 'd2ID') )
   }
 
   data <- h5handle[dpath][]
@@ -279,19 +279,19 @@ d2h5_to_array <- function(h5handle, dpath){
 #' @description
 #' Transform HDF5 3D numeric matrix to array
 #'
-#' @param h5handle HDF5 file handle, Get handle using h5::h5file(infile, 'r')
+#' @param h5handle HDF5 file handle, Get handle using hdf5r::h5file(infile, 'r')
 #' @param dpath character, Path to the HDF5 3D matrix like data element
 #'
 #' @return Data in 'dpath' as a numeric array
 #'
-#' @importFrom h5 h5attr
+#' @importFrom hdf5r h5attr
 #'
 #' @export
 d3h5_to_array <- function(h5handle, dpath){
 
-  d1ID <-  h5attr2dimname( h5::h5attr(h5handle[dpath], 'd1ID') )
-  d2ID <-  h5attr2dimname( h5::h5attr(h5handle[dpath], 'd2ID') )
-  d3ID <-  h5attr2dimname( h5::h5attr(h5handle[dpath], 'd3ID') )
+  d1ID <-  h5attr2dimname( hdf5r::h5attr(h5handle[dpath], 'd1ID') )
+  d2ID <-  h5attr2dimname( hdf5r::h5attr(h5handle[dpath], 'd2ID') )
+  d3ID <-  h5attr2dimname( hdf5r::h5attr(h5handle[dpath], 'd3ID') )
 
   data <- h5handle[dpath][]
   dimnames(data) <- list(d1ID, d2ID, d3ID)
@@ -307,7 +307,7 @@ d3h5_to_array <- function(h5handle, dpath){
 #' Using the convention of collapsing into single string with ";"
 #' separators.
 #'
-#' @param attrdata HDF5 attribute data, Output of h5::h5attr(object, attributename)
+#' @param attrdata HDF5 attribute data, Output of hdf5r::h5attr(object, attributename)
 #'
 #' @return Attribute data in dimnames() compatible format
 #'
@@ -332,10 +332,10 @@ h5attr2dimname <- function(attrdata){
 #'
 #' @return Attribute data
 #'
-#' @importFrom h5 h5file
-#' @importFrom h5 h5close
-#' @importFrom h5 list.groups
-#' @importFrom h5 list.datasets
+#' @importFrom hdf5r h5file
+#' @importFrom hdf5r h5close
+#' @importFrom hdf5r list.groups
+#' @importFrom hdf5r list.datasets
 #'
 #' @examples
 #' \dontrun{
@@ -348,16 +348,16 @@ h5attr2dimname <- function(attrdata){
 #' @export
 h5.get.dataset.attr <- function(hdf5file, dgroup, dataset, attrib){
 
-  f <- h5::h5file(hdf5file, 'r')
+  f <- hdf5r::h5file(hdf5file, 'r')
 
   # List available datasets in the desired group
-  grps <- h5::list.groups(f)
+  grps <- hdf5r::list.groups(f)
 
   if (is.null(dgroup)){
     ds <- dataset
   } else {
     match <- grps %in% dgroup
-    ds <- h5::list.datasets(f[grps[match]])
+    ds <- hdf5r::list.datasets(f[grps[match]])
   }
 
   # Get attribute
@@ -375,7 +375,7 @@ h5.get.dataset.attr <- function(hdf5file, dgroup, dataset, attrib){
     }
   }
 
-  h5::h5close(f)
+  hdf5r::h5close(f)
 
   out
 }

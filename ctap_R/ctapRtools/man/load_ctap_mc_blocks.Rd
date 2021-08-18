@@ -4,8 +4,12 @@
 \alias{load_ctap_mc_blocks}
 \title{Load CTAP MC blocks sheet/table}
 \usage{
-load_ctap_mc_blocks(mc_file, blocks_sheet, timeformat = "\%Y\%m\%dT\%H\%M\%S",
-  tz = "UTC")
+load_ctap_mc_blocks(
+  mc_file,
+  blocks_sheet,
+  timeformat = "\%Y\%m\%dT\%H\%M\%S",
+  tz = "UTC"
+)
 }
 \arguments{
 \item{mc_file}{character, Full path to the MC file}

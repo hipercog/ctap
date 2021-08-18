@@ -5,7 +5,8 @@ Authors@R: c(person("Jussi", "Korpela", email = "jussitapiokorpela@gmail.com", r
                      email = "ben.cowley@helsinki.fi"))
 Description: R functions related to the CTAP EEG analysis framework
 Depends: R (>= 3.3.0)
-Imports: hdf5r,
+Imports:
+    hdf5r,
     utils,
     reshape2,
     plyr,
@@ -17,4 +18,4 @@ Imports: hdf5r,
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 6.0.1
+RoxygenNote: 7.1.1
