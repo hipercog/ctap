@@ -96,15 +96,23 @@ end
 
 
 %% ASSIST
+eegix = get_eeg_inds(EEG, 'EEG');
 chans_before_interpolation = {EEG.chanlocs.labels};
+tailEEG = pop_select(EEG, 'nochannel', eegix);
 
 
 %% CORE
 %interpolate channels
-if ~isfield( EEG.chanlocs, 'sph_theta_besa' )
-    EEG.chanlocs = convertlocs( EEG.chanlocs, 'cart2sphbesa' );
+if ~isfield(EEG.chanlocs, 'sph_theta_besa')
+    EEG.chanlocs = convertlocs(EEG.chanlocs, 'cart2sphbesa');
 end
-EEG = eeg_interp( EEG, Arg.channels, Arg.method );
+EEG = eeg_interp(pop_select(EEG, 'channel', eegix), Arg.channels, Arg.method);
+
+% add tail channels back to dataset
+EEG.data = [EEG.data; tailEEG.data];
+EEG.nbchan = EEG.nbchan + tailEEG.nbchan;
+EEG.chanlocs = eeg_mergechan(EEG.chanlocs, tailEEG.chanlocs);
+EEG = eeg_checkset(EEG);
 
 %get labels of interpolated channels for reporting
 chs_intrpd = setdiff({EEG.chanlocs.labels}, chans_before_interpolation);

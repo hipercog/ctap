@@ -182,7 +182,7 @@ findcurves <- function(data,mtr=5000,mva=5000,alpha=0.05,signflip=FALSE) {
 #'   colMeans plus upper and lower MWE confidence bands, plus 1-alpha confidence intervals
 #'
 #' @examples
-#' findcurves(curvematrix, alpha = a)
+#' find_erp_curves(curve_DF, alpha = a)
 #'
 #' @export
 find_erp_curves <- function(df, timep, grp, erp, alpha = 0.05) {
@@ -240,7 +240,7 @@ plotlines <- function(x, tvec, ..., CI=TRUE) {
 #' ggplot2 line plotting for ERP MWEs
 #'
 #' @description
-#' ggplot2 line plotting for lsit of ERP MWE dataframes with mean, MWE confidence bands, and 1-alpha confidence intervals
+#' ggplot2 line plotting for list of ERP MWE dataframes with mean, MWE confidence bands, and 1-alpha confidence intervals
 #'
 #' @param curve_list list, input data
 #'
@@ -305,7 +305,7 @@ plot_ci_one <- function(curve_list, curve_colors = c('#0072B2', '#D55E00'), grp 
       legend.justification='top',
       legend.direction='vertical') +
     scale_color_manual(values = curve_colors) +
-    scale_fill_manual(values = curve_colors)  
+    scale_fill_manual(values = curve_colors)
   
   p
 }

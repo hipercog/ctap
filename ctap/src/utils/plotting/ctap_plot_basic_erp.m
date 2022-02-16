@@ -89,9 +89,9 @@ p(2) = plot(erp(2, :)', 'Linewidth', 2, 'Color', 'r');
 
 if ~isempty(P.overploterp)
     p(3) = plot(P.overploterp(1, :)'...
-                            , 'Linewidth', 2, 'LineStyle', ':', 'Color', 'c');
+                            , 'Linewidth', 2, 'LineStyle', ':', 'Color', 'g');
     p(4) = plot(P.overploterp(2, :)'...
-                            , 'Linewidth', 2, 'LineStyle', ':', 'Color', 'y');
+                            , 'Linewidth', 2, 'LineStyle', ':', 'Color', 'm');
 end
 
 
@@ -117,7 +117,9 @@ if ~isempty(P.testps)
     
     for p = 1:numel(P.testps)
         ix = find(P.testps(p) < alphas, 1, 'last');
-        text(x(p, 1), ytxt, asterii{ix})
+        if ~isempty(ix)
+            text(x(p, 1), ytxt, asterii{ix})
+        end
     end
     
 end

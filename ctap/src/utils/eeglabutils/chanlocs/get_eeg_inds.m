@@ -1,4 +1,4 @@
-function chinds = get_eeg_inds(EEG, chloc_cellstr)
+function chinds = get_eeg_inds(EEG, chloc_cellstr, varargin)
 % GET_EEG_INDS return channel indices equal to a type or label cell string array
 %
 % Description:
@@ -16,6 +16,8 @@ function chinds = get_eeg_inds(EEG, chloc_cellstr)
 %   EEG             struct, EEGLAB struct
 %   chloc_cellstr   cell string array, type or label of channels to get indices.
 %                   Channels must be defined in chanlocs
+%   match_field     char, field to match on, type or labels
+%                   default: 'type'
 %
 %
 % Outputs:
@@ -31,9 +33,13 @@ function chinds = get_eeg_inds(EEG, chloc_cellstr)
 
 %% Parse input arguments and set varargin defaults
 p = inputParser;
-p.addRequired('EEG', @isstruct);
-p.addRequired('chloc_cellstr', @(x) iscellstr(x) || ischar(x)); %#ok<ISCLSTR>
-p.parse(EEG, chloc_cellstr);
+p.addRequired('EEG', @isstruct)
+p.addRequired('chloc_cellstr', @(x) iscellstr(x) || ischar(x)) %#ok<ISCLSTR>
+p.addParameter('match_field', 'type', @(x) any(strcmpi(x, {'type' 'labels'})))
+p.parse(EEG, chloc_cellstr)
+
+p.parse(EEG, chloc_cellstr, varargin{:});
+Arg = p.Results;
 
 if ischar(chloc_cellstr)
     chloc_cellstr = {chloc_cellstr};
@@ -47,10 +53,12 @@ if all(cellfun(@isempty, chloc_cellstr))
     return
 end
 
-chinds = find(ismember({EEG.chanlocs.type}, chloc_cellstr));
+switch Arg.match_field
+    case 'type'
+        chinds = find(ismember({EEG.chanlocs.type}, chloc_cellstr));
 
-if isempty(chinds)
-    chinds = find(ismember({EEG.chanlocs.labels}, chloc_cellstr));
+    case 'labels'
+        chinds = find(ismember({EEG.chanlocs.labels}, chloc_cellstr));
 end
 
 channels = size(EEG.data, 1);

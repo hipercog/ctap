@@ -81,8 +81,9 @@ end
 
 
 %% ERROR/REPORT
-% Arg = joinstruct(Arg, params);
-Arg = params;
+if exist('params', 'var')
+    Arg = params;
+end
 Cfg.ctap.extract_signal = Arg;
 
 msg = myReport({'Extracted DATA corresponding to channel types: ' chanTypes...
