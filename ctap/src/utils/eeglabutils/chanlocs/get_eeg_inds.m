@@ -53,13 +53,17 @@ if all(cellfun(@isempty, chloc_cellstr))
     return
 end
 
-switch Arg.match_field
-    case 'type'
-        chinds = find(ismember({EEG.chanlocs.type}, chloc_cellstr));
-
-    case 'labels'
-        chinds = find(ismember({EEG.chanlocs.labels}, chloc_cellstr));
+chinds = find(ismember({EEG.chanlocs.type}, chloc_cellstr));
+if isempty(chinds)
+    chinds = find(ismember({EEG.chanlocs.labels}, chloc_cellstr));
 end
+% switch Arg.match_field
+%     case 'type'
+%         chinds = find(ismember({EEG.chanlocs.type}, chloc_cellstr));
+% 
+%     case 'labels'
+%         chinds = find(ismember({EEG.chanlocs.labels}, chloc_cellstr));
+% end
 
 channels = size(EEG.data, 1);
 if numel(chinds) == channels
