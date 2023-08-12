@@ -25,6 +25,12 @@ function [EEG, varargout] = ctapeeg_epoch_data(EEG, varargin)
 %                 Default = [-500 500]
 %   'valulim'   : negative/positive latency (points) around epoch,
 %                 Default = []
+%   'rmbase'    : remove the baseline (pre-zero mean)
+%                  Default = 1 (yes)
+%   'response'  : an event to consider the response to the lock event
+%                 If this is not empty, function will calculate response 
+%                 time and add a field to epoch struct to store RT
+%                  Default = ''
 %
 % OUTPUT
 %   'EEG'       : struct, modified input EEG
@@ -55,6 +61,12 @@ Arg.timelim = Arg.timelim./1000; %to seconds
 %% Epoching...operation
 switch Arg.method
     case 'epoch'
+
+        % Calculate and store RT
+        if ~isempty(Arg.response)
+            sbf_add_rts()
+        end
+        
         % check if event type is defined
         if ~all(cellfun(@isempty, Arg.evtype))
             [EEG, event] = pop_epoch(EEG, Arg.evtype, Arg.timelim,...
@@ -109,8 +121,12 @@ switch Arg.method
         
 end
 
-EEG = pop_rmbase(EEG, 1000*[EEG.xmin, 0]); 
+% remove the baseline
+if Arg.rmbase
+    EEG = pop_rmbase(EEG, 1000*[EEG.xmin, 0]);
+end
 EEG.CTAP.ERP.id = Arg.erpid; %store for later reference
+
 
 %% wrap up
 varargout{1} = Arg;
@@ -118,6 +134,10 @@ varargout{2} = event;
 
 
 %% Sub-functions
+    function sbf_add_rts()
+    end % sbf_add_rts
+
+
     function Arg = sbf_check_input() % parse the varargin, set defaults
         % Unpack and store varargin
         if isempty(varargin)
@@ -138,6 +158,7 @@ varargout{2} = event;
         Arg.name = [EEG.setname '_epochs'];
         Arg.valulim = [];
         Arg.timelim = [-500 500];
+        Arg.rmbase = 1;
 
         switch Arg.method
             case 'epoch'
@@ -145,6 +166,7 @@ varargout{2} = event;
                 Arg.indices = [];
                 Arg.verbose = 'no';
                 Arg.epevents = 'yes';
+                Arg.response = '';
 
             case 'regep'
 

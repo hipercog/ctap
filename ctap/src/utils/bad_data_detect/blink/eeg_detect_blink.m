@@ -19,9 +19,13 @@ function [peakLatArr, BlinkData] = eeg_detect_blink(veog, fs, varargin)
 %           VeogUp-VeogDown
 %   fs      [1,1] numeric, Sampling rate in Hz
 %
-%   varargin    Keyword-value pairs
-%   Keyword         Type, description, values
-%   'FIRLength'     interger, Length of the FIR filter, default: floor(0.3*fs) 
+% Varargin:
+%   'FIRLength'     integer, Length of the FIR filter, default: floor(0.3*fs)
+%   'classMethod'   string, how to separate blinks from non-blinks
+%   'featureAcceptRange'
+%   'cdfGtrid'
+%   'cdfTailProb'
+%   'emGaussReasoning'
 %
 % Outputs:
 %   peakLatArr  [1,N] numeric, Blink positions in samples (= indices of veog)
@@ -214,7 +218,7 @@ BlinkData.clusters = cluster(:);
 % BlinkData.blinkIdxEMGauss.asymm = ok_inds(blink_match_emgauss_asymm);
 % BlinkData.blinkIdxKMeans = ok_inds(blink_match_kmeans);
 BlinkData.DvAcceptRange = Arg.featureAcceptRange;
-
+BlinkData.ebr = (sum(blink_match_tmp) * 60) / duration;
 
 %% Debug stuff
 
@@ -297,16 +301,14 @@ function blink_match = sbf_1Dclass_kmeans(Dv, dur, medseed)
 
     % Refine classes
     cluster = litekmeans(Dv, 2, label);
-
-
     clusterMeans = [mean(Dv(cluster==1)), mean(Dv(cluster==2))] ;
     [~, max_i] = max(clusterMeans); 
 
     blink_match = cluster==max_i;
     ebr = (sum(blink_match) * 60) / dur;
     fprintf(' done, counting blink rate at %2.1f per minute. \n', ebr)
-    if ebr < 3 && ~medseed
-        fprintf('...blink rate too low, trying again with median seed\n')
+    if (ebr < 3 || ebr > 120) && ~medseed
+        fprintf('...implausible blink rate, trying again with median seed\n')
         blink_match = sbf_1Dclass_kmeans(Dv, dur, true);
     end
 end

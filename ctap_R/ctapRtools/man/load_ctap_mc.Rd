@@ -4,8 +4,12 @@
 \alias{load_ctap_mc}
 \title{Load CTAP MC file contents}
 \usage{
-load_ctap_mc(mc_file, measurement_sheet = "mc", subject_sheet = "subject",
-  blocks_sheet = "blocks")
+load_ctap_mc(
+  mc_file,
+  measurement_sheet = "mc",
+  subject_sheet = "subject",
+  blocks_sheet = "blocks"
+)
 }
 \arguments{
 \item{mc_file}{character, Full path to the MC file}

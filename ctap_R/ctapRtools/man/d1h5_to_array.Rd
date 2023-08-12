@@ -7,7 +7,7 @@
 d1h5_to_array(h5handle, dpath)
 }
 \arguments{
-\item{h5handle}{HDF5 file handle, Get handle using h5::h5file(infile, 'r')}
+\item{h5handle}{HDF5 file handle, Get handle using hdf5r::h5file(infile, 'r')}
 
 \item{dpath}{character, Path to the HDF5 vector like data element}
 }

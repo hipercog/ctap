@@ -42,6 +42,7 @@ if ischar(event)
 end
 event_fnames = fieldnames(event);
 
+
 %% define 'match_fields' to index matched fields in request struct
 match_fields = ismember(event_fnames, fieldnames(EEG.event));
 if ~all(match_fields)

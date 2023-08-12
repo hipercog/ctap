@@ -70,7 +70,7 @@ Arg = p.Results;
 CHANNELS = Arg.channels;
 % Set up chunks
 nchan = length(CHANNELS);
-if Arg.chunksize > numel(Arg.channels)
+if Arg.chunksize >= numel(Arg.channels)
     nchunks = 1;
     chchunks = [1, nchan + 1];
 else
@@ -100,7 +100,7 @@ for ix = 1:numel(IDX)
 
         % savename concats the file id with the channel information
         chpart = '';
-        if nchunks == 1
+        if nchunks > 1
             chpart = sprintf('-chs%d-%d', chchunks(i), chchunks(i + 1) - 1);
         end
         savename = sprintf('%s-Badepoch_%d%s.png', plotname, IDX(ix), chpart);

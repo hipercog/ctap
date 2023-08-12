@@ -7,7 +7,7 @@
 h5attr2dimname(attrdata)
 }
 \arguments{
-\item{attrdata}{HDF5 attribute data, Output of h5::h5attr(object, attributename)}
+\item{attrdata}{HDF5 attribute data, Output of hdf5r::h5attr(object, attributename)}
 }
 \value{
 Attribute data in dimnames() compatible format
