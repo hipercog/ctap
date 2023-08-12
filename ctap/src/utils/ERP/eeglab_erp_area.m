@@ -56,7 +56,7 @@ p = inputParser;
 p.addRequired('EEG', @isstruct);
 p.addRequired('limits', @isnumeric);
 p.addRequired('blocks', @iscell);
-p.addParameter('blockFieldName', '', @isstr);
+p.addParameter('blockFieldName', '', @ischar);
 
 p.parse(EEG, limits, blocks, varargin{:});
 Arg = p.Results;

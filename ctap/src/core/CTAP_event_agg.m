@@ -2,8 +2,13 @@ function [EEG, Cfg] = CTAP_event_agg(EEG, Cfg)
 %CTAP_EVENT_AGG create new events based on groups of old events, for epoch/export
 %
 % Description:
-%   Events which match any on a given list can be used to form new events: this
-%   can be extended to list of lists.
+%   Events for which the 'type' field matches any entry on a given list can 
+%   be used to form new events: this can be extended to list of lists.
+%   Example: 3 different codes are used to represent responses _in 1 list_, 
+%           {{'early' 'ontime' 'late'}}
+%   Enter the above cellstring array as the .evtype value, and enter
+%           {'response'}
+%   as the .newevs value.
 %   New events can be made by relabelling existing events (relabel event list)
 %   or adding new events with same latency/duration but new type labels (add to 
 %   event list). Relabel option can be complete, prepend, or append.
@@ -68,6 +73,7 @@ end
 
 
 %% CORE
+% TODO - refactor CORE to ctapeeg_event_agg()
 evix = cell(numel(Arg.evtype), 1);
 for ix = 1:numel(Arg.evtype)
     evlist = eeglab_validate_evlist(EEG, Arg.evtype{ix}, Arg.match);
