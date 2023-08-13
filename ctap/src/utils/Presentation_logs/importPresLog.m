@@ -20,7 +20,8 @@ function [out1, out2] = importPresLog( file_name )
 %
 
 % Get the first part of log data (all event info)
-T = readtable(file_name, 'NumHeaderLines', 3, 'Delimiter', '\t');
+T = readtable(file_name...
+    , 'NumHeaderLines', 3, 'Delimiter', '\t', "FileType", "text");
 T.Properties.VariableNames = strrep(strrep(strip(lower(...
             T.Properties.VariableNames), '_'), '_str', ''), '_num', '');
 ix = find(contains(T.code, 'End task'));
@@ -32,7 +33,8 @@ textscan(fid, '%s', ix + 5, 'Delimiter', '\n');
 B = textscan(fid, '%s%s%s%s%s%s%s%s%s%s%s%s', 1, 'Delimiter', '\t');
 vars = matlab.lang.makeUniqueStrings(matlab.lang.makeValidName([B{:}]));
 
-T2 = readtable(file_name, 'NumHeaderLines', ix + 5, 'Delimiter', '\t');
+T2 = readtable(file_name...
+    , 'NumHeaderLines', ix + 5, 'Delimiter', '\t', "FileType", "text");
 T2.Properties.VariableNames = strrep(strrep(strip(lower(vars), '_')...
                                                 , '_str', ''), '_num', '');
 ix = find(contains(T2.code, 'End task'));
