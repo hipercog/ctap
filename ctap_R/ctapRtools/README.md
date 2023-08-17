@@ -1,5 +1,5 @@
 # Rtools
-An R package that contains miscellaneous tools for R. I use these tools in my free time projects as well as in work. Currently the most important part are the HDF5 -wrappers that are used to read in ERP data from CTAP.
+An R package that contains miscellaneous tools for working with EEG data in R. Currently the most important part are the HDF5 -wrappers that are used to read in ERP data from CTAP.
 
 The tools are made into a proper package to make them easier to use. See chapter "howto".
 
@@ -17,13 +17,13 @@ RPM-based (e.g Fedora): 'sudo yum install hdf5-devel'
 
 1. clone the repository to your machine:
 ```
-git clone https://github.com/jutako/Rtools.git
+git clone https://github.com/hipercog/ctap.git
 ```
 
 2. install it in R:
 ```
 install.packages('devtools')
 require(devtools)
-devtools::install('path-to-Rtools-repo')
-require(Rtools)
+devtools::install('path-to-ctap-repo/ctap/ctap_R/ctapRtools')
+library(ctapRtools)
 ```

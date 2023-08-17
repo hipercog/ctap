@@ -102,3 +102,5 @@ for i = 1:size(EEG.data, 3)
         , 'groupPath', [h5p_epc '/' idx{i}] ...
         , 'dsetname', idx{i})
 end
+
+H5F.close(fileId)
