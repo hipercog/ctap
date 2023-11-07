@@ -24,7 +24,7 @@ else
         if isnumeric(cell2mat(tmp(1)))
             nullx = cellfun(@isempty, tmp);
             if any(nullx)
-                tmp{nullx} = NaN;
+                tmp(nullx) = {NaN};
             end
             tmp = cell2mat(tmp);
         end
