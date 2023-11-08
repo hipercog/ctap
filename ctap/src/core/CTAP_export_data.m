@@ -83,8 +83,9 @@ switch Arg.type
             EEGev = pop_select(EEG, 'trial', find(idx));
             savename = fullfile(Arg.outdir, sprintf('%s_%s_ERPdata.h5'...
                             , EEG.CTAP.measurement.casename, lock_evname));
+            
             eeglab_writeh5_erp(savename, EEGev);
-            msg = ['Export ERP of ' lock_evname ' epochs to HDF5'];
+            msg = ['Export ERP of ' lock_evname ' epochs to HDF5 at:' savename];
         else
             msg = ['WARN No epochs found containing ' lock_evname];
         end

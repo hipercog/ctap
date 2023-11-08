@@ -37,14 +37,6 @@ if exist(h5file, 'file')
     delete(h5file);
 end
 
-% debug:
-%keyboard;
-%tmp = h5info(h5file, h5p_erpavg)
-%tmp = h5info(h5file, h5p_erp)
-%tmp = h5info(h5file, '/erp/SEAMPILOT301')
-%h5disp(h5file)
-%h5readatt(h5file, '/erp')
-
 
 %% Create file and datasets
 [x, y, z] = size(EEG.data);
@@ -70,7 +62,7 @@ h5write(h5file, h5p_erp, permute(EEG.data, [3,2,1]) );%Note: flips dims 1+2
 h5writeatt(h5file, h5p_erp, 'chans', strjoin({EEG.chanlocs.labels}, ';'))
 h5writeatt(h5file, h5p_erp, 'frames', EEG.times)
 h5writeatt(h5file, h5p_erp, 'trials', 1:size(EEG.data,3))
-
+%}
 
 %% Write continuous and epoched events using struct2h5()
 fileId = H5F.open(h5file, 'H5F_ACC_RDWR', 'H5P_DEFAULT');
@@ -104,3 +96,4 @@ for i = 1:size(EEG.data, 3)
 end
 
 H5F.close(fileId)
+%}
