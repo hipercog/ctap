@@ -7,13 +7,18 @@ function [ephits, lock_evname] = get_event_epochIdx(EEG, event)
 %   The logical AND of matches from all passed fields provides an event index;
 %   these events occur inside a subset of epochs, and this set is returned.
 % 
+% Syntax:
+%   [epochs_found, joint_event_names] = ...
+%                         get_event_epochIdx(EEG, struct('type', 'target'))
+% 
 % Inputs:
 %   EEG     struct, EEG structure to search
-%   event   struct | string, 'name', 'value' pairs; names must match fieldnames
-%                   in EEG.event; values must match some that occur in events
+%   event   struct | string | numeric, 'name', 'value' pairs; 
+%                   names must match fieldnames in EEG.event (must be strings)
+%                   values must match some that occur in events (can be numeric)
 %                   E.g. 'type', 'target'
-%           NOTE: if 'event' is string, will be converted to the value of a
-%           struct 'event.type', i.e. 'type' is default event matching field
+%           NOTE: if 'event' is scalar string or numeric, it will be converted to
+%           value of struct 'event.type', i.e. 'type' is default event matching field
 % 
 %
 % Copyright(c) 2019:
@@ -74,6 +79,6 @@ end
 ephits = false(1, EEG.trials);
 ephits(unique([EEG.event(evhits).epoch])) = 1;
 
-lock_evname = strjoin(struct2cell(event), '-');
+lock_evname = myToString(event);
 
 end

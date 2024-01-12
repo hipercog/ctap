@@ -45,7 +45,7 @@ function str = myToString(in)
             end
             try
                 in = cell2mat(in);
-            catch iamerr,   
+            catch iamerr   
                 disp( strcat('Can''t convert to string!', iamerr.identifier) );
             end
         end
