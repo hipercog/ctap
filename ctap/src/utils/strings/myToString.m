@@ -17,8 +17,8 @@ function str = myToString(in)
 %   'str'           string, some printable string version of 'in'
 %
 %
-% Copyright(c) 2015 FIOH:
-% Benjamin Cowley (Benjamin.Cowley@ttl.fi)
+% Copyright(c) 2015:
+% Benjamin Cowley (Ben.Cowley@helsinki.fi)
 %
 % This code is released under the MIT License
 % http://opensource.org/licenses/mit-license.php

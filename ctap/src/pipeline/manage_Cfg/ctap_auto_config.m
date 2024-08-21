@@ -58,6 +58,8 @@ end
 %% Add canonical locations to Cfg
 if isfield(Cfg.env.paths, 'ctapRoot')
     
+    Cfg.env.paths.ctapRoot = fullfile(Cfg.env.paths.ctapRoot, 'TAPPED');
+
     % First step set input data is loaded from:
     if ~isfield(Cfg.env.paths, 'branchSource')
         warning('ctap_auto_config:no_basepath', ['Please use cfg_create_paths()',...
