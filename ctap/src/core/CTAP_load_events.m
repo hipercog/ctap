@@ -53,10 +53,11 @@ end
 
 
 %% ASSIST
+msg = '';
 errmsg = 'Log file is needed to load events!';
+if ~strcmpi(Arg.src, 'EEG.event')
 % Try locating the folder of the EEG file
 if ~isfield(Arg, 'src') || isempty(Arg.src)
-    Arg.src = 'EEG.event';
     if isfield(EEG, 'filepath') && ~isempty(EEG.filepath)
         Arg.src = EEG.filepath;
     elseif ~isempty(EEG.comments)
@@ -88,6 +89,7 @@ if (ischar(Arg.src) || iscellstr(Arg.src)) && isfolder(Arg.src)
 % ...or test if a file exists according to the Arg.src string
 elseif ischar(Arg.src) && ~exist(Arg.src, 'file') == 2
     error('CTAP_load_events:no_log', '%s :: Bad filename or not a file', errmsg)
+end
 end
 
 
