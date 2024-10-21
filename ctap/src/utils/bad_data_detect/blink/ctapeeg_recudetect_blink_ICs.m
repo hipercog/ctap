@@ -69,7 +69,7 @@ if ( ~ismember('blink', unique({EEG.event.type})) )
         ' blink template matching. Run CTAP_blink2event() to fix.'])
 end
 
-veogidx = ismember({EEG.chanlocs.labels}, Arg.veog);
+veogidx = contains({EEG.chanlocs.labels}, Arg.veog);
 if sum(veogidx) > 2
     error('ctapeeg_recudetect_blink_ICs:tooManyVeogChans',...
         '%d channels match the given VEOG info: can''t proceed.', sum(veogidx))
