@@ -292,7 +292,7 @@ if Arg.plotEEG
     if isfield(EEG.CTAP, 'badchans') &&...
        isfield(EEG.CTAP.badchans, 'detect') &&...
        EEG.CTAP.badchans.detect.prc > 0
-        markChannels = EEG.CTAP.badchans.detect.chans;
+        [markChannels, ~] = ctap_read_detections(EEG, 'badchans');
     else
         markChannels = {};
     end
