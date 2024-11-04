@@ -240,6 +240,7 @@ writetable(peektab, fullfile(savepath, 'peek_times'), 'WriteRowNames', true)
 
 
 %% save EEG data from each peek
+% FIXME: DOES NOT FUNCTION FOR EPOCHED DATA!!
 if Arg.savePeekData
     % grab data for a number of "peek" windows and save matrices as mat files
     for i = 1:numel(starts)
@@ -252,6 +253,7 @@ end
 
 
 %% save ICA data from each peek
+% FIXME: DOES NOT FUNCTION FOR EPOCHED DATA!!
 if Arg.savePeekICA && ~isempty(EEG.icaweights)
     activations = icaact(EEG.data(EEG.icachansind, :),...
                          EEG.icaweights * EEG.icasphere, 0);
@@ -266,6 +268,7 @@ end
 
 
 %% calculate stats for each peek separately
+% FIXME: DOES NOT FUNCTION FOR EPOCHED DATA!!
 if Arg.peekStats
     % grab stats for a number of "peek" windows and save tables as mat files
     for i = 1:numel(starts)
