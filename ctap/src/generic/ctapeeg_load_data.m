@@ -35,8 +35,10 @@ function [EEG, varargout] = ctapeeg_load_data(filename, varargin )
 %               'txt': load ascii file, meta-data specified via free arguments
 %               'mat': load matlab file, meta-data specified via free arguments
 %               'raw': load EGI format file using pop_readegi()
+%               'easy': load .easy format using pop_easy, Neuroelectrics plugin
+%               'nedf': load .nedf format using pop_nedf, Neuroelectrics plugin
 % 
-%               WIP - importers for Enobio native txt format, BESA, etc.
+%               WIP - importers for BESA, etc.
 % 
 %           Even if filename has no extension, file_loadable() will
 %           still check all supported EEG formats against given filename.
@@ -132,6 +134,20 @@ switch file.ext
         
     case 'raw'
         EEG = pop_readegi(fullfile(file.path, file.name), [], [], '');
+
+    case {'easy' 'nedf'}
+        if isfield(Arg, 'accelerometer')
+            acc = Arg.accelerometer;
+        else
+            acc = 0;
+        end
+        if isfield(Arg, 'locations')
+            locs = Arg.locations;
+        else
+            locs = 1;
+        end
+        loader = str2func(['pop_' file.ext]);
+        EEG = loader(fullfile(file.path, file.name), acc, locs);
         
 end
 

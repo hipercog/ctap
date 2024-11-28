@@ -130,6 +130,11 @@ if any(args)
 else
     return;
 end
+pipe_peeks = cellfun(@find...
+           , cellfun(@(x)...
+             cellfun(@(y) strcmp(func2str(y), 'CTAP_peek_data'), x)...
+             , {Cfg.pipe.stepSets.funH}, 'Un', 0)...
+             , 'Un', 0);
 
 
 %% make and save stats to log file
@@ -178,6 +183,8 @@ end
 peekmatch = ismember({EEG.event.type}, 'ctapeeks');
 if any(peekmatch)%peek events are present - use them
     starts = int32([EEG.event(peekmatch).latency]);
+%     FIXME - HOW TO GET THE LOCATION OF THE LAST PEEK'S DATA OUTPUT?
+%     prior_pipe = Cfg.pipe.current.
 else
     %create new peeks from existing user-defined events
     if isfield(Arg, 'peekevent')
