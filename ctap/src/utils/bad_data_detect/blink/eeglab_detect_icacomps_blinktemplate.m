@@ -8,6 +8,7 @@ p.addRequired('EEG', @isstruct);
 p.addParameter('templateCompFun', @sbf_vecangle, @(x)isa(x,'function_handle'));
 p.addParameter('leqThreshold', 0.5, @isnumeric); %threshold value (def=radians)
 p.addParameter('blinkEventType', 'blink', @ischar);
+p.addParamater('chan_types', 'EEG', @(x) ischar(x) | iscellstr(x)) %#ok<ISCLSTR> 
 p.parse(EEG, varargin{:});
 Arg = p.Results;
 
@@ -19,7 +20,8 @@ blink_match = ismember({EEG.event.type}, Arg.blinkEventType);
 
 if sum(blink_match)>0
     blink_inds = int64([EEG.event(blink_match).latency]);
-    bAmps = EEG.data(:,blink_inds);
+    eeg_inds = get_eeg_inds(EEG, Arg.chan_types);
+    bAmps = EEG.data(eeg_inds, blink_inds);
     blinkTemplate = mean(bAmps, 2);
 else
     msg = 'Could not construct blink template. Are blink events missing?'; 
