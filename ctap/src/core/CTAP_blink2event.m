@@ -59,15 +59,17 @@ end
 
 
 %% CORE
-Eog = eeglab_extract_eog(EEG,...
-                        Cfg.eeg.veogChannelNames,...
-                        Cfg.eeg.heogChannelNames);
+Eog = eeglab_extract_eog(EEG...
+                       , Cfg.eeg.veogChannelNames...
+                       , Cfg.eeg.heogChannelNames...
+                       , 'invert_polarity', Arg.invert_polarity);
                     
-if Arg.invert_polarity
-    EEG = eeglab_blink2event(EEG, -Eog.veog, rmfield(Arg, 'invert_polarity'));
-else 
-    EEG = eeglab_blink2event(EEG, Eog.veog, rmfield(Arg, 'invert_polarity'));
-end
+% if Arg.invert_polarity
+%     EEG = eeglab_blink2event(EEG, -Eog.veog, rmfield(Arg, 'invert_polarity'));
+% else 
+EEG = eeglab_blink2event(EEG, Eog.veog, rmfield(Arg, 'invert_polarity'));
+% end
+
 
 %% ERROR/REPORT
 Cfg.ctap.blink2event = Arg;

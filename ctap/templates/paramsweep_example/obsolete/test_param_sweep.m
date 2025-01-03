@@ -26,7 +26,7 @@ SweepParams.values = num2cell(linspace(1.1, 1.6, 10));
 
 projectRoot = fullfile(resultRoot,'hydra');
 ctapRoot = fullfile(projectRoot, 'projtmp');
-Cfg.env.paths = cfg_create_paths(ctapRoot, 'projtmp', 'dummy');
+Cfg.env.paths = cfg_create_branch_paths(ctapRoot, 'projtmp', 'dummy');
 %Cfg.eeg.chanlocs = 'chanlocs128_biosemi.elp';
 %Channels = readlocs(Cfg.eeg.chanlocs);
 Cfg.eeg.reference = {'L_MASTOID' 'R_MASTOID'};

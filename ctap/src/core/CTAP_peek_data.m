@@ -214,8 +214,8 @@ else
 %TODO - CHECK IF select_evdata EXISTS IN THE FUTURE PIPE?
 %TODO - IF SO, CHECK WHAT ITS COVERAGE IS? THEN CONSTRAIN PEEKS WITHIN THAT
 %
-        %num peeks = as many as will fit with space at the end, < Arg.numpeeks
-        npk = min(Arg.numpeeks, round((EEG.xmax * EEG.trials - Arg.secs(2)) / dur));
+        %num peeks = as many as will fit with space at the end, <= Arg.numpeeks
+        npk = min(Arg.numpeeks, ceil((EEG.xmax * EEG.trials - Arg.secs(2)) / dur));
         % start latency of peeks is linear spread, randomly jittered
         starts = (linspace(1, EEG.xmax * EEG.trials - Arg.secs(2), npk) +...
                                    [rand(1, npk - 1) .* dur 0]) * EEG.srate;

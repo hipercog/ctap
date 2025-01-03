@@ -51,8 +51,7 @@ if isfield(Cfg.ctap, 'load_data')
 end
 
 loadable = 0;
-extns = {'.set', '.bdf', '.edf', '.gdf', '.vhdr', '.eeg', '.vpd', ...
-         '.xml', '.e'};
+extns = {'.set', '.bdf', '.edf', '.gdf', '.vhdr', '.eeg', '.vpd', '.xml', '.e'};
 file = file_loadable(Arg.physiodata, extns);
 
 if ~file.load

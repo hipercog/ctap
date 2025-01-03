@@ -60,9 +60,9 @@ function event = eeglab_create_event(latency, type, varargin)
 %
 % Version History:
 % 11.10.2007 Created (Jussi Korpela, TTL)
-%
-% Copyright 2007- Jussi Korpela, TTL 
+% Updated 2024 Benjamin Cowley, UH
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 
 %% Default parameter values
 % Currently only optional event fields can be passed to create_event 
@@ -94,7 +94,7 @@ if isnumeric(type)
 end
 
 % For 'type': add values if necessary
-if length(type) == 1
+if isscalar(type)
     type2 = cell(length(latency),1);
     type2(:) = type(1);
     type = type2; clear('type2');
@@ -110,8 +110,7 @@ userfields = fieldnames(Arg);
 
 if ~isempty(userfields)
     for k = 1:length(userfields)
-       if length(Arg.(userfields{k})(:)) == 1
-           % Field value vector is of length 1
+       if isscalar(Arg.(userfields{k})(:)) % Field value vector is of length 1
            % Fields with value vectors longer than one are skipped (but
            % checked later against latency vector length)
           

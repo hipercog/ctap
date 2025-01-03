@@ -51,17 +51,6 @@ end
 [EEG, params, result] = ctapeeg_load_data(Arg.physiodata, Arg);
 
 
-%% MISC
-try result.meta; catch, result.meta = 'No meta data'; end
-try result.time; catch, result.time = {now()}; end
-%time_specs: { file start time string,
-%              measurement start time string,
-%              measurement start offset from file start in samples, default = 0}
-time_specs = { datestr(result.time{1}, 30),...
-               datestr(result.time{1}, 30),...
-               0};
-
-
 %% HANDLE EVENTS
 if (isempty(EEG.event))
     % Add dummy event to avoid problems with functions that assume events exist
@@ -86,8 +75,8 @@ Cfg.ctap.load_data = Arg;
 msg = myReport({'Load data, add CTAP, for ' Arg.physiodata}, Cfg.env.logFile);
 
 EEG = add_CTAP(EEG, Cfg,...
-    'time', time_specs,...
-    'meta', result);
+    'time', result.time,...
+    'meta', rmfield(result, 'time'));
 
 
 %% HANDLE CHANLOCS

@@ -195,14 +195,6 @@ for i = 1:length(max_ind_blinks)
      peakLatArr(i) = max_ind_blinks(i) + tmpind -1;
 end
 
-% debug:
-% figure();
-% yvals = rand(1,numel(Dv));
-% plot(Dv(~blink_match), yvals(~blink_match), 'bo');
-% hold on;
-% plot(Dv(blink_match), yvals(blink_match), 'ro');
-% hold off;
-
 
 %% Passing outputs
 cluster = ones(1,length(Dv)); % label 1 == non blink
@@ -220,17 +212,18 @@ BlinkData.clusters = cluster(:);
 BlinkData.DvAcceptRange = Arg.featureAcceptRange;
 BlinkData.ebr = (sum(blink_match_tmp) * 60) / duration;
 
+
 %% Debug stuff
 
 % For testing purposes:
 %{
-figure;
 %blink_match = blink_match_kmeans;
 %blink_match = blink_match_emgauss_heur;
-blink_match = blink_match_emgauss_asymm;
-plot(Dv(blink_match), rand(sum(blink_match),1), 'ro')
+% blink_match = blink_match_emgauss_asymm;
+figure();
+plot(Dv(~blink_match), rand(1,sum(~blink_match)), 'bo');
 hold on;
-plot(Dv(~blink_match), rand(sum(~blink_match),1), 'bo')
+plot(Dv(blink_match), rand(1,sum(blink_match)), 'ro');
 hold off;
 
 

@@ -2,13 +2,14 @@ function [comps_match, th_arr] = eeglab_detect_icacomps_blinktemplate(EEG, varar
 %EEG_DETECT_ICACOMPS_BLINK - Detect ICA components that are blink related
 %
 % Requires events of type 'blink' to be present in EEG.event.
+
+
 %% Parse input arguments and set varargin defaults
 p = inputParser;
 p.addRequired('EEG', @isstruct);
 p.addParameter('templateCompFun', @sbf_vecangle, @(x)isa(x,'function_handle'));
 p.addParameter('leqThreshold', 0.5, @isnumeric); %threshold value (def=radians)
 p.addParameter('blinkEventType', 'blink', @ischar);
-p.addParamater('chan_types', 'EEG', @(x) ischar(x) | iscellstr(x)) %#ok<ISCLSTR> 
 p.parse(EEG, varargin{:});
 Arg = p.Results;
 
@@ -20,19 +21,18 @@ blink_match = ismember({EEG.event.type}, Arg.blinkEventType);
 
 if sum(blink_match)>0
     blink_inds = int64([EEG.event(blink_match).latency]);
-    eeg_inds = get_eeg_inds(EEG, Arg.chan_types);
-    bAmps = EEG.data(eeg_inds, blink_inds);
+    bAmps = EEG.data(EEG.icachansind, blink_inds);
     blinkTemplate = mean(bAmps, 2);
 else
     msg = 'Could not construct blink template. Are blink events missing?'; 
     error('eeglab_detect_icacomps_blinktemplate:blinkTemplateError',msg); 
 end
 
-% Make zero mean and unit variance to avoid false result due to baseline
-% offset and such
+% Make zero mean and unit variance to avoid false result due to baseline offset
 blinkTemplate = blinkTemplate / std(blinkTemplate);
 blinkTemplate = blinkTemplate - mean(blinkTemplate);
-    
+
+
 %% Compare the vector angle between blink template and component scalp 
 %% projection (i.e. ICA "mixing matrix" = A = EEG.icawinv).
 %
@@ -43,16 +43,14 @@ blinkTemplate = blinkTemplate - mean(blinkTemplate);
 %       tight boundary.
 %   4. In Uupuneet-project some clearly blink related ICs had angle values 
 %       around 0.7. The threshold was increased to get these detected.
-
-% Flag SCs based on blink template
-% Flag SCs whose scalp map fits predefined "blink scalp map"
+% Flag ICs based on blink template
+% Flag ICs whose scalp map fits predefined "blink scalp map"
 
 
 % size(EEG.icawinv) = [nchan, nIC]    
 th_arr = NaN(size(EEG.icawinv,2),1);
 for i = 1:size(EEG.icawinv, 2) 
-    th_arr(i,1) = Arg.templateCompFun(EEG.icawinv(:,i),...
-                                        blinkTemplate(EEG.icachansind));
+    th_arr(i,1) = Arg.templateCompFun(EEG.icawinv(:,i), blinkTemplate);
 end  
 fprintf(1,'Using leqThreshold %3.2f ...\n',Arg.leqThreshold);
 comps_match = th_arr <= Arg.leqThreshold;
@@ -74,7 +72,7 @@ plot(EEG.icawinv(:,20)/std(EEG.icawinv(:,4)),'-g')
 %% Additional criteria
 % If _none_ of the IC's are below the threshold criterion select the one
 % with the lowest criterion value
-if sum(comps_match) == 0
+if ~any(comps_match)
     [~, ind] = min(th_arr);
     comps_match(ind) = true;
 end

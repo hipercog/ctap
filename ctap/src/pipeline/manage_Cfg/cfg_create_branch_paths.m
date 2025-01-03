@@ -1,8 +1,8 @@
-function Dirs = cfg_create_paths(ctapRoot, id, srcid, srcix)
-%CFG_CREATE_PATHS() determine source and savepaths for a branched pipe
+function Dirs = cfg_create_branch_paths(ctapRoot, id, srcid, srcix)
+%CFG_CREATE_BRANCH_PATHS() determine source and savepaths for a branched pipe
 %
 % Syntax: 
-%   Dirs = cfg_create_paths(ctapRoot, id, srcid, has_multiple_src)
+%   Dirs = cfg_create_branch_paths(ctapRoot, id, srcid, has_multiple_src)
 %
 % Inputs:
 %   ctapRoot          string, Root directory of CTAP results

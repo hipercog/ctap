@@ -10,7 +10,7 @@ function [EEG, Cfg] = CTAP_clock_stop(EEG, Cfg)
 %   into Cfg.env.paths.featuresRoot/elapsed.
 %
 % Syntax:
-%   [Cfg] = CTAP_check_file_loadable(~, Cfg)
+%   [Cfg] = CTAP_clock_stop(~, Cfg)
 %
 % Inputs:
 %   Cfg         struct, CTAP configuration structure

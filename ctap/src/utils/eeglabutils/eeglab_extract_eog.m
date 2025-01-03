@@ -15,6 +15,7 @@ p.addRequired('EEG', @isstruct);
 p.addRequired('veogChanNames', @(x) iscellstr(x) || isstring(x) || ischar(x));
 p.addRequired('heogChanNames', @(x) iscellstr(x) || isstring(x) || ischar(x));
 p.addParameter('filter', false, @islogical);
+p.addParameter('invert_polarity', false, @islogical);
 
 p.parse(EEG, veogChanNames, heogChanNames, varargin{:});
 Arg = p.Results;
@@ -31,20 +32,24 @@ end
 Eog = struct();
 
 veog = sbf_get_signal(EEG, veogChanNames);
+veog = sbf_check_polarity(veog, EEG.srate, Arg.invert_polarity);
 Eog.veog = veog;
 if ~isnan(veog)
-    disp(['Using ''',catcellstr(veogChanNames),''' as veog signal...']);
+    fprintf('Using ''%s'' as vertical EOG signal...\n', catcellstr(veogChanNames));
 else
-    disp(['Channels {',catcellstr(veogChanNames,'sep',','),'} were not found. Cannot extract veog signal.'])
+    fprintf('Channels {%s} were not found. Cannot extract vertical EOG signal.\n'...
+        , catcellstr(veogChanNames,'sep',','))
 end
 
 heog = sbf_get_signal(EEG, heogChanNames);
 Eog.heog = heog;
 if ~isnan(heog)
-    disp(['Using ''',catcellstr(heogChanNames),''' as heog signal...']);
+    fprintf('Using ''%s'' as horizontal EOG signal...\n', catcellstr(heogChanNames));
 else
-    disp(['Channels {',catcellstr(heogChanNames,'sep',','),'} were not found. Cannot extract heog signal.'])
+    fprintf('Channels {%s} were not found. Cannot extract horizontal EOG signal.\n'...
+        , catcellstr(heogChanNames,'sep',','))
 end
+
 
 %% Filter to remove baseline wander
 if isfield(Eog, 'veog') && Arg.filter
@@ -84,6 +89,39 @@ end
             otherwise
                 error('eeglab_extract_eog:tooManyChannels',...
                     'There are too many channels specified. Check inputs.');
+        end
+    end
+
+
+    %% Estimate the polarity of the signal, and correct to be positive
+    function sig = sbf_check_polarity(sig, srate, inv_cmd)
+        
+        smth = smooth(sig, numel(sig) / srate, 'sgolay');%NEEDS curve-fitting TOOLBOX
+        polarityTendency = skewness(smth);
+        
+        [posPeaks, ~] = findpeaks(smth, srate);
+        [negPeaks, ~] = findpeaks(-smth, srate);
+        negPeaks = -negPeaks; % Restore the actual values
+        
+        madVal = median(abs(smth - median(smth)));%Threshold on robust deviation
+        xtrmPos = posPeaks(posPeaks > 3 * madVal);
+        xtrmNeg = negPeaks(negPeaks < -3 * madVal);
+
+        if inv_cmd
+            sig = -sig;
+        elseif polarityTendency > 0 && abs(median(xtrmPos)) > abs(median(xtrmNeg))
+            [hKS, pKS, KS] = kstest2(posPeaks, negPeaks, 'Tail', 'larger');
+            if hKS
+                % do nothing as v-EOG is already positive
+                % sig = sig;
+            end
+        elseif polarityTendency < 0 && abs(median(xtrmPos)) < abs(median(xtrmNeg))
+            [hKS, pKS, KS] = kstest2(negPeaks, posPeaks, 'Tail', 'larger');
+            if hKS
+                % flip the sign as v-EOG is negative
+                sig = -sig;
+            end
+        else
         end
     end
 

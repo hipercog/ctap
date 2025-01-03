@@ -1,4 +1,4 @@
-function [EEG, varargout] = ctapeeg_load_data(filename, varargin )
+function [EEG, varargout] = ctapeeg_load_data(filename, varargin)
 %CTAPEEG_LOAD_DATA load a eeg single file as an EEGLAB struct 
 %
 % SYNTAX
@@ -19,7 +19,7 @@ function [EEG, varargout] = ctapeeg_load_data(filename, varargin )
 %   {2}         : struct, file description, includes fields from <help dir> and:
 %                 - load, boolean, is file loadable
 %                 - ext, string, file extension
-%                 - others depending on file type
+%                 - others depending on file type, e.g. metadata and recording time
 %
 %
 % USAGE:    Call with 'filename' as a file to get an EEG struct;
@@ -62,78 +62,80 @@ function [EEG, varargout] = ctapeeg_load_data(filename, varargin )
 
 Arg = sbf_check_input(); % parse the varargin, set defaults
 
+% HERE CTAP'S SUPPORTED FILE TYPES ARE LISTED
+extns = ctapeeg_supported_types();
+
 % Check format and file existence
-file = file_loadable(filename, ctap_supported_eeg_types());
-if ~file.load
+eegf = file_loadable(filename, extns);
+if ~eegf.load
     error('ctapeeg_load_data:bad_file',...
         'File does not exist or cannot be loaded')
-elseif file.load == 2
+elseif eegf.load == 2
     warning('ctapeeg_load_data:bad_extension',...
         'File extension not recognised; might not be possible to load!')
 end
 if isfield(Arg, 'type') && ~isempty(Arg.type)
-    file.ext = Arg.type;
+    eegf.ext = Arg.type;
     Arg = rmfield(Arg, 'type');
 end
 
-file.ext = lower(strrep(file.ext, '.', ''));
+eegf.ext = lower(strrep(eegf.ext, '.', ''));
 EEG = eeg_emptyset();
 res = struct;
-res.file = file;
+res.file = eegf;
+res.meta = struct;
+res.time = struct;
 
 
 %% Get requested file
-switch file.ext
+switch eegf.ext
     case 'set'
-        EEG = pop_loadset('filename', file.name, 'filepath', file.path);
+        EEG = pop_loadset('filename', eegf.name, 'filepath', eegf.path);
             
     case {'bdf' 'gdf' 'edf'}
-        if Arg.biosig && ~isempty(which('pop_biosig')) 
-%             && any(cellfun(@(x) contains(x, [filesep 'biosig']), regexp(path,pathsep,'Split')))
-            EEG = pop_biosig(fullfile(file.path, file.name));
+        if Arg.biosig && ~isempty(which('pop_biosig'))
+            EEG = pop_biosig(fullfile(eegf.path, eegf.name));
         else
 %TODO - GDF AND EDF MIGHT NOT BE READABLE USING ctap_readbdf()
-            EEG = ctap_readbdf(fullfile(file.path, file.name));
+            EEG = ctap_readbdf(fullfile(eegf.path, eegf.name));
         end
             
     case 'vhdr'
-        EEG = pop_loadbv(file.path, file.name);
+        EEG = pop_loadbv(eegf.path, eegf.name);
             
     case 'eeg'
-        EEG = loadeeg(fullfile(file.path, file.name));
+        EEG = loadeeg(fullfile(eegf.path, eegf.name));
             
     case 'vpd'
-        vpd = ImportVPD(fullfile(file.path, file.name));
-        [EEG, file.date] = vpd2eeglab(vpd);
+        vpd = ImportVPD(fullfile(eegf.path, eegf.name));
+        [EEG, eegf.date] = vpd2eeglab(vpd);
             
     case {'neurone' 'xml'}
         if ~isfield(Arg, 'neurone_version') || strcmpi(Arg.neurone_version, 'old')
             % Loads whole datafile, all events from all tasks - BWRC utils!
-            neur1 = read_data_gen(file.path);
+            neur1 = read_data_gen(eegf.path);
             EEG = recording_neurone_to_eeglab(neur1); %old NeurOne-approved syntax
-    %         EEG = recording2eeglab(neur1); %even older syntax
             % return meta-data and timing for this recording 
-            res.meta = struct;
             res.meta.device = neur1.device;
             res.meta.properties = neur1.properties;
             res.meta.identifier = neur1.identifier;
-            res.time = {datetime(datestr(datenum(...
-                neur1.properties.start.time,'yyyymmddTHHMMSS')))};
+            res.time.fileStart = {datetime(neur1.properties.start.time...
+                , 'InputFormat', 'yyyymmddTHHMMSS')};
         
         else
             % TODO (BC): THIS OFFICIAL MEGAELECTRONICS readneurone() function calls
             % pop_chanedit() and results in a pop-up which prevents batching
-            EEG = readneurone(fullfile(file.path,'/'));
+            EEG = readneurone(fullfile(eegf.path,'/'));
         end
         
     case {'mat' 'txt'}
         tmp = [fieldnames(Arg) struct2cell(Arg)];
         df = {'matlab' 'ascii'; 'mat' 'txt'};
-        EEG = pop_importdata('data', fullfile(file.path, file.name)...
-            , 'dataformat', df(1, strcmp(df(2, :), file.ext)), tmp{:});
+        EEG = pop_importdata('data', fullfile(eegf.path, eegf.name)...
+            , 'dataformat', df(1, strcmp(df(2, :), eegf.ext)), tmp{:});
         
     case 'raw'
-        EEG = pop_readegi(fullfile(file.path, file.name), [], [], '');
+        EEG = pop_readegi(fullfile(eegf.path, eegf.name), [], [], '');
 
     case {'easy' 'nedf'}
         if isfield(Arg, 'accelerometer')
@@ -144,10 +146,15 @@ switch file.ext
         if isfield(Arg, 'locations')
             locs = Arg.locations;
         else
-            locs = 1;
+            locs = 0;
         end
-        loader = str2func(['pop_' file.ext]);
-        EEG = loader(fullfile(file.path, file.name), acc, locs);
+        if isfield(Arg, 'channels')
+            chans = Arg.channels;
+        else
+            chans = [];
+        end
+        loader = str2func(['pop_' eegf.ext]);
+        EEG = loader(fullfile(eegf.path, eegf.name), acc, locs, chans);
         
 end
 

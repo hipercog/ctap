@@ -17,12 +17,12 @@ function EEG = add_CTAP(EEG, Cfg, varargin)
 %   varargin    Keyword-value pairs
 %   Keyword     Type, description, values
 %   'meta'      struct, data about the EEG recording, e.g. device, id
-%   'time'      {1,3} cell, Three elements:
-%               1. file start data string for CTAP.time.fileStartDS
-%               2. data start data string for CTAP.time.dataStartDS,
-%               3. data start offset in samples for CTAP.time.dataStartOffsetSamp
+%   'time'      struct, three fields, all copied to CTAP.time:
+%               fileStart, file start data string
+%               dataStart, data start data string
+%               dataStartOffsetSamp, data start offset in samples
 %               These are needed to add timestamps into results. Use Matlab 
-%               format: 30 = ISO 8601: 'yyyymmddTHHMMSS' e.g. 20000301T154517
+%               format: 30 = ISO 8601: 'yyyymmddTHHMMSS' e.g. 20240101T123045
 %               Default = now
 %
 % Outputs:
@@ -54,7 +54,7 @@ p = inputParser;
 p.addRequired('EEG', @isstruct);
 p.addRequired('Cfg', @isstruct);
 
-p.addParameter('time', {}, @iscell);
+p.addParameter('time', struct, @isstruct);
 p.addParameter('meta', struct, @isstruct);
 
 p.parse(EEG, Cfg, varargin{:});
@@ -77,24 +77,75 @@ EEG.CTAP.files.eegFile = Cfg.measurement.physiodata;
 EEG.CTAP.files.channelLocationsFile = ctap_eeg_find_chlocs(Cfg);
 EEG.CTAP.reference = Cfg.eeg.reference;
 
-% .CTAP.time.fileStart and .CTAP.time.dataStart
-if isempty(Arg.time)
-    EEG.CTAP.time.fileStart = datestr(0,0);
-	EEG.CTAP.time.dataStart = datestr(0,0);
-    EEG.CTAP.time.dataStartOffsetSamp = NaN;
-elseif numel(Arg.time)==1
-    EEG.CTAP.time.fileStart = Arg.time{1};
-	EEG.CTAP.time.dataStart = datestr(0,0);
-    EEG.CTAP.time.dataStartOffsetSamp = NaN;
-else
-    EEG.CTAP.time.fileStart = Arg.time{1};
-	EEG.CTAP.time.dataStart = Arg.time{2};
-    EEG.CTAP.time.dataStartOffsetSamp = Arg.time{3};
+
+% Convert MC datetime to datetime
+if isfield(EEG.CTAP.measurement, 'datetime') 
+    if isstring(EEG.CTAP.measurement.datetime)
+        MC_datetime = datetime(EEG.CTAP.measurement.datetime, 'I', 'yyyyMMddHHmmss');
+    elseif isnumeric(EEG.CTAP.measurement.datetime)
+        if isscalar(EEG.CTAP.measurement.datetime)
+            MC_datetime = datetime(EEG.CTAP.measurement.datetime, 'C', 'yyyyMMddHHmmss');
+        else
+            MC_datetime = datetime(EEG.CTAP.measurement.datetime);
+        end
+    end
+end
+% Convert MC date to datetime
+if isfield(EEG.CTAP.measurement, 'date') 
+    if isstring(EEG.CTAP.measurement.date)
+        MC_date = datetime(EEG.CTAP.measurement.date);
+    elseif isnumeric(EEG.CTAP.measurement.date)
+        if isscalar(EEG.CTAP.measurement.date)
+            MC_date = datetime(EEG.CTAP.measurement.date, 'ConvertFrom', 'yyyyMMdd');
+        else
+            MC_date = datetime(EEG.CTAP.measurement.date);
+        end
+    end
+end
+% Convert MC time to duration
+if isfield(EEG.CTAP.measurement, 'time')
+    if isstring(EEG.CTAP.measurement.time)
+        MC_time = datetime(EEG.CTAP.measurement.time, 'I', 'HHmmss');
+    elseif isnumeric(EEG.CTAP.measurement.time)
+        if isscalar(EEG.CTAP.measurement.time)
+            MC_time = datetime(num2str(EEG.CTAP.measurement.time), 'I', 'HHmmss');
+        else
+            MC_time = datetime(EEG.CTAP.measurement.time);
+        end
+    end
+    MC_time = duration(MC_time.Hour, MC_time.Minute, MC_time.Second);
+end
+if exist("MC_date", "var") && exist("MC_time", "var") && ~exist("MC_datetime", "var")
+    MC_datetime = MC_date + MC_time;
 end
 
+% populate CTAP time field depending on info available: prioritise parameters,
+% then measurement config, then now
+if isfield(Arg.time, 'fileStart')
+    EEG.CTAP.time.fileStart = Arg.time.fileStart;
+elseif exist("MC_datetime", "var")
+    EEG.CTAP.time.fileStart = MC_datetime;
+else
+    EEG.CTAP.time.fileStart = datetime;
+end
+
+if isfield(Arg.time, 'dataStart')
+    EEG.CTAP.time.dataStart = Arg.time.dataStart;
+else
+    EEG.CTAP.time.dataStart = EEG.CTAP.time.fileStart;
+end
+
+if isfield(Arg.time, 'dataStartOffsetSamp')
+    EEG.CTAP.time.dataStartOffsetSamp = Arg.time.dataStartOffsetSamp;
+else
+    EEG.CTAP.time.dataStartOffsetSamp = NaN;
+end
+
+
 EEG.CTAP.history = create_CTAP_history_entry(...
-                ['CTAP struct created: ',datestr(now)],...
-                'add_CTAP');
+        sprintf('CTAP struct created: %s', datetime), 'add_CTAP');
 % This needs to be set up like this for the (end+1) appending to work
 EEG.CTAP.err = struct;
-EEG.CTAP.meta = Arg.meta;
+if ~isempty(fieldnames(Arg.meta))
+    EEG.CTAP.meta = Arg.meta;
+end

@@ -22,7 +22,7 @@ else
     % with a provided seed data segment extract from test data
     % set CTAP Cfg
     BRANCH_NAME = 'CTAP_hydra_prepare';
-    Arg.env.paths = cfg_create_paths(PARAM.path.projectRoot, BRANCH_NAME, {''}, 1);
+    Arg.env.paths = cfg_create_branch_paths(PARAM.path.projectRoot, BRANCH_NAME, {''}, 1);
     Arg.eeg.chanlocs = CH_FILE;
     Arg.eeg.reference = Cfg.eeg.reference;
     Arg.eeg.veogChannelNames = Cfg.eeg.veogChannelNames; %'C17' has highest blink amplitudes

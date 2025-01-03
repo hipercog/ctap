@@ -42,7 +42,7 @@ function [pathstr, fname, ext, file] = get_file_parts(filename)
 % Please see the file LICENSE for details.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-if isdir(filename)
+if isfolder(filename)
     filename = fullfile(filename, filesep);
 end
 [pathstr, fname, ext] = fileparts(filename);
