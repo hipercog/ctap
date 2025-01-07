@@ -58,7 +58,7 @@ if isfield(Cfg, 'MC') && isfield(Cfg.MC, 'blocks')
             varargin(i + 1) = {blocks.factors(:, j)}; %Embed matched factor values
         end
     end
-
+% FIXME - CHECK DO THESE ADDED EVENTS OFFSET THE BLINK EVENTS?
     % Make block events, Add to EEG
     vblk = [{'duration'} {num2cell(blocks.limits_sample(:,2))} varargin];
     event = eeglab_create_event(blocks.limits_sample(:,1), 'block', vblk{:});

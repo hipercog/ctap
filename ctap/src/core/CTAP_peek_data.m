@@ -320,12 +320,12 @@ if Arg.plotEEG
         
     % plot a number of "peek" windows and save as png(s)
     for i = 1:numel(starts)
-        if ~isempty(last_peek)
-            last_sig = fullfile(last_peek, sprintf('signal_%s.mat', labels{i}));
-            if isfile(last_sig)
-                last_sig = importdata(last_sig);
-            end
-        end
+        % if ~isempty(last_peek)
+        %     last_sig = fullfile(last_peek, sprintf('signal_%s.mat', labels{i}));
+        %     if isfile(last_sig)
+        %         last_sig = importdata(last_sig);
+        %     end
+        % end
 % FIXME - HOW TO PLOT LOADED DATA WITH NEW PEEK?
         % plot n save one peek window over 'idx' EEG channels, max 32 chans/png
         plotNsave_raw(EEG, savepath, sprintf('rawEEG_%s', labels{i})...
