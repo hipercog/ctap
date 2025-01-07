@@ -52,7 +52,7 @@ function [comp_match, method_data] = ctapeeg_recudetect_blink_ICs(EEG, varargin)
 %% Parse input arguments and set varargin defaults
 p = inputParser;
 p.addRequired('EEG', @isstruct);
-p.addParameter('veog', 'VEOG', @iscell);
+p.addParameter('veog', '', @iscell);
 p.addParameter('test_pc', 25, @isscalar);
 p.addParameter('epoch_len_secs', 0.3, @isscalar);
 

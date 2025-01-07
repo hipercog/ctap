@@ -181,10 +181,21 @@ end
 
 %% Define latencies to peek at
 peekmatch = ismember({EEG.event.type}, 'ctapeeks');
-if any(peekmatch)%peek events are present - use them
+
+% If peek events are present - use them
+if any(peekmatch)
     starts = int32([EEG.event(peekmatch).latency]);
-%     FIXME - HOW TO GET THE LOCATION OF THE LAST PEEK'S DATA OUTPUT?
-%     prior_pipe = Cfg.pipe.current.
+    % Get the location of the last peek's data output
+    [s, f] = get_last_call(Cfg, mfilename);
+    idx1 = strfind(savepath, 'CTAP_peek_data/set') + 15;
+    idx2 = strfind(savepath, EEG.CTAP.measurement.casename) - 2;
+    last_peek = strrep(savepath, savepath(idx1:idx2), sprintf('set%d_fun%d', s, f));
+    if ~isfolder(last_peek)
+        warning('%s::no_directory', '''%s'' should match last peek but not a folder'...
+            , mfilename...
+            , last_peek)
+        last_peek = '';
+    end
 else
     %create new peeks from existing user-defined events
     if isfield(Arg, 'peekevent')
@@ -309,6 +320,13 @@ if Arg.plotEEG
         
     % plot a number of "peek" windows and save as png(s)
     for i = 1:numel(starts)
+        if ~isempty(last_peek)
+            last_sig = fullfile(last_peek, sprintf('signal_%s.mat', labels{i}));
+            if isfile(last_sig)
+                last_sig = importdata(last_sig);
+            end
+        end
+% FIXME - HOW TO PLOT LOADED DATA WITH NEW PEEK?
         % plot n save one peek window over 'idx' EEG channels, max 32 chans/png
         plotNsave_raw(EEG, savepath, sprintf('rawEEG_%s', labels{i})...
                 , 'channels', {EEG.chanlocs(chidx).labels}...

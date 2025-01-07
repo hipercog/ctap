@@ -11,13 +11,13 @@ function Eog = eeglab_extract_eog(EEG, veogChanNames, heogChanNames, varargin)
 
 %% Parse input arguments and set varargin defaults
 p = inputParser;
-p.addRequired('EEG', @isstruct);
-p.addRequired('veogChanNames', @(x) iscellstr(x) || isstring(x) || ischar(x));
-p.addRequired('heogChanNames', @(x) iscellstr(x) || isstring(x) || ischar(x));
-p.addParameter('filter', false, @islogical);
-p.addParameter('invert_polarity', false, @islogical);
+p.addRequired('EEG', @isstruct)
+p.addRequired('veogChanNames', @(x) iscellstr(x) || isstring(x) || ischar(x))
+p.addRequired('heogChanNames', @(x) iscellstr(x) || isstring(x) || ischar(x))
+p.addParameter('filter', false, @islogical)
+p.addParameter('invert_polarity', false, @islogical)
 
-p.parse(EEG, veogChanNames, heogChanNames, varargin{:});
+p.parse(EEG, veogChanNames, heogChanNames, varargin{:})
 Arg = p.Results;
 
 if ~iscell(veogChanNames)

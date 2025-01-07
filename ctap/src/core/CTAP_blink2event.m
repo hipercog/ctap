@@ -14,11 +14,11 @@ function [EEG, Cfg] = CTAP_blink2event(EEG, Cfg)
 %   [EEG, Cfg] = CTAP_blink2event(EEG, Cfg);
 %
 % Inputs:
-%   EEG         struct, EEGLAB structure
-%   Cfg         struct, CTAP configuration structure
+%   EEG                 struct, EEGLAB structure
+%   Cfg                 struct, CTAP configuration structure
 %   Cfg.ctap.blink2event:
-%   invert      boolean, If true, inverts the EOG signal polarity,
-%               default = false
+%   invert_polarity     boolean, If true, inverts the EOG signal polarity,
+%                       default = false
 %
 % Outputs:
 %   EEG         struct, EEGLAB structure modified by this function
@@ -63,12 +63,8 @@ Eog = eeglab_extract_eog(EEG...
                        , Cfg.eeg.veogChannelNames...
                        , Cfg.eeg.heogChannelNames...
                        , 'invert_polarity', Arg.invert_polarity);
-                    
-% if Arg.invert_polarity
-%     EEG = eeglab_blink2event(EEG, -Eog.veog, rmfield(Arg, 'invert_polarity'));
-% else 
+
 EEG = eeglab_blink2event(EEG, Eog.veog, rmfield(Arg, 'invert_polarity'));
-% end
 
 
 %% ERROR/REPORT

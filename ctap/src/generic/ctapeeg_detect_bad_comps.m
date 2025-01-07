@@ -201,6 +201,13 @@ switch Arg.method
             , 'RowNames', cellstr(num2str(icacomps'))...
             , 'VariableNames', {'blinkSimilarityRads'});
 
+    case 'dtw_blink'
+        [bad_comp_match, ranks] = ctapeeg_dtw_detect_eog_ics(EEG...
+            , rmfield(Arg, 'method'));
+        result.scores = table(ranks ...
+            , 'RowNames', cellstr(num2str(icacomps'))...
+            , 'VariableNames', {'dtw_veog_ICs'});
+
 end
 
 
@@ -266,6 +273,7 @@ function sbf_check_input() % parse the varargin, set defaults
             Arg.freq_lims = [25 45];
             Arg.cmpSpcMethod = 'multitaper';
 
+            % FIXME - CHECK IF ARGS ARE PASSED THROUGH, E.G. INVERT_POLARITY
         case 'blink_template'
             Arg.thr = 0.5; %threshold value (def=radians)
 
@@ -273,6 +281,9 @@ function sbf_check_input() % parse the varargin, set defaults
             Arg.veog = {'VEOG'};
             Arg.test_pc = 25;
             Arg.epoch_len_secs = 0.3;
+
+        case 'dtw_blink'
+            Arg.veog = {'VEOG'};
 
         otherwise
             error('ctapeeg_detect_bad_comps:bad_method',...

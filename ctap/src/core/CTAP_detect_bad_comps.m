@@ -59,7 +59,7 @@ end
 switch Arg.method
     case 'given'
         if isfield(Arg, 'badICsFile') && strcmpi(Arg.badICsFile(end-2:end), 'csv')
-            gic = csvread(Arg.badICsFile);
+            gic = readtable(Arg.badICsFile);
         else
             error('CTAP_detect_bad_comps:insufficient_parameters'...
                 , 'You must pass a file of bad ICs to this method');
