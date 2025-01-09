@@ -103,8 +103,9 @@ if isfield(EEG.CTAP, 'detected')
         savefile = fullfile(get_savepath(Cfg, mfilename, 'qc'), savename);
         print(figH, '-dpng', savefile);
         close(figH);
-        
-        % Plot ERP of detected blinks
+
+    % Plot ERP of detected blinks - IFF any were found!
+    if any(EEG.CTAP.detected.blink.QCData.isBlink)
         eegep = pop_epoch(EEG, {'blink'}, [-0.3 0.3]);
         
         chixv = get_eeg_inds(EEG, Cfg.eeg.veogChannelNames);
@@ -119,5 +120,6 @@ if isfield(EEG.CTAP, 'detected')
         savefile = fullfile(get_savepath(Cfg, mfilename, 'qc'), savename);
         print(figH, '-dpng', savefile);
         close(figH);
+    end
     end
 end

@@ -15,6 +15,12 @@ function EEG = eeglab_blink2event(EEG, veog_signal, varargin)
 % Varargin:
 %   blinkDetectFun  function handle, name of a blink detection function
 %                   default : eeg_detect_blink()
+%                   Two outputs are expected:
+%                   1. blink latency array, numeric [1 n], time in samples of blink events
+%                   2. quality control, struct, with (at least) the fields:
+%                      - isBlink, logical [1 n], 0 if not and 1 if blink
+%                      - criterion name, char, metric used to separate out blinks
+%                      - criterion value, numeric [1 n], value of metric
 %
 % Outputs:
 %   EEG         struct, EEGLAB structure with added blink events
@@ -50,8 +56,9 @@ Arg = p.Results;
 % Detect blinks
 QCData = NaN; %#ok<NASGU>
 [blink_latency_arr, QCData] = Arg.blinkDetectFun(veog_signal, p.Unmatched);
+EEG.CTAP.detected.blink.QCData = QCData;
 
-if (~isempty(blink_latency_arr)) %some blinks found
+if (~isempty(blink_latency_arr)) %were blinks found?
     % Make events
     event = eeglab_create_event(blink_latency_arr, 'blink'); 
 
@@ -67,12 +74,8 @@ if (~isempty(blink_latency_arr)) %some blinks found
     hold off;
     %}
 else
-    error('eeglab_blink2event:noBlinksFound',...
-        'Found no blinks. Check input data.');
-end
-
-if exist('QCData', 'var')
-    EEG.CTAP.detected.blink.QCData = QCData;    
+    warning('eeglab_blink2event:noBlinksFound',...
+        'Found no blinks. Check input data.')
 end
 
 
