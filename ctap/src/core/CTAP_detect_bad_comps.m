@@ -64,8 +64,8 @@ switch Arg.method
             error('CTAP_detect_bad_comps:insufficient_parameters'...
                 , 'You must pass a file of bad ICs to this method');
         end
-        gic = gic(gic(:,1) == Cfg.measurement.subjectnr, 2:end);
-        result.comps = gic(gic ~= 0);
+        gic = table2array(gic(ismember(gic{:,1}, Cfg.measurement.casename), 2:end));
+        result.comps = gic(gic ~= 0 & ~isnan(gic));
         gic = false(size(EEG.icaact,1), 1);
         gic(result.comps) = true; 
         result.scores = table(gic...

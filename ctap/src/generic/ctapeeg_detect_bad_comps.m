@@ -25,8 +25,8 @@ function [EEG, varargout] = ctapeeg_detect_bad_comps(EEG, varargin)
 %   'match_logic' choice of logic to aggregate measures, either 'any' or 'all'
 %                 Default = 'all'
 %   'match_measures' choice of measures to use, default all from the list:
-%               medianGradient, spectralSlope, kurtosis, hurst, eogCorrelation
-%               Partial string matches (down to 1 letter) will also work
+%                   medianGradient, spectralSlope, kurtosis, hurst, eogCorrelation
+%                 Partial string matches (down to 1 letter) will also work
 % 
 %   FOR 'recufast' recursive FASTER method
 %   'bounds'      sigma thresholds to detect bad components with recufast method
@@ -138,14 +138,15 @@ switch Arg.method
         EOG = get_eeg_inds(EEG, 'EOG');
         icprp = component_properties(EEG, EOG, 1, icacomps);
         % Choose which properties to match on
-        if iscell(Arg.match_measures)
+        if iscell(Arg.match_measures) || ischar(Arg.match_measures)
             match_measures = startsWith(faster_vars, Arg.match_measures);
         end
+        %FIXME - HANDLE MISMATCHED ARGUMENT?
         if isscalar(Arg.bounds)
             Arg.bounds = [(abs(Arg.bounds) * -1) abs(Arg.bounds)];
         end
         % identify the bad components by z-score thresholding on each measure
-        rej_opt = struct('z', Arg.bounds, 'measures', match_measures);
+        rej_opt = struct('z', Arg.bounds, 'measure', match_measures);
         icbad = min_z(icprp, Arg.match_logic, rej_opt);
         bad_comp_match = icacomps(icbad');
         % build the output table
