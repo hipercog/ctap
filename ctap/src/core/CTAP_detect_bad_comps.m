@@ -143,7 +143,8 @@ function sbf_plot_bad_comps()
     EEGname = strrep(EEG.CTAP.measurement.casename, '_', '-');
 
     %plot scalp maps of bad components
-    comps = EEG.CTAP.badcomps.(Arg.method).comps;
+    comps = EEG.CTAP.badcomps.(Arg.method);
+    comps = comps(EEG.CTAP.badcomps.detect.src{2}).comps;
     chans = get_eeg_inds(EEG, 'EEG');
     saveid = sprintf('%s_Method-%s', EEG.CTAP.measurement.casename, Arg.method);
 
