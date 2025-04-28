@@ -48,6 +48,11 @@ end
 
 
 %% ASSIST
+chind = get_eeg_inds(EEG, Arg.channelTypes);
+if strcmpi(Arg.method, 'infomax')
+    Arg.method = 'runica';
+end
+
 if Arg.overwrite && ~isempty(EEG.icaweights)
     EEG.icaweights = [];
     EEG.icasphere = [];
@@ -55,43 +60,53 @@ if Arg.overwrite && ~isempty(EEG.icaweights)
     EEG.icachansind = [];
 end
 
+% Convert Arg struct to key-value pairs for pop_runica
+pass_args = rmfield(Arg, {'method', 'overwrite', 'channelTypes', 'plot'});
+argFields = fieldnames(pass_args);
+argValues = struct2cell(pass_args);
+pass_args = [argFields'; argValues'];
+pass_args = pass_args(:)';
+
 
 %% CORE
-    
-% call the CHOSEN method
-switch Arg.method
-    case 'fastica'
-        if ~exist('fastica', 'file')
-            error('CTAP_run_ica:bad_method',...
-                    'FastICA method not found on path, aborting')
-        end
-        EEG = pop_runica(EEG, 'icatype', 'fastica',...
-                        'chanind', Arg.channelTypes );
+% Pass additional arguments dynamically to pop_runica
+EEG = pop_runica(EEG, 'icatype', Arg.method, 'chanind', chind, pass_args{:});
+
+
+% % call the CHOSEN method
+% switch Arg.method
+%     case 'fastica'
+%         if ~exist('fastica', 'file')
+%             error('CTAP_run_ica:bad_method',...
+%                     'FastICA method not found on path, aborting')
+%         end
+%         EEG = pop_runica(EEG, 'icatype', 'fastica',...
+%                         'chanind', Arg.channelTypes );
                
         
-    case 'infomax'
-        EEG = pop_runica(EEG, 'chanind', Arg.channelTypes,...
-                        'extended', 1,...
-                        'interupt', 'on',...
-                        'stop', 1E-7);
+%     case 'infomax'
+%         EEG = pop_runica(EEG, 'chanind', Arg.channelTypes,...
+%                         'extended', 1,...
+%                         'interupt', 'on',...
+%                         'stop', 1E-7);
                     
-    case 'binary'
-        warning('Method not yet available.'); %#ok<WNTAG>
-%         [wts,sph]=binica( EEG.data(chIwant,:,:), 'extended', 1 );
-%         EEG = pop_editset(EEG, 'icasphere', sph);
-%         EEG = pop_editset(EEG, 'icaweights', wts);
+%     case 'binary'
+%         warning('Method not yet available.'); %#ok<WNTAG>
+% %         [wts,sph]=binica( EEG.data(chIwant,:,:), 'extended', 1 );
+% %         EEG = pop_editset(EEG, 'icasphere', sph);
+% %         EEG = pop_editset(EEG, 'icaweights', wts);
 
-    case 'jade'
-        EEG = pop_runica( EEG, 'icatype', 'jader',...
-            'chanind', Arg.channelTypes,...
-            'extended', 1,...
-            'interupt', 'on',...
-            'stop', 1E-7 );
+%     case 'jade'
+%         EEG = pop_runica( EEG, 'icatype', 'jader',...
+%             'chanind', Arg.channelTypes,...
+%             'extended', 1,...
+%             'interupt', 'on',...
+%             'stop', 1E-7 );
         
-    case 'otherwise'
-        error('CTAP_run_ica:bad_method',...
-                    'Method %s not recognised, aborting', Arg.method)
-end
+%     case 'otherwise'
+%         error('CTAP_run_ica:bad_method',...
+%                     'Method %s not recognised, aborting', Arg.method)
+% end
 
 
 %% ERROR/REPORT
@@ -108,12 +123,11 @@ if Arg.plot
     %% Plot scalp maps of all components for reference
     titleStr = sprintf('%s--independent components', EEG.setname);
     comps = 1:size(EEG.icawinv, 2);
-    chans = get_eeg_inds(EEG, 'EEG');
 
     figH = ctap_ic_topoplot(EEG, comps...
         , 'savepath', get_savepath(Cfg, mfilename, 'qc')...
         , 'savename', EEG.CTAP.measurement.casename...
         , 'topotitle', titleStr...
-        , 'topoplot', {'plotchans', chans}...
+        , 'topoplot', {'plotchans', chind}...
         , 'visible', 'off'); %#ok<NASGU>
 end

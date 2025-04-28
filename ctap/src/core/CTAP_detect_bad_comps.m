@@ -144,10 +144,13 @@ function sbf_plot_bad_comps()
 
     %plot scalp maps of bad components
     comps = EEG.CTAP.badcomps.(Arg.method);
-    comps = comps(EEG.CTAP.badcomps.detect.src{2}).comps;
+    idx = strcmp(EEG.CTAP.badcomps.detect.src(:,1), Arg.method);
+    comps = comps(EEG.CTAP.badcomps.detect.src{idx, 2}).comps;
     chans = get_eeg_inds(EEG, 'EEG');
     saveid = sprintf('%s_Method-%s', EEG.CTAP.measurement.casename, Arg.method);
 
+    % FIXME - PLOT MULTIPLE VISUALS PER EACH IC
+    % figh = ctap_ic_plotprop(EEG, ICidx, varargin)
     figh = ctap_ic_topoplot(EEG, comps...
         , 'savepath', savepath...
         , 'savename', saveid...
@@ -155,5 +158,4 @@ function sbf_plot_bad_comps()
         , 'topoplot', {'plotchans', chans}...
         , 'visible', 'off'); %#ok<NASGU>
 end
-
 end

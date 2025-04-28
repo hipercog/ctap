@@ -50,7 +50,11 @@ else
     srcid = srcid{:};
 end
 
-Dirs.ctapRoot = ctapRoot;
+if strcmp(ctapRoot(max(strfind(ctapRoot, filesep)) + 1:end), 'TAPPED')
+    Dirs.ctapRoot = ctapRoot;
+else
+    Dirs.ctapRoot = fullfile(ctapRoot, 'TAPPED');
+end
 
 
 %% Create paths

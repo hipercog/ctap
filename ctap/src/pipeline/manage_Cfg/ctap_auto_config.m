@@ -87,7 +87,10 @@ end
 %% Add canonical locations to Cfg
 if isfield(Cfg.env.paths, 'ctapRoot')
     
-    Cfg.env.paths.ctapRoot = fullfile(Cfg.env.paths.ctapRoot, 'TAPPED');
+    if ~strcmp(Cfg.env.paths.ctapRoot(...
+        max(strfind(Cfg.env.paths.ctapRoot, filesep)) + 1:end), 'TAPPED')
+        Cfg.env.paths.ctapRoot = fullfile(Cfg.env.paths.ctapRoot, 'TAPPED');
+    end
 
     % First step set input data is loaded from:
     if ~isfield(Cfg.env.paths, 'branchSource')
