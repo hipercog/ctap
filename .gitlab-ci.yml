@@ -1,0 +1,19 @@
+stages:
+  - sync
+
+github-sync:
+  stage: sync
+  image: alpine:latest
+  variables:
+    GIT_STRATEGY: clone
+  before_script:
+    - apk add --no-cache git openssh
+    - git config --global user.email "ci@example.com"
+    - git config --global user.name "GitLab CI"
+    - git remote add github https://${GITHUB_TOKEN}@github.com/username/repo.git
+  script:
+    - git checkout ${CI_COMMIT_BRANCH}
+    - git push github ${CI_COMMIT_BRANCH}
+  only:
+    - main  # Only run on the main branch
+    - master # Or master if that's your default branch
