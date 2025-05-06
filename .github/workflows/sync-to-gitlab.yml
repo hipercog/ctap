@@ -32,3 +32,9 @@ jobs:
           
           # Push to GitLab
           git push gitlab ${BRANCH_NAME}:${BRANCH_NAME} --force
+
+      - name: Push to GitLab with marker
+        run: |
+          # Add a marker to the commit message
+          git commit --allow-empty -m "[GitHub Sync] Latest commit was ${GITHUB_SHA}"
+          git push gitlab ${BRANCH_NAME}
