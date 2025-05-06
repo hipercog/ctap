@@ -49,7 +49,7 @@ mkdir(PARAM.path.sweepresDir);
 %% CTAP config
 CH_FILE = Cfg.HYDRA.chanloc;
 
-Arg.env.paths = cfg_create_paths(PARAM.path.projectRoot, BRANCH_NAME, {''}, 1);
+Arg.env.paths = cfg_create_branch_paths(PARAM.path.projectRoot, BRANCH_NAME, {''}, 1);
 Arg.eeg.chanlocs = CH_FILE;
 chanlocs = readlocs(CH_FILE);
 

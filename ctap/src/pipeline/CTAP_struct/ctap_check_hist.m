@@ -10,7 +10,7 @@ function [msg, fun, args] = ctap_check_hist(eeg, outdir)
 %   line and optionally written to a log file. 
 %
 % Syntax:
-%   check_ctap_hist(eeg, outdir)
+%   ctap_check_hist(eeg, outdir)
 %
 % Inputs:
 %   'eeg'       struct, EEG structure to check

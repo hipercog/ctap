@@ -3,14 +3,6 @@ function epoch_match = eeglab_select_epoch(EEG, selection, eventfield)
 % Epochselection is based on trigger events (see eeg_trigger_events.m) and
 % factor-like grouping variables present in EEG.event.
 %
-% Description:
-%   * Intended purpose
-%   * What it does, preferably in list form
-%   * Side effects (e.g. produces a plot)
-%
-% Algorithm:
-%   * How the function achieves its results?
-%
 % Syntax:
 %   [] = name();
 %

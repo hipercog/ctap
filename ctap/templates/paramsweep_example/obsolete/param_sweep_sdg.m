@@ -9,7 +9,7 @@
 projectRoot = '/home/jkor/work_local/projects/ctap/ctapres_hydra';
 
 ctapRoot = projectRoot;
-Cfg.env.paths = cfg_create_paths(ctapRoot, 'ctap_prepro', '');
+Cfg.env.paths = cfg_create_branch_paths(ctapRoot, 'ctap_prepro', '');
 
 % what to run:
 run_datagen = true; % todo: not working anymore

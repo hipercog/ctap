@@ -49,6 +49,9 @@ function file = file_loadable(filename, extns)
 
 
 %% Initialise
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% FIXME - RATIONALISE THIS: SUPPORT FINDING FILES W.OUT EXTS, ETC
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 try
     [pathstr, filename, ext, file] = get_file_parts(filename);
 catch ME
@@ -68,7 +71,7 @@ extns = strrep(extns, '.', '');
 if isempty(ext)
     if isempty(filename), filename = '*'; end
     for i = 1:numel(extns)
-        tst_ext = fullfile(pathstr, [filename extns{i}]);
+        tst_ext = fullfile(pathstr, [filename '.' extns{i}]);
         tmp = dir(tst_ext);
         if numel(tmp) > 0
             file = tmp(1);

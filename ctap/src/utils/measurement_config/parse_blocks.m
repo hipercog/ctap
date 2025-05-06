@@ -1,4 +1,4 @@
-function block_structure = parse_blocks(MC, casename)
+function block_structure = parse_blocks(EEG, MC, casename)
 % PARSE_BLOCKS - Parse block information given in the MC
 %
 % Description: 
@@ -38,9 +38,10 @@ function block_structure = parse_blocks(MC, casename)
 %                The number of factors (strings after stoptime) is unlimited.
 %
 % Syntax:
-%   MC = parse_blocks(MC, casename)
+%   MC = parse_blocks(EEG, MC, casename)
 %
 % Inputs:
+%   EEG         the EEG data struct defined by EEGLAB + CTAP
 %   MC          A struct containing the measurement configuration
 %   casename    A string giving a casename found in the MC
 %
@@ -87,8 +88,19 @@ end
 % =========================================================================
 % Get information regarding the physiologic recording
 % =========================================================================
-
-recording =  read_data_gen(measurement.physiodata, 'headerOnly', true);
+recording.properties.start.time     = EEG.CTAP.time.fileStart;
+recording.properties.start.unixTime = posixtime(EEG.CTAP.time.fileStart);
+recording.properties.subject        = EEG.CTAP.subject.subject;
+if isfield(EEG.CTAP.measurement, 'physiodevice')
+    recording.device.type       = EEG.CTAP.measurement.physiodevice;
+end
+recording.properties.samplingRate = EEG.srate;
+% ORIGINALLY data WAS LOADED from source file: LIMITED TO EDF / NEURONE
+% recording =  read_data_gen(measurement.physiodata, 'headerOnly', true);
+% MAYBEDO - OTHER FIELDS ORIGINALLY USED AND READ FROM PHYSIO FILE HEADER
+% recording.device.version    = device_tmp;
+% recording.device.markerType = '';
+% recording.identifier = 'FIOH_BWRC';
 
 % =========================================================================
 % Determine the zerotime, if possible
@@ -106,7 +118,7 @@ if numel(events) == 0
     warning('No zerotime event specified. Using 0 as the zerotime.')
     zerotime = 0;
 else
-    [zerotime, zerosample] = ...
+    [zerotime, ~] = ...
         event_to_time(events.markertype, events.timestamp, 0, recording);
 end
 
@@ -119,23 +131,22 @@ factorlabels    = setdiff(fieldnames(blocks), required_fields);
 nfactors        = numel(factorlabels);
 
 blocklimits_time    = zeros(nblocks, 2);
-blocklimits_samples = zeros(nblocks, 2);
+blocklimits_sample = zeros(nblocks, 2);
 factors             = cell(nblocks, nfactors);
 
 % =========================================================================
 % Parse the events
 % =========================================================================
-
 for i = 1:nblocks
     block_record = blocks(i);
     
     % Unpack the block data record
     starttype    = block_record.starttype;
     startmark    = block_record.starttime;
-    startmarkraw = block_record.starttime;
+    % startmarkraw = block_record.starttime;
     stoptype     = block_record.stoptype;
     stopmark     = block_record.stoptime;
-    stopmarkraw  = block_record.stoptime;
+    % stopmarkraw  = block_record.stoptime;
     
     % Factors
     for j = 1:nfactors
@@ -144,10 +155,10 @@ for i = 1:nblocks
     
     % Start and stop times of the blocks
     [start_time, start_sample] = ...
-    event_to_time(starttype, startmark, zerotime, recording);
+                        event_to_time(starttype, startmark, zerotime, recording);
 
     [stop_time, stop_sample] = ...
-    event_to_time(stoptype, stopmark, zerotime, recording);
+                        event_to_time(stoptype, stopmark, zerotime, recording);
 
     
     % Check that starttime/sampe is smaller than stoptime/sample

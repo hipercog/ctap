@@ -12,12 +12,14 @@ function [EEG, Cfg] = CTAP_select_data(EEG, Cfg)
 %   EEG         struct, EEGLAB structure
 %   Cfg         struct, CTAP configuration structure
 %   Cfg.ctap.select_data:
-%   .<method>   <method> is one of {'time','notime','point','nopoint',
-%               'trial','notrial','channel','nochannel'}, see pop_select()
-%               for details. Field contents specifies the things to
-%               (un)select. I.e. the mapping is
-%               pop_select(EEG, '<method>', <value>) <=> 
-%               Cfg.ctap.select_data.<method>=value
+%   .<method>   <method> is one of those below, see pop_select() for details:
+% 
+%       {'time','rmtime','point','rmpoint','trial','rmtrial','channel','rmchannel'}
+% 
+%               Field contains the things to (un)select, i.e. mapping is
+% 
+%       pop_select(EEG, '<method>', <value>) <=> Cfg.ctap.select_data.<method>=value
+% 
 %               default: there is no default
 %
 % Outputs:

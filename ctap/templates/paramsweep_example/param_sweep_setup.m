@@ -23,7 +23,7 @@ seed_fname = 'BCICIV_calib_ds1a.set';
 CH_FILE = 'chanlocs128_biosemi.elp';
 
 ctapRoot = PARAM.projectRoot;
-Cfg.env.paths = cfg_create_paths(ctapRoot, branch_name, '');
+Cfg.env.paths = cfg_create_branch_paths(ctapRoot, branch_name, '');
 Cfg.eeg.chanlocs = CH_FILE;
 chanlocs = readlocs(CH_FILE);
 

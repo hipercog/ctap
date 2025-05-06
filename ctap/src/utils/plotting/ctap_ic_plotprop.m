@@ -139,6 +139,8 @@ else
     stat_inset = [3 4];
 end
 
+% get IC activation
+icaact = eeg_getdatact(EEG, 'component', ICidx);
 
 
 %% plotting component topoplot
@@ -167,7 +169,10 @@ try
             freqs = [1 50];
         end
     end
-    [spectra, freq_outs] = spectopo(EEG.icaact(ICidx, :), EEG.pnts, EEG.srate...
+    if isempty(EEG.icaact)
+
+    end
+    [spectra, freq_outs] = spectopo(icaact, EEG.pnts, EEG.srate...
         , Arg.spectopo{:}...
         , 'mapnorm', EEG.icawinv(:, ICidx)...
         , 'plot', 'off');
@@ -193,8 +198,6 @@ if EEG.trials > 1
     else
       ei_smooth = 3;
     end
-    % get IC activation
-    icaact = eeg_getdatact(EEG, 'component', ICidx);
     offset = nan_mean(icaact(:));
     era    = nan_mean(squeeze(icaact)') - offset;
     mn = min(era);
@@ -230,8 +233,6 @@ else
         EI_frames = floor(size(EEG.data,2) / EI_LINES);
         EI_framestot = EI_frames * EI_LINES;
         eegtimes = linspace(0, EI_frames-1, length(EI_frames));
-        %get IC activation
-        icaact = eeg_getdatact(EEG, 'component', ICidx);
         offset = nan_mean(icaact(:));
         % get erpimage data
         [outdata, ~, ~, limits, ~, erp] = erpimage(...

@@ -14,11 +14,11 @@ function [EEG, Cfg] = CTAP_blink2event(EEG, Cfg)
 %   [EEG, Cfg] = CTAP_blink2event(EEG, Cfg);
 %
 % Inputs:
-%   EEG         struct, EEGLAB structure
-%   Cfg         struct, CTAP configuration structure
+%   EEG                 struct, EEGLAB structure
+%   Cfg                 struct, CTAP configuration structure
 %   Cfg.ctap.blink2event:
-%   invert      boolean, If true, inverts the EOG signal polarity,
-%               default = false
+%   invert_polarity     boolean, If true, inverts the EOG signal polarity,
+%                       default = false
 %
 % Outputs:
 %   EEG         struct, EEGLAB structure modified by this function
@@ -59,15 +59,13 @@ end
 
 
 %% CORE
-Eog = eeglab_extract_eog(EEG,...
-                        Cfg.eeg.veogChannelNames,...
-                        Cfg.eeg.heogChannelNames);
-                    
-if Arg.invert_polarity
-    EEG = eeglab_blink2event(EEG, -Eog.veog, rmfield(Arg, 'invert_polarity'));
-else 
-    EEG = eeglab_blink2event(EEG, Eog.veog, rmfield(Arg, 'invert_polarity'));
-end
+Eog = eeglab_extract_eog(EEG...
+                       , Cfg.eeg.veogChannelNames...
+                       , Cfg.eeg.heogChannelNames...
+                       , 'invert_polarity', Arg.invert_polarity);
+
+EEG = eeglab_blink2event(EEG, Eog.veog, rmfield(Arg, 'invert_polarity'));
+
 
 %% ERROR/REPORT
 Cfg.ctap.blink2event = Arg;
@@ -105,8 +103,9 @@ if isfield(EEG.CTAP, 'detected')
         savefile = fullfile(get_savepath(Cfg, mfilename, 'qc'), savename);
         print(figH, '-dpng', savefile);
         close(figH);
-        
-        % Plot ERP of detected blinks
+
+    % Plot ERP of detected blinks - IFF any were found!
+    if any(EEG.CTAP.detected.blink.QCData.isBlink)
         eegep = pop_epoch(EEG, {'blink'}, [-0.3 0.3]);
         
         chixv = get_eeg_inds(EEG, Cfg.eeg.veogChannelNames);
@@ -121,5 +120,6 @@ if isfield(EEG.CTAP, 'detected')
         savefile = fullfile(get_savepath(Cfg, mfilename, 'qc'), savename);
         print(figH, '-dpng', savefile);
         close(figH);
+    end
     end
 end

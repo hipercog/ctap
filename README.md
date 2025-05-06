@@ -22,18 +22,22 @@ _If you use CTAP for your research, __please use the following citations___:
 
 ### System requirements
 The following are required:
-* Matlab R2019b or later
+* Matlab R2019b or later 
+    * it is advised to use R2024b
 * EEGLAB v2019.1 or later
+    * it is advised to clone the development version from github https://github.com/sccn/eeglab
 
-The system is under development and tested in Matlab R2019b and EEGLAB v2019.1 for Debian/Ubuntu Linux, Mac, and Windows.
+The system is under development and tested in Matlab R2022b and EEGLAB v2024.0 for Debian/Ubuntu Linux, Mac, and Windows.
 
 ### Installation procedure
 
 #### 1. clone the repo
-Clone the GitHub repository to your machine using
+Clone the GitLab repository to your machine using
 
-    git clone https://github.com/bwrc/ctap.git <destination dir>
-    
+    git clone https://version.helsinki.fi/hipercog/Methods/ctap.git <destination dir>
+OR
+    git clone git@version.helsinki.fi:hipercog/Methods/ctap.gitt <destination dir>
+
 NOTE 1: you can clone wherever you like, but on Unix-based systems we recommend to clone in the home directory, to be compatible with the [CTAP code generation tool](https://hipercog.github.io/ctap/#/)
 
 NOTE 2: we have used git LFS to track/manage large data files (in \*.mat and  \*.set format). This implies that you need to set up LFS by

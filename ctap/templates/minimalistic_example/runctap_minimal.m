@@ -8,7 +8,7 @@ reporoot = reporoot(1:strfind(reporoot, fullfile(...
     'ctap', 'templates', 'minimalistic_example', 'runctap_minimal')) - 1);
 
 project_dir = fullfile(reporoot, 'example-project');
-if ~isdir(project_dir), mkdir(project_dir); end;
+if ~isfolder(project_dir), mkdir(project_dir); end
 
 [Cfg, ctap_args] = cfg_minimal(project_dir);
 

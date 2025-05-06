@@ -130,6 +130,11 @@ if any(args)
 else
     return;
 end
+pipe_peeks = cellfun(@find...
+           , cellfun(@(x)...
+             cellfun(@(y) strcmp(func2str(y), 'CTAP_peek_data'), x)...
+             , {Cfg.pipe.stepSets.funH}, 'Un', 0)...
+             , 'Un', 0);
 
 
 %% make and save stats to log file
@@ -176,8 +181,21 @@ end
 
 %% Define latencies to peek at
 peekmatch = ismember({EEG.event.type}, 'ctapeeks');
-if any(peekmatch)%peek events are present - use them
+
+% If peek events are present - use them
+if any(peekmatch)
     starts = int32([EEG.event(peekmatch).latency]);
+    % Get the location of the last peek's data output
+    [s, f] = get_last_call(Cfg, mfilename);
+    idx1 = strfind(savepath, 'CTAP_peek_data/set') + 15;
+    idx2 = strfind(savepath, EEG.CTAP.measurement.casename) - 2;
+    last_peek = strrep(savepath, savepath(idx1:idx2), sprintf('set%d_fun%d', s, f));
+    if ~isfolder(last_peek)
+        warning('%s::no_directory', '''%s'' should match last peek but not a folder'...
+            , mfilename...
+            , last_peek)
+        last_peek = '';
+    end
 else
     %create new peeks from existing user-defined events
     if isfield(Arg, 'peekevent')
@@ -207,8 +225,8 @@ else
 %TODO - CHECK IF select_evdata EXISTS IN THE FUTURE PIPE?
 %TODO - IF SO, CHECK WHAT ITS COVERAGE IS? THEN CONSTRAIN PEEKS WITHIN THAT
 %
-        %num peeks = as many as will fit with space at the end, < Arg.numpeeks
-        npk = min(Arg.numpeeks, round((EEG.xmax * EEG.trials - Arg.secs(2)) / dur));
+        %num peeks = as many as will fit with space at the end, <= Arg.numpeeks
+        npk = min(Arg.numpeeks, ceil((EEG.xmax * EEG.trials - Arg.secs(2)) / dur));
         % start latency of peeks is linear spread, randomly jittered
         starts = (linspace(1, EEG.xmax * EEG.trials - Arg.secs(2), npk) +...
                                    [rand(1, npk - 1) .* dur 0]) * EEG.srate;
@@ -240,6 +258,7 @@ writetable(peektab, fullfile(savepath, 'peek_times'), 'WriteRowNames', true)
 
 
 %% save EEG data from each peek
+% FIXME: DOES NOT FUNCTION FOR EPOCHED DATA!!
 if Arg.savePeekData
     % grab data for a number of "peek" windows and save matrices as mat files
     for i = 1:numel(starts)
@@ -252,6 +271,7 @@ end
 
 
 %% save ICA data from each peek
+% FIXME: DOES NOT FUNCTION FOR EPOCHED DATA!!
 if Arg.savePeekICA && ~isempty(EEG.icaweights)
     activations = icaact(EEG.data(EEG.icachansind, :),...
                          EEG.icaweights * EEG.icasphere, 0);
@@ -266,6 +286,7 @@ end
 
 
 %% calculate stats for each peek separately
+% FIXME: DOES NOT FUNCTION FOR EPOCHED DATA!!
 if Arg.peekStats
     % grab stats for a number of "peek" windows and save tables as mat files
     for i = 1:numel(starts)
@@ -292,13 +313,20 @@ if Arg.plotEEG
     if isfield(EEG.CTAP, 'badchans') &&...
        isfield(EEG.CTAP.badchans, 'detect') &&...
        EEG.CTAP.badchans.detect.prc > 0
-        markChannels = EEG.CTAP.badchans.detect.chans;
+        [markChannels, ~] = ctap_read_detections(EEG, 'badchans');
     else
         markChannels = {};
     end
         
     % plot a number of "peek" windows and save as png(s)
     for i = 1:numel(starts)
+        % if ~isempty(last_peek)
+        %     last_sig = fullfile(last_peek, sprintf('signal_%s.mat', labels{i}));
+        %     if isfile(last_sig)
+        %         last_sig = importdata(last_sig);
+        %     end
+        % end
+% FIXME - HOW TO PLOT LOADED DATA WITH NEW PEEK?
         % plot n save one peek window over 'idx' EEG channels, max 32 chans/png
         plotNsave_raw(EEG, savepath, sprintf('rawEEG_%s', labels{i})...
                 , 'channels', {EEG.chanlocs(chidx).labels}...

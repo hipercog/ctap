@@ -59,13 +59,13 @@ end
 switch Arg.method
     case 'given'
         if isfield(Arg, 'badICsFile') && strcmpi(Arg.badICsFile(end-2:end), 'csv')
-            gic = csvread(Arg.badICsFile);
+            gic = readtable(Arg.badICsFile);
         else
             error('CTAP_detect_bad_comps:insufficient_parameters'...
                 , 'You must pass a file of bad ICs to this method');
         end
-        gic = gic(gic(:,1) == Cfg.measurement.subjectnr, 2:end);
-        result.comps = gic(gic ~= 0);
+        gic = table2array(gic(ismember(gic{:,1}, Cfg.measurement.casename), 2:end));
+        result.comps = gic(gic ~= 0 & ~isnan(gic));
         gic = false(size(EEG.icaact,1), 1);
         gic(result.comps) = true; 
         result.scores = table(gic...
@@ -143,10 +143,14 @@ function sbf_plot_bad_comps()
     EEGname = strrep(EEG.CTAP.measurement.casename, '_', '-');
 
     %plot scalp maps of bad components
-    comps = EEG.CTAP.badcomps.(Arg.method).comps;
+    comps = EEG.CTAP.badcomps.(Arg.method);
+    idx = strcmp(EEG.CTAP.badcomps.detect.src(:,1), Arg.method);
+    comps = comps(EEG.CTAP.badcomps.detect.src{idx, 2}).comps;
     chans = get_eeg_inds(EEG, 'EEG');
     saveid = sprintf('%s_Method-%s', EEG.CTAP.measurement.casename, Arg.method);
 
+    % FIXME - PLOT MULTIPLE VISUALS PER EACH IC
+    % figh = ctap_ic_plotprop(EEG, ICidx, varargin)
     figh = ctap_ic_topoplot(EEG, comps...
         , 'savepath', savepath...
         , 'savename', saveid...
@@ -154,5 +158,4 @@ function sbf_plot_bad_comps()
         , 'topoplot', {'plotchans', chans}...
         , 'visible', 'off'); %#ok<NASGU>
 end
-
 end

@@ -5,7 +5,7 @@ function [EEG, Cfg] = CTAP_select_evdata(EEG, Cfg)
 %   Field Cfg.ctap.select_evdata.evtype has to be specified.
 %   Select subset of data points by reference to an event type. For all events
 %   'x' matching 'evtype', points from x.latency to x.latency + x.duration 
-%   are selected.
+%   are selected / unselected.
 %
 % Syntax:
 %   [EEG, Cfg] = CTAP_select_evdata(EEG, Cfg);
@@ -23,6 +23,7 @@ function [EEG, Cfg] = CTAP_select_evdata(EEG, Cfg)
 %               'fixed' - use a fixed duration given by Arg.duration = [min max]
 %   .duration   [1 2] numeric, Fixed millisec duration around selected events,
 %                default: min, max = minus/plus one second, i.e. -+1000
+%   .select     true/false, keep the data covered by designated events, or remove it
 %
 % Outputs:
 %   EEG         struct, EEGLAB structure modified by this function
@@ -32,7 +33,7 @@ function [EEG, Cfg] = CTAP_select_evdata(EEG, Cfg)
 %
 % See also: ctapeeg_select_data()  
 %
-% Copyright(c) 2015 FIOH:
+% Copyright(c) 2015:
 % Benjamin Cowley (Ben.Cowley@helsinki.fi), Jussi Korpela (jussi.korpela@ttl.fi)
 %
 % This code is released under the MIT License
@@ -46,6 +47,8 @@ Arg.evtype = 'all';     %Default event type to select: all
 Arg.covertype = 'total';  %Default coverage of points around events
 
 Arg.duration = [-1000 1000]; %Fixed duration around selected events
+
+Arg.select = true;
 
 % Override defaults with user parameters
 if isfield(Cfg.ctap, 'select_evdata')
@@ -114,7 +117,11 @@ switch Arg.covertype
 end
 
 % Select
-EEG = pop_select(EEG, 'point', event_lat);
+if Arg.select
+    EEG = pop_select(EEG, 'point', event_lat);
+else
+    EEG = pop_select(EEG, 'rmpoint', event_lat);
+end
 
 
 %% QUALITY CONTROL

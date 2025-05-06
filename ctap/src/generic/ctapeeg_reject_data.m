@@ -56,11 +56,11 @@ switch Arg.method
         
     case 'badepochs'
         tmp = find(~ismember(1:EEG.trials, Arg.badness));
-        if numel(tmp)==1
+        if isscalar(tmp)
             tmpep = EEG.epoch(tmp);
         end
-        EEG = pop_select( EEG, 'notrial', Arg.badness, 'sorttrial', 'off' );
-        if numel(tmp)==1
+        EEG = pop_select(EEG, 'notrial', Arg.badness, 'sorttrial', 'off' );
+        if isscalar(tmp)
             EEG.epoch = tmpep;
         end
         

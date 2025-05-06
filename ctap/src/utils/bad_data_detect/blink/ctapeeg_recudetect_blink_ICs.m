@@ -52,7 +52,7 @@ function [comp_match, method_data] = ctapeeg_recudetect_blink_ICs(EEG, varargin)
 %% Parse input arguments and set varargin defaults
 p = inputParser;
 p.addRequired('EEG', @isstruct);
-p.addParameter('veog', 'VEOG', @iscell);
+p.addParameter('veog', '', @iscell);
 p.addParameter('test_pc', 25, @isscalar);
 p.addParameter('epoch_len_secs', 0.3, @isscalar);
 
@@ -69,7 +69,7 @@ if ( ~ismember('blink', unique({EEG.event.type})) )
         ' blink template matching. Run CTAP_blink2event() to fix.'])
 end
 
-veogidx = ismember({EEG.chanlocs.labels}, Arg.veog);
+veogidx = contains({EEG.chanlocs.labels}, Arg.veog);
 if sum(veogidx) > 2
     error('ctapeeg_recudetect_blink_ICs:tooManyVeogChans',...
         '%d channels match the given VEOG info: can''t proceed.', sum(veogidx))

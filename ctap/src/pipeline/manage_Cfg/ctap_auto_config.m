@@ -41,6 +41,35 @@ function Cfg = ctap_auto_config(Cfg, fun_args)
 warning('OFF', 'BACKTRACE')
 
 
+%% Parse input arguments and set varargin defaults
+% p = inputParser;
+% % p.KeepUnmatched = true;
+% 
+% p.addRequired('id', @ischar)
+% p.addRequired('proj_root', @isfolder) %FIXME - make optional? Default=cd?
+% p.addRequired('step_sets', @isstruct)
+% p.addRequired('fun_args', @isstruct)
+% p.addRequired('heogChannelNames', @iscellstr)
+% p.addRequired('veogChannelNames', @iscellstr)
+% 
+% p.addParameter('data_root', fullfile(proj_root, 'raw'), @isfolder)
+% p.addParameter('ctap_root', fullfile(proj_root, 'processed'), @ischar)
+% % FIXME - if ~isfolder(ctap_root), mkdir(ctap_root); end
+% p.addParameter('chanlocs', '', @ischar)
+% p.addParameter('reference', 'average', @ischar)
+% 
+% % p.addParameter('example', [], @(x) iscell(x) || isvector(x) || isempty(x))
+% 
+% p.parse(id, proj_root, step_sets, fun_args, heogChannelNames. veogChannelNames...
+%     , varargin{:});
+% Arg = p.Results;
+% FIXME - VALIDATE MC PATHS GIVEN DATA_ROOT
+% % Fix spreadsheet-hardcoded paths to match locale
+% if any(strcmpi(meas_info.ext, {'.sqlite' '.xls' '.xlsx'}))
+%     MC = cfg_validate_MC_paths(MC, data_root);
+% end
+
+
 %% Add some CTAP-wide conventions
 % Event type strings 
 Cfg.event.badSegment = 'badSegment';
@@ -58,17 +87,22 @@ end
 %% Add canonical locations to Cfg
 if isfield(Cfg.env.paths, 'ctapRoot')
     
+    if ~strcmp(Cfg.env.paths.ctapRoot(...
+        max(strfind(Cfg.env.paths.ctapRoot, filesep)) + 1:end), 'TAPPED')
+        Cfg.env.paths.ctapRoot = fullfile(Cfg.env.paths.ctapRoot, 'TAPPED');
+    end
+
     % First step set input data is loaded from:
     if ~isfield(Cfg.env.paths, 'branchSource')
-        warning('ctap_auto_config:no_basepath', ['Please use cfg_create_paths()',...
-            ' to create canonical basepaths for your config.']);
+        warning('ctap_auto_config:no_basepath', ['Please use ',...
+            'cfg_create_branch_paths() to create canonical basepaths for your config.']);
         Cfg.env.paths.branchSource = ''; %the default
     end
     
     % All results are saved in:
     if ~isfield(Cfg.env.paths, 'analysisRoot')
-        warning('ctap_auto_config:no_basepath', ['Please use cfg_create_paths()',...
-            ' to create canonical basepaths for your config.']);
+        warning('ctap_auto_config:no_basepath', ['Please use ',...
+            'cfg_create_branch_paths() to create canonical basepaths for your config.']);
         Cfg.env.paths.analysisRoot = fullfile(Cfg.env.paths.ctapRoot, Cfg.id);
     end
     [~,~,~] = mkdir(Cfg.env.paths.analysisRoot);
