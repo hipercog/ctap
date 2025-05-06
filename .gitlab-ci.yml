@@ -13,6 +13,12 @@ github-sync:
     - git remote add github https://${GITHUB_TOKEN}@github.com/username/repo.git
   script:
     - git checkout ${CI_COMMIT_BRANCH}
+    - |
+      COMMIT_MSG=$(git log -1 --pretty=%B)
+      if [[ $COMMIT_MSG == *"[GitHub Sync]"* ]]; then
+        echo "Skipping sync to avoid loop"
+        exit 0
+      fi
     - git push github ${CI_COMMIT_BRANCH}
   only:
     - main  # Only run on the main branch
