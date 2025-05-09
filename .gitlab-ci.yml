@@ -11,7 +11,7 @@ github-sync:
     - apk add --no-cache git openssh
     - git config --global user.email "ci@example.com"
     - git config --global user.name "GitLab CI"
-    - git remote add github https://${GITHUB_TOKEN}@github.com/username/repo.git
+    - git remote add github https://${GITHUB_TOKEN}@github.com/hipercog/ctap.git
   script:
     - git checkout ${CI_COMMIT_BRANCH}
     - |
