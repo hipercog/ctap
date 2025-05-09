@@ -3,8 +3,7 @@ stages:
 
 github-sync:
   stage: sync
-  tags:
-    - linux
+  tags: [shared-runner]
   image: alpine:latest
   variables:
     GIT_STRATEGY: clone
