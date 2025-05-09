@@ -9,8 +9,8 @@ github-sync:
     GIT_STRATEGY: clone
   before_script:
     - apk add --no-cache git openssh
-    - git config --global user.email "ci@example.com"
-    - git config --global user.name "GitLab CI"
+    - git config --global user.email "ben.cowley@helsinki.fi"
+    - git config --global user.name "zenBen"
     - git remote add github https://${GITHUB_TOKEN}@github.com/hipercog/ctap.git
   script:
     - git checkout ${CI_COMMIT_BRANCH}
