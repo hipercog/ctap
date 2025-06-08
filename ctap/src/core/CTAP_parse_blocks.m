@@ -70,7 +70,7 @@ if isfield(Cfg, 'MC') && isfield(Cfg.MC, 'blocks')
     EEG.event = eeglab_merge_event_tables(EEG.event, event, 'ignoreDiscontinuousT');
 
     % Make block_end events, Add to EEG
-    vend = [{'duration'} {num2cell(zeros(rows(blocks.limits_time), 1))} varargin];
+    vend = [{'duration'} {num2cell(zeros(size(blocks.limits_time, 1), 1))} varargin];
     event = eeglab_create_event(blocks.limits_sample(:,2) - 1, 'block_end', vend{:});
     EEG.event = eeglab_merge_event_tables(EEG.event, event, 'ignoreDiscontinuousT');
 

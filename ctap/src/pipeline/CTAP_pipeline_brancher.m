@@ -6,7 +6,7 @@ function CTAP_pipeline_brancher(Cfg, pipeArr, varargin)
 %   https://docs.google.com/document/d/1nexEgDg0JzumWbl3-KJRUnq2_vf6Iiiei_wAd6zM9vo/
 %
 % Syntax:
-%   CTAP_pipeline_brancher(Cfg, Filt, pipeArr, first, last, dbg, ovw);
+%   CTAP_pipeline_brancher(Cfg, Filt, pipeArr, first, last, debug, overwrite);
 %
 % Inputs:
 %   'Cfg'       struct, pipe configuration structure, see specifications above
@@ -14,8 +14,8 @@ function CTAP_pipeline_brancher(Cfg, pipeArr, varargin)
 % 
 % Varargin:
 %   'runPipes'  [1 n] numeric, indices of pipes to process, default = 1:end
-%   'dbg'       boolean, see CTAP_pipeline_looper, default = false
-%   'ovw'       boolean, see CTAP_pipeline_looper, default = false
+%   'debug'           boolean, see CTAP_pipeline_looper, default = false
+%   'overwrite'       boolean, see CTAP_pipeline_looper, default = false
 %
 % Outputs:
 %
@@ -42,12 +42,12 @@ p.addRequired('Cfg', @isstruct)
 p.addRequired('pipeArr', @iscell)
 
 p.addParameter('runPipes', 1:numel(pipeArr), @isnumeric)
-p.addParameter('dbg', false, @islogical)
-p.addParameter('ovw', false, @islogical)
+p.addParameter('debug', false, @islogical)
+p.addParameter('overwrite', false, @islogical)
 
 p.parse(Cfg, pipeArr, varargin{:});
 Arg = p.Results;
-if ~Arg.dbg
+if ~Arg.debug
     dbclear if error
 else
     dbstop if error
@@ -85,7 +85,7 @@ for i = Arg.runPipes
     Cfg.pipe.totalSets = sbf_get_total_sets(i_Cfg);
     i_Cfg.HYDRA = Cfg.HYDRA;
     myReport(sprintf('Begin analysis run at %s with pipe:%s ''%s'''...
-        , datestr(now), newline, i_Cfg.id));
+        , datetime, newline, i_Cfg.id));
 
     for k = 1:length(i_Cfg.srcid)
         looplogfile = 'looplog.txt';
@@ -103,13 +103,13 @@ for i = Arg.runPipes
         k_Cfg.MC = Cfg.MC;
 
         % Run the pipe
-        CTAP_branchedpipe_looper(k_Cfg, 'debug', Arg.dbg, 'overwrite', Arg.ovw)
+        CTAP_branchedpipe_looper(k_Cfg, 'debug', Arg.debug, 'overwrite', Arg.overwrite)
 
 % TODO: CALL THIS USING CTAP_postproc_brancher() INSTEAD.
         if isfield(Cfg, 'export')
             export_features_CTAP([k_Cfg.id '_db']...
                 , {'bandpowers', 'PSDindices'}, Cfg.MC, k_Cfg...
-                , 'debug', Arg.dbg, 'overwrite', k_Cfg.export.ovw...
+                , 'debug', Arg.debug, 'overwrite', k_Cfg.export.ovw...
                 , 'srcFilt', k_Cfg.export.featureSavePoints);
         end
 
@@ -458,8 +458,7 @@ end %over measurements
 
 
 %% END/REPORT
-myReport(sprintf('\nAnalysis run ended at %s.\n', datestr(now, 30)),...
-    Cfg.env.logFile);
+myReport(sprintf('\nAnalysis run ended at %s.\n', datetime), Cfg.env.logFile);
 if any(MCbad)
     myReport({'Analysis failed for: ' MCSub.measurement(MCbad).casename},...
         Cfg.env.logFile, newline);
@@ -496,7 +495,7 @@ end
 function sbf_report_error(ME)
     % Error handling
     logfile = fullfile(Cfg.env.paths.crashLogRoot,...
-                sprintf('crashlog_%s.txt', datestr(now(),30)) );
+            sprintf('crashlog_%s.txt', string(datetime, 'yyyyMMdd''T''HHmmss')) );
 
     myReport(sprintf([...
         'WARN\n~~~~/#~~~~/#~~~~/#~~~~/#~~~~/#~~~~'...

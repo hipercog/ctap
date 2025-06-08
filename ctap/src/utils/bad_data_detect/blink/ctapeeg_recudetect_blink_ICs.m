@@ -64,9 +64,13 @@ els = Arg.epoch_len_secs;
 %% measure IC similarity to blink template
 %Are blinks there? Fail if missing
 if ( ~ismember('blink', unique({EEG.event.type})) )
-    error('ctapeeg_recudetect_blink_ICs:noBlinkEvents',...
+    warning('ctapeeg_recudetect_blink_ICs:noBlinkEvents',...
         ['No events of type ''blink'' found. Cannot proceed with'...
         ' blink template matching. Run CTAP_blink2event() to fix.'])
+    comp_match = false(length(EEG.icachansind), 1);
+    method_data.thArr = NaN(length(EEG.icachansind), 1);
+    method_data.blinkERP = [];
+    return
 end
 
 veogidx = contains({EEG.chanlocs.labels}, Arg.veog);

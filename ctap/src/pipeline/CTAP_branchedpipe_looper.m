@@ -6,7 +6,7 @@ function CTAP_branchedpipe_looper(Cfg, varargin)
 %   https://docs.google.com/document/d/1nexEgDg0JzumWbl3-KJRUnq2_vf6Iiiei_wAd6zM9vo/
 %
 % Syntax:
-%   CTAP_pipeline_looper(Cfg, varargin);
+%   CTAP_branchedpipe_looper(Cfg, varargin);
 %
 % Inputs:
 %   'Cfg'       struct, pipe configuration structure, see specifications above
