@@ -71,7 +71,7 @@ for i = 1:Arg.runPipes(1) - 1
 end
 
 
-%% Run the pipes
+%% Run the i-requested pipes
 for i = Arg.runPipes
     % Set Cfg
     [i_Cfg, i_ctap_args] = pipeArr{i}(Cfg);
@@ -87,14 +87,15 @@ for i = Arg.runPipes
     myReport(sprintf('Begin analysis run at %s with pipe:%s ''%s'''...
         , datetime, newline, i_Cfg.id));
 
-    for k = 1:length(i_Cfg.srcid)
+    % Run the k-requested sources
+    for k = i_Cfg.pipe_src{i,2}
         looplogfile = 'looplog.txt';
         looplogFH = fopen(looplogfile, 'a');
         fprintf(looplogFH, 'I: %d, K: %d\n', i, k);
         fclose(looplogFH);
         
         k_Cfg = i_Cfg;
-        if isnan(k_Cfg.srcid{k}), continue, end %skip empty sources
+        if any(isnan(k_Cfg.srcid(k))) || isempty(k_Cfg.srcid{k}), continue, end %skip null src
 
         k_Cfg.env.paths = cfg_create_branch_paths(Cfg.env.paths.ctapRoot, k_Cfg.id...
                                                             , k_Cfg.srcid, k);

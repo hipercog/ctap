@@ -61,7 +61,7 @@ end
 if isempty(srcid)
     % First pipe, raw data file from MC as source
     Dirs.branchSource = ''; 
-    Dirs.analysisRoot = fullfile(Dirs.ctapRoot, id, 'this');
+    Dirs.analysisRoot = fullfile(Dirs.ctapRoot, id, 'tppd');
     
 else
     % Subsequent pipe, previous pipes as source
@@ -70,11 +70,11 @@ else
     srcStep = parts{end};
     parts = parts(1:(end-1));
 
-    Dirs.branchSource = fullfile(Dirs.ctapRoot, parts{:}, 'this', srcStep);
+    Dirs.branchSource = fullfile(Dirs.ctapRoot, parts{:}, 'tppd', srcStep);
     if has_multiple_src
-        Dirs.analysisRoot = fullfile(Dirs.ctapRoot, parts{:}, id, 'this'...
+        Dirs.analysisRoot = fullfile(Dirs.ctapRoot, parts{:}, id, 'tppd'...
             , ['src-' srcStep]);
     else
-        Dirs.analysisRoot = fullfile(Dirs.ctapRoot, parts{:}, id, 'this');
+        Dirs.analysisRoot = fullfile(Dirs.ctapRoot, parts{:}, id, 'tppd');
     end
 end
