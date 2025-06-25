@@ -95,7 +95,9 @@ for i = Arg.runPipes
         fclose(looplogFH);
         
         k_Cfg = i_Cfg;
-        if any(isnan(k_Cfg.srcid{k})) || isempty(k_Cfg.srcid{k}), continue, end %skip null src
+        if ~isnan(k)
+            if (any(isnan(k_Cfg.srcid{k})) || isempty(k_Cfg.srcid{k})), continue, end %skip null src
+        end
 
         k_Cfg.env.paths = cfg_create_branch_paths(Cfg.env.paths.ctapRoot, k_Cfg.id...
                                                             , k_Cfg.srcid, k);
