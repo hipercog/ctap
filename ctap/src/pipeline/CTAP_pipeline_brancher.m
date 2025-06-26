@@ -95,8 +95,8 @@ for i = Arg.runPipes
         fclose(looplogFH);
         
         k_Cfg = i_Cfg;
-        if ~isnan(k)
-            if (any(isnan(k_Cfg.srcid{k})) || isempty(k_Cfg.srcid{k})), continue, end %skip null src
+        if ~isnan(k) %Don't test pipes with NaN src ix, but otw skip null src
+            if any(isnan(k_Cfg.srcid{k})) || isempty(k_Cfg.srcid{k}), continue, end
         end
 
         k_Cfg.env.paths = cfg_create_branch_paths(Cfg.env.paths.ctapRoot, k_Cfg.id...
