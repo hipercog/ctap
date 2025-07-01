@@ -40,18 +40,16 @@ nbins = max(50, min(500,round(pnts/100)));
 
 
 %% Basic properties
-cte = mean(data);
-SD = std(data);
+cte = mean(data, 'omitnan');
+SD = std(data, 'omitnan');
 
 
 %% Basic properties without the highest and lowest 'percent'/2 % of data
 zlo = quantile(data, (Arg.tailPrc / 2));   % low  quantile
 zhi  = quantile(data, 1 - Arg.tailPrc / 2); % high quantile
-tndx = find((data >= zlo & data <= zhi & ~isnan(data)));
 
-tM = mean(data(tndx)); %#ok<NASGU> % mean with excluded Arg.tailPrc/2*100
-                                   % of highest and lowest values
-tSD = std(data(tndx)); % trimmed SD
+tM = mean(data(data >= zlo & data <= zhi), 'omitnan'); %#ok<NASGU> % trimmed mean 
+tSD = std(data(data >= zlo & data <= zhi), 'omitnan'); % trimmed SD
 
 
 %% Histogram data
