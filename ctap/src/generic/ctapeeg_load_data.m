@@ -158,6 +158,11 @@ switch eegf.ext
         
 end
 
+if isfile(EEG.filepath) && isempty(EEG.filename)
+    [EEG.filepath, nimi, ext] = fileparts(EEG.filepath);
+    EEG.filename = [nimi ext];
+end
+
 varargout{1} = Arg;
 varargout{2} = res;
 

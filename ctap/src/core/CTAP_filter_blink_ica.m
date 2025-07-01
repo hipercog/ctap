@@ -36,6 +36,7 @@ function [EEG, Cfg] = CTAP_filter_blink_ica(EEG, Cfg)
 Arg.cutoff = 10; % high pass filter cutoff frequency in Hz
 Arg.transBandWidth = 1; % transition band width in Hz
 Arg.filt_type = 'fir';
+Arg.window = 'hamming';
 
 % Override defaults with user parameters
 if isfield(Cfg.ctap, 'filter_blink_ica')
@@ -67,15 +68,14 @@ end
 %% CORE
 % Make dummy dataset to be able to use firfilt plugin directly
 icaact = eeg_getica(EEG);
-TMP = create_eeg(icaact(cmpidx,:),...
-                'fs', EEG.srate);
-            
+TMP = create_eeg(icaact(cmpidx,:), 'fs', EEG.srate);
+
 % Filter
 switch Arg.filt_type
     case 'fir'
-        m = pop_firwsord('hamming', TMP.srate, Arg.transBandWidth);
+        m = pop_firwsord(Arg.window, TMP.srate, Arg.transBandWidth);
         b = firws(m...
-            , Arg.cutoff / (TMP.srate / 2), 'high', windows('hamming', m + 1));
+            , Arg.cutoff / (TMP.srate / 2), 'high', windows(Arg.window, m + 1));
         TMPf = firfilt(TMP, b);
     otherwise
         error('CTAP_filter_blink_ica:badfilter', 'Filter type %s not defined'...
@@ -137,11 +137,12 @@ if Cfg.grfx.on
 end
 
 %% Plot blink ERP
-if ~isfield(Cfg.eeg, 'veogChannelNames')
-    
+if ~isfield(Cfg.eeg,'veogChannelNames')
     warning('CTAP_filter_blink_ICA:cfgFieldMissing',...
     'Field Cfg.eeg.veogChannelNames is needed to plot blink ERPs.');
-
+elseif ~ismember('blink',unique({EEG.event.type}))
+    warning('CTAP_filter_blink_ICA:no_blinks',...
+    'Blinks were not detected to plot blink ERPs.');
 else
     figh = ctap_eeg_blink_ERP(EEG0, EEG, Cfg.eeg.veogChannelNames,...
                     'dataSetLabels', {'Before correction', 'After correction'});

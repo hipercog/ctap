@@ -115,6 +115,7 @@ if Cfg.grfx.on
     
     % firfilt plugin default plots
     fg = figure('Visible','off');
+    set(fg, 'Tag', 'plotfiltresp');
     plotfresp(b, [], [], EEG.srate);
     qcfile = fullfile(get_savepath(Cfg, mfilename, 'qc'),...
           sprintf('filter_properties_%s.png', EEG.CTAP.measurement.casename));
