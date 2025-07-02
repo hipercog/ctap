@@ -34,7 +34,7 @@ Eog = struct();
 veog = sbf_get_signal(EEG, veogChanNames);
 veog = sbf_check_polarity(veog, EEG.srate, Arg.invert_polarity);
 Eog.veog = veog;
-if ~isnan(veog)
+if ~isempty(veog)
     fprintf('Using ''%s'' as vertical EOG signal...\n', catcellstr(veogChanNames));
 else
     fprintf('Channels {%s} were not found. Cannot extract vertical EOG signal.\n'...
@@ -43,7 +43,7 @@ end
 
 heog = sbf_get_signal(EEG, heogChanNames);
 Eog.heog = heog;
-if ~isnan(heog)
+if ~isempty(heog)
     fprintf('Using ''%s'' as horizontal EOG signal...\n', catcellstr(heogChanNames));
 else
     fprintf('Channels {%s} were not found. Cannot extract horizontal EOG signal.\n'...
@@ -77,7 +77,7 @@ end
         % Extract EOG
         switch length(chIndArr)
             case 0
-                sig = NaN;
+                sig = [];
             case 1
                 sig = EEG.data(chIndArr,:);
             case 2
@@ -110,13 +110,13 @@ end
         if inv_cmd
             sig = -sig;
         elseif polarityTendency > 0 && abs(median(xtrmPos)) > abs(median(xtrmNeg))
-            [hKS, pKS, KS] = kstest2(posPeaks, negPeaks, 'Tail', 'larger');
+            [hKS, ~, ~] = kstest2(posPeaks, negPeaks, 'Tail', 'larger');
             if hKS
                 % do nothing as v-EOG is already positive
                 % sig = sig;
             end
         elseif polarityTendency < 0 && abs(median(xtrmPos)) < abs(median(xtrmNeg))
-            [hKS, pKS, KS] = kstest2(negPeaks, posPeaks, 'Tail', 'larger');
+            [hKS, ~, ~] = kstest2(negPeaks, posPeaks, 'Tail', 'larger');
             if hKS
                 % flip the sign as v-EOG is negative
                 sig = -sig;
