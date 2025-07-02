@@ -65,6 +65,7 @@ p.parse(veog, varargin{:});
 Arg = p.Results;
 
 veog = double(veog); %often single
+veog = veog(~isnan(veog));
 duration = length(veog) / fs;
 
 
