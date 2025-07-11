@@ -256,7 +256,8 @@ end %sbf_plot_channel_rejections()
 % Visualize segment rejections
 function sbf_plot_bad_segments(EEG0, savepath)
     
-    evMatch = ismember({EEG0.event.type}, EEG0.CTAP.badsegev.quantileTh.evidstr);
+    evMatch = ismember({EEG0.event.type}...
+        , EEG0.CTAP.badsegev.(EEG.CTAP.badsegev.detect.src{1}).evidstr);
     ev = EEG0.event(evMatch);
     inds = get_eeg_inds(EEG0, 'EEG');
     %save a bunch of pngs to a unique subdirectory.

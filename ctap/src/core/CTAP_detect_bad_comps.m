@@ -57,6 +57,7 @@ end
 
 %% CORE
 switch Arg.method
+
     case 'given'
         if isfield(Arg, 'badICsFile') && strcmpi(Arg.badICsFile(end-2:end), 'csv')
             gic = readtable(Arg.badICsFile);
@@ -73,6 +74,7 @@ switch Arg.method
             , 'VariableNames', {'given_bad_IC'});
         result.method_data = '';
         params = Arg;
+        
     otherwise
         [EEG, params, result] = ctapeeg_detect_bad_comps(EEG, Arg);
 

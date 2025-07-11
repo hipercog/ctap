@@ -100,10 +100,69 @@ Arg.channels = setdiff(Arg.channels, Arg.exclude_channels);
 
 %detect bad segments
 switch Arg.method
+
+    case 'given'
+        if isfield(Arg, 'badSegsFile') && strcmpi(Arg.badSegsFile(end-2:end), 'csv')
+            tbl = readtable(Arg.badSegsFile, "Delimiter", ' ');
+        else
+            error('CTAP_detect_bad_segments:insufficient_parameters'...
+                , 'You must pass a file of bad segments to use this method');
+        end
+        gsg = table2array(tbl(ismember(tbl{:,1}, Cfg.measurement.casename), 2:end));
+        if mod(numel(gsg), 2) ~= 0
+            error('CTAP_detect_bad_segments:segments_misspecified'...
+                , 'Bad segments file must have even number of start/stop times');
+        end
+        switch tbl.Properties.VariableNames{2}
+            case 'sec'
+                unit_mult = 1000;
+
+            case {'ms' 'milli'}
+                unit_mult = 1;
+
+            case 'Var2'
+                unit_mult = 1000 ^ single(any(mod(gsg, 1) ~= 0));%detects decimals
+        end
+        gsg = gsg .* unit_mult;
+        rej_match = false(1, EEG.pnts);
+        rej_inds = zeros(numel(gsg) / 2, 2);
+        for i = 1:2:numel(gsg)
+            if any(isnan(gsg(i:i+1)))
+                continue
+            end
+            rej_inds(ceil(i / 2), 1) = find(EEG.times >= gsg(i), 1);
+            rej_inds(ceil(i / 2), 2) = find(EEG.times < gsg(i+1), 1, 'last');
+            rej_match(EEG.times > gsg(i) & EEG.times < gsg(i+1)) = true;
+
+        end
+        numbad = sum(rej_match);
+
+        if numbad > 0
+            rej_inds(all(rej_inds == 0, 2), :) = [];
+            durat = rej_inds(:,2) - rej_inds(:,1) + 1;
+            bs_count = numel(durat);
+            bs_event = eeglab_create_event(rej_inds(:,1), Arg.badSegmentIDStr,...
+                                            'duration', num2cell(durat));
+            if ~isempty(EEG.event)
+                EEG.event = eeglab_merge_event_tables(EEG.event, bs_event, 'ignore');
+            else
+                EEG.event = eeglab_merge_event_tables(bs_event, 'ignore');
+            end
+            rej_table = table(gsg(1:2:end)', gsg(2:2:end)', durat.*1000/EEG.srate...
+                , rej_inds(:,1), rej_inds(:,2), durat...
+                , 'RowNames', cellstr(num2str((1:numel(durat))'))...
+                , 'VariableNames', {'ms_beg' 'ms_end' 'ms_dur' 'lat_beg' 'lat_end' 'lat_dur'});
+        else
+            bs_count = numbad;
+            rej_table = table;
+            fprintf('No artefactual segments given for %s.', Cfg.measurement.casename)
+        end
+
     case 'quantileTh'
         
         % mappings (from CTAP_*() input to method input, avoid these)
-        Arg.rejectionChannels = Arg.channels; %todo: Change CTAP_*() function interface regarding channels?
+        Arg.rejectionChannels = Arg.channels; 
+        %todo FIXME: Change CTAP_*() function interface regarding channels?
         Arg.eventIDStr = Arg.badSegmentIDStr;
         
         varg_in = struct2varargin(Arg);
@@ -115,18 +174,22 @@ switch Arg.method
         EEG.CTAP.badsegev.quantileTh.method_data = Rej; %not used by CTAP
             %Note: contains data only for channels listed in Arg.channels i.e.
             %      typically e.g. EOG and REF channels are missing.
-        rtb = table(Rej.qntTh(:,1), Rej.qntTh(:,2),...
+        rej_table = table(Rej.qntTh(:,1), Rej.qntTh(:,2),...
                     'VariableNames', {'ampth_low','ampth_up'},...
                     'RowNames', Arg.channels);
-        EEG.CTAP.badsegev.quantileTh.scores = rtb; 
-        EEG.CTAP.badsegev.quantileTh.evidstr = Arg.badSegmentIDStr;
+        bs_count = Rej.allChannelsCount;
+        
     otherwise
         error('CTAP_detect_bad_segments:badArgument', 'Unrecognized argument.')
 end
+% TODO FIXME : combine shared code from GIVEN method and QUANTILE method
+% (inc. in eeglab_detect_extreme_amplitudes.m)
 
 
 %% Set .detect field
 % save the index of the badness for the CTAP_reject_data() function
+EEG.CTAP.badsegev.(Arg.method).scores = rej_table;
+EEG.CTAP.badsegev.(Arg.method).evidstr = Arg.badSegmentIDStr;
 prcbad = 100 * numbad / EEG.pnts;
 EEG.CTAP.badsegev.detect.prc = prcbad;
 EEG.CTAP.badsegev.detect.src = {Arg.method, 1};
@@ -136,10 +199,9 @@ EEG.CTAP.badsegev.detect.src = {Arg.method, 1};
 
 
 %% ERROR/REPORT
-reportStr = sprintf(...
-    ['Bad segments by ''%s'' for ''%s'': %d segments involving %d/%d = %3.1f'...
-    ' prc of samples marked as bad.'], Arg.method, EEG.CTAP.measurement.casename...
-    , Rej.allChannelsCount, numbad, EEG.pnts, prcbad);
+reportStr = sprintf(['Bad segments by ''%s'' for ''%s'':'...
+    ' %d segments involving %d/%d = %3.1f prc of samples marked as bad.']...
+    , Arg.method, EEG.CTAP.measurement.casename, bs_count, numbad, EEG.pnts, prcbad);
 msg = myReport({reportStr}, Cfg.env.logFile);
 
 Cfg.ctap.detect_bad_segments = Arg;
