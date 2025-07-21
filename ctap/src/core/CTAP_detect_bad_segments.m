@@ -123,16 +123,17 @@ switch Arg.method
             case 'Var2'
                 unit_mult = 1000 ^ single(any(mod(gsg, 1) ~= 0));%detects decimals
         end
-        gsg = gsg .* unit_mult;
+        gsg = reshape(gsg, 2, numel(gsg) / 2)' .* unit_mult;
+        gsg(all(isnan(gsg), 2), :) = [];
         rej_match = false(1, EEG.pnts);
-        rej_inds = zeros(numel(gsg) / 2, 2);
-        for i = 1:2:numel(gsg)
-            if any(isnan(gsg(i:i+1)))
+        rej_inds = zeros(size(gsg, 1), 2);
+        for i = 1:size(gsg, 1)
+            if any(isnan(gsg(i, :)))
                 continue
             end
-            rej_inds(ceil(i / 2), 1) = find(EEG.times >= gsg(i), 1);
-            rej_inds(ceil(i / 2), 2) = find(EEG.times < gsg(i+1), 1, 'last');
-            rej_match(EEG.times > gsg(i) & EEG.times < gsg(i+1)) = true;
+            rej_inds(ceil(i / 2), 1) = find(EEG.times >= gsg(i, 1), 1);
+            rej_inds(ceil(i / 2), 2) = find(EEG.times < gsg(i, 2), 1, 'last');
+            rej_match(EEG.times >= gsg(i, 1) & EEG.times <= gsg(i, 2)) = true;
 
         end
         numbad = sum(rej_match);
@@ -148,7 +149,7 @@ switch Arg.method
             else
                 EEG.event = eeglab_merge_event_tables(bs_event, 'ignore');
             end
-            rej_table = table(gsg(1:2:end)', gsg(2:2:end)', durat.*1000/EEG.srate...
+            rej_table = table(gsg(:, 1)', gsg(:, 2)', durat.*1000/EEG.srate...
                 , rej_inds(:,1), rej_inds(:,2), durat...
                 , 'RowNames', cellstr(num2str((1:numel(durat))'))...
                 , 'VariableNames', {'ms_beg' 'ms_end' 'ms_dur' 'lat_beg' 'lat_end' 'lat_dur'});
