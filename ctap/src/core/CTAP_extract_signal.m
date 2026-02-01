@@ -15,6 +15,7 @@ function [EEG, Cfg] = CTAP_extract_signal(EEG, Cfg)
 %   .strip      boolean, Should the extracted signals be removed from EEG,
 %               default: true
 %   .types      cell string array, type names of channels to extract
+%   .evflds     cell, names of EEG event structure fields to export
 %
 % Outputs:
 %   EEG         struct, EEGLAB structure modified by this function

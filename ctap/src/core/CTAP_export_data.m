@@ -66,7 +66,12 @@ switch Arg.type
         
     case 'bva'
         savename = fullfile(Arg.outdir, Arg.name);
-        pop_writebva(EEG, savename);
+        if isfield(Arg, 'DataOrientation')
+            msg = pop_writebva(EEG, savename, 'DataOrientation', Arg.DataOrientation);
+        else
+            msg = pop_writebva(EEG, savename);
+        end
+        savename = strcat(savename, {'.dat' '.vhdr' '.vmrk'});
         
     case {'gdf','edf','bdf','cfwb','cnt'}
         savename = fullfile(Arg.outdir, [Arg.name '.' Arg.type]);
@@ -114,7 +119,12 @@ end
 %% ERROR/REPORT
 Cfg.ctap.export_data = Arg;
 
-if exist(savename, 'file')
+if iscell(savename)
+    test = cell2mat(cellfun(@(x) exist(x, 'file'), savename, 'Un', 0));
+else
+    test = exist(savename, 'file');
+end
+if all(test)
     msg = myReport([msg '::Export successful'], Cfg.env.logFile);
 else
     msg = myReport([msg '::Export unsuccessful'], Cfg.env.logFile);

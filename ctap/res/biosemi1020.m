@@ -1,5 +1,11 @@
 function eloc = biosemi1020( num )
 
+% Parse and validate input
+p = inputParser();
+addRequired(p, 'num', @(x) isnumeric(x) || ischar(x) || isstring(x));
+parse(p, num);
+num = p.Results.num;
+
 % Handle matrix input
 if ismatrix(num) && ~isscalar(num)
     [x,y] = size(num);
