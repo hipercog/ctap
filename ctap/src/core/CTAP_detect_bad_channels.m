@@ -13,8 +13,7 @@ function [EEG, Cfg] = CTAP_detect_bad_channels(EEG, Cfg)
 %   Cfg         struct, CTAP configuration structure
 %   Cfg.ctap.detect_bad_channels:
 %   .channels       cellstring, A list of channels which should be
-%                   analyzed, overrides .channelType, default: field does
-%                   not exist
+%                   analyzed, overrides .channelType, default: inherits channelType
 %   .channelType    string or cellstring, A list of channel type string that
 %                   specify which channels are to be analyzed, default: 'EEG'
 %   .orig_ref       cellstring, Original reference channels, needed by some
