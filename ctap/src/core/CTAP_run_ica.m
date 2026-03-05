@@ -69,44 +69,34 @@ pass_args = pass_args(:)';
 
 
 %% CORE
-% Pass additional arguments dynamically to pop_runica
-EEG = pop_runica(EEG, 'icatype', Arg.method, 'chanind', chind, pass_args{:});
-
-
-% % call the CHOSEN method
-% switch Arg.method
-%     case 'fastica'
-%         if ~exist('fastica', 'file')
-%             error('CTAP_run_ica:bad_method',...
-%                     'FastICA method not found on path, aborting')
-%         end
-%         EEG = pop_runica(EEG, 'icatype', 'fastica',...
-%                         'chanind', Arg.channelTypes );
+% call the CHOSEN method
+switch Arg.method
+    case 'fastica'
+        if ~exist('fastica', 'file')
+            error('CTAP_run_ica:bad_method',...
+                    'FastICA method not found on path, aborting')
+        end
+        EEG = pop_runica(EEG, 'icatype', 'fastica',...
+                        'chanind', Arg.channelTypes );
                
         
-%     case 'infomax'
-%         EEG = pop_runica(EEG, 'chanind', Arg.channelTypes,...
-%                         'extended', 1,...
-%                         'interupt', 'on',...
-%                         'stop', 1E-7);
-                    
-%     case 'binary'
-%         warning('Method not yet available.'); %#ok<WNTAG>
-% %         [wts,sph]=binica( EEG.data(chIwant,:,:), 'extended', 1 );
-% %         EEG = pop_editset(EEG, 'icasphere', sph);
-% %         EEG = pop_editset(EEG, 'icaweights', wts);
+    case 'infomax'
+        EEG = pop_runica(EEG, 'chanind', Arg.channelTypes,...
+                        'extended', 1,...
+                        'interupt', 'on',...
+                        'stop', 1E-7 );
 
-%     case 'jade'
-%         EEG = pop_runica( EEG, 'icatype', 'jader',...
-%             'chanind', Arg.channelTypes,...
-%             'extended', 1,...
-%             'interupt', 'on',...
-%             'stop', 1E-7 );
+    case 'jade'
+        EEG = pop_runica( EEG, 'icatype', 'jader',...
+            'chanind', Arg.channelTypes,...
+            'extended', 1,...
+            'interupt', 'on',...
+            'stop', 1E-7 );
         
-%     case 'otherwise'
-%         error('CTAP_run_ica:bad_method',...
-%                     'Method %s not recognised, aborting', Arg.method)
-% end
+    case 'otherwise'
+        % Pass additional arguments dynamically to pop_runica and roll the dice!!
+        EEG = pop_runica(EEG, 'icatype', Arg.method, 'chanind', chind, pass_args{:});
+end
 
 
 %% ERROR/REPORT
