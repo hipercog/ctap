@@ -49,9 +49,6 @@ end
 
 %% ASSIST
 chind = get_eeg_inds(EEG, Arg.channelTypes);
-if strcmpi(Arg.method, 'infomax')
-    Arg.method = 'runica';
-end
 
 if Arg.overwrite && ~isempty(EEG.icaweights)
     EEG.icaweights = [];

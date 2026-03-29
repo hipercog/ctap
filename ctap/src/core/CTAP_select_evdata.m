@@ -14,15 +14,31 @@ function [EEG, Cfg] = CTAP_select_evdata(EEG, Cfg)
 %   EEG         struct, EEGLAB structure
 %   Cfg         struct, CTAP configuration structure
 %   Cfg.ctap.select_evdata:
-%   .evtype     string, event type to select, default: 'all'
-%   .covertype  string, coverage of points around events, default: ''
+%   .evtype     string, event type to select, 
+%                default: 'all'
+%   .evfield    string, choose an event field to search for 'evtype'
+%                default: 'type'
+%   .covertype  string, coverage of points around events, 
+%                default: ''
 %               'total' - select (1st evt + duration1) to (last evt + duration2)
 %               'longest' - find x=longest gap between events, select 1st-x to last+x
 %               'own' - use each event's own duration field, if exists
 %               'next' - set evt duration = offset from next event; select by durations
 %               'fixed' - use a fixed duration given by Arg.duration = [min max]
+%               'pairs' - use 'evtype' to name 2 events to mark start & end of segments
+%                         Event names can be in field 'type' or any other field, chosen
+%                         using 'evfield'. See sbf_get_pair_lats() for pair matching 
+%                         behaviour 
+%   .match_fun  string, option to match evtype in 'pairs' mode, choose from
+%                       startsWith, endsWith, or regexp
+%                default: strcmp
+%   .strict_pair logical scalar, for 'pairs' covertype, if true:
+%                           take only strict pairs from the starts and ends lists;
+%               if false & #starts > #ends:
+%                           allow one more start to run to end of data
+%                default: true
 %   .duration   [1 2] numeric, Fixed millisec duration around selected events,
-%                default: min, max = minus/plus one second, i.e. -+1000
+%                default: min, max = minus/plus zero second, i.e. -+0
 %   .select     true/false, keep the data covered by designated events, or remove it
 %
 % Outputs:
@@ -42,11 +58,15 @@ function [EEG, Cfg] = CTAP_select_evdata(EEG, Cfg)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% Set optional arguments
-Arg.evtype = 'all';     %Default event type to select: all
+Arg.evtype = 'all';      %Default event type to select
 
-Arg.covertype = 'total';  %Default coverage of points around events
+Arg.evfield = 'type';    %Default event field to select
 
-Arg.duration = [-1000 1000]; %Fixed duration around selected events
+Arg.covertype = 'total'; %Default coverage of points around events
+
+Arg.strict_pair = true;
+
+Arg.duration = [0 0];    %Default duration around selected events
 
 Arg.select = true;
 
@@ -63,6 +83,11 @@ if ~isfield(Arg, 'evtype')
 end
 %convert duration milliseconds to latencies
 Arg.duration = Arg.duration .* (EEG.srate / 1000);
+if isscalar(Arg.duration)
+    if Arg.duration >= 0
+        Arg.duration = [-Arg.duration Arg.duration];
+    end
+end
 
 
 %% CORE
@@ -70,7 +95,7 @@ Arg.duration = Arg.duration .* (EEG.srate / 1000);
 if strcmpi(Arg.evtype, 'all')
     event_match = true(1, numel(EEG.event));
 else
-    event_match = ismember({EEG.event.type}, Arg.evtype);
+    event_match = ismember({EEG.event.(Arg.evfield)}, Arg.evtype);
 end
 if isempty(event_match)
     error(  'CTAP_select_evdata:selectedEventError',...
@@ -105,8 +130,8 @@ switch Arg.covertype
 
     case 'next'
         offsets = diff([EEG.event(event_match).latency]);
-        for i = 1:numel(EEG.event(event_match)) - 1
-            EEG.event(i).duration = offsets(i);
+        for evtix = 1:numel(EEG.event(event_match)) - 1
+            EEG.event(evtix).duration = offsets(evtix);
         end
         EEG.event(end).duration = min(mean(offsets), EEG.pnts);
         event_lat(:,2) = event_lat(:,1) + [EEG.event(event_match).duration]';
@@ -114,6 +139,9 @@ switch Arg.covertype
     case 'fixed'
         event_lat = [event_lat + Arg.duration(1), event_lat + Arg.duration(2)];
 
+    case 'pairs'
+        event_lat = sbf_get_pair_lats(Arg.evtype, Arg.duration, Arg.evfield);
+        Arg.evtype = catcellstr(Arg.evtype);
 end
 
 % Select
@@ -131,13 +159,82 @@ sbf_log_regions(event_lat, EEG, Arg, Cfg)
 %% ERROR/REPORT
 Cfg.ctap.select_evdata = Arg;
 
-msg = myReport({'Crop data from: ' EEG.setname ' -- by event: ' Arg.evtype}...
+msg = myReport(sprintf('Crop data from: %s -- by event: %s -- of field: %s'...
+    , EEG.setname, Arg.evtype, Arg.evfield)...
     , Cfg.env.logFile);
 
 EEG.CTAP.history(end+1) = create_CTAP_history_entry(msg, mfilename, Arg);
 
 
     %% Subfunctions
+    function [pair_lats, match_samps] = sbf_get_pair_lats(pairs, d_samples, fjeld)
+        %% Parse input arguments and set varargin defaults
+        p = inputParser;
+        p.KeepUnmatched = true;
+        
+        p.addRequired('pairs', @iscell)
+        p.addRequired('d_samples', @isnumeric)
+        p.addRequired('fjeld', @ischar)
+        
+        p.parse(pairs, d_samples, fjeld);
+        p = p.Results;
+
+        if isfield(Arg, 'match_fun')
+            switch Arg.match_fun
+                case 'startsWith'
+                    comp = @(c, pat) startsWith(c, pat);
+                case 'endsWith'
+                    comp = @(c, pat) endsWith(c, pat);
+                case 'regexp'
+                    comp = @(c, pat) ~cellfun('isempty', regexp(c, pat, 'once'));
+            end
+        else
+            comp = @(c, pat) strcmp(c, pat);
+        end
+        
+        % EEG is the EEGLAB/CTAP EEG struct
+        n_samples = EEG.pnts;
+        match_samps = false(1, n_samples);
+        
+        vals = {EEG.event.(p.fjeld)};        % cell array of strings/numbers
+        start_mask = comp(vals, pairs(1));   % logical mask
+        end_mask   = comp(vals, pairs(2));
+        
+        % Collect & sort sample indices for start,end events, adding duration trims
+        starts = sort(round([EEG.event(start_mask).latency] + p.d_samples(1)));
+        ends = sort(round([EEG.event(end_mask).latency] + p.d_samples(2)));
+
+        % Greedy match: for each start, take the next end > start.
+        j = 1;
+        nE = numel(ends);
+        nS = numel(starts);
+        pair_lats = zeros(0, 2);
+        aaaand_were_done = false;
+        
+        for i = 1:nS
+            s = starts(i);
+            % advance j until ends(j) > s (or j > nE)
+            while j <= nE && ends(j) <= s
+                j = j + 1;
+            end
+            if j <= nE
+                e = ends(j);
+                j = j + 1;   % consume this end for the next start
+            elseif Arg.strict_pair
+                break
+            else
+                e = n_samples;           % no more ends -> use end of data
+                aaaand_were_done = true; % given starts are sorted, we cover all data
+            end
+            pair_lats(end+1,:) = [max(1,s), min(n_samples, e)]; %#ok<AGROW>
+            match_samps(s:e) = true;
+            if aaaand_were_done
+                break
+            end
+        end
+
+    end
+
     function sbf_log_regions(evlats, eeg, args, conf)
         %Write regions found
         evdata = NaN(size(evlats,1), 5);
@@ -159,6 +256,5 @@ EEG.CTAP.history(end+1) = create_CTAP_history_entry(msg, mfilename, Arg);
                         , horzcat('%-4.0d', repmat({'%-12.1f'},1,4))...
                         , 'delimiter', ';', 'writemode', 'at');        
     end
-
 
 end
