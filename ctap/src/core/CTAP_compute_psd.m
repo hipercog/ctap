@@ -121,7 +121,7 @@ end
 %% ERROR/REPORT
 Cfg.ctap.compute_psd = Arg;
 
-msg = myReport(sprintf('Estimated PSD for events of type  ''%s''.'...
-    , Cfg.event.csegEvent), Cfg.env.logFile);
+msg = myReport(sprintf('Estimated PSD for ''%s''-type events.', Cfg.event.csegEvent));
+%myReport(msg, Cfg.env.logFile)
 
 EEG.CTAP.history(end+1) = create_CTAP_history_entry(msg, mfilename, Arg);

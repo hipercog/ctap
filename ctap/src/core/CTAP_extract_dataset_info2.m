@@ -51,11 +51,10 @@ save(fullfile(savepath,savename), 'INFO', 'SEGMENT', 'dataset_info2');
 
 %% ERROR/REPORT
 Cfg.ctap.extract_dataset_info2 = Arg;
+
 msg = myReport(sprintf('Dataset info 2 stored for measurement %s.',...
-    EEG.CTAP.measurement.casename), Cfg.env.logFile);
-%create an entry to the history struct, with 
-%   1. informative message, 
-%   2. function filename
-%   3. %the complete parameter set from the function call, for reference
+    EEG.CTAP.measurement.casename));
+%myReport(msg, Cfg.env.logFile)
+
 EEG.CTAP.history(end+1) = create_CTAP_history_entry(msg, mfilename, Arg);
 

@@ -55,7 +55,7 @@ function export_features_CTAP2(id, featureIDArr, measFilt, MC, Cfg)
 
 %% Initialize
 % Create directory (if needed)
-if ~isdir(Cfg.env.paths.exportRoot)
+if ~isfolder(Cfg.env.paths.exportRoot)
     mkdir(Cfg.env.paths.exportRoot);
 end
 
@@ -187,7 +187,7 @@ function result = export_features_CTAP2_onefile(sourcefile)
                      strcat('M.',thisFileValueFields(j),'.',thisStructValueField) ...
                  ));
                   %Skip arrays, only do primitives
-                  if numel(actualValue)==1
+                  if isscalar(actualValue)
                      if strcmp(thisStructValueFieldType,'datetime')
                          actualValue = datenum(actualValue);
                      end

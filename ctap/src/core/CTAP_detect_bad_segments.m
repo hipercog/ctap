@@ -64,6 +64,7 @@ if isfield(Cfg.ctap, 'detect_bad_segments')
 end
 
 %% ASSIST
+rept = {'\n'};
 if ~isfield(Arg, 'channels')
     chidx = get_eeg_inds(EEG, Arg.channelType);
     Arg.channels = {EEG.chanlocs(chidx).labels};
@@ -76,9 +77,9 @@ end
 
 % Check that given channels are EEG channels
 if isempty(Arg.channels) || ~all(ismember({EEG.chanlocs(chidx).type}, 'EEG'))
-    myReport(['WARN ' mfilename ':: '...
+    rept{1} = myReport(['WARN ' mfilename ':: '...
         'EEG channel type has not been well defined,'...
-        ' or given channels are not all EEG!'], Cfg.env.logFile);
+        ' or given channels are not all EEG!']);
 end
 
 % Running more than once without rejection in between not (yet) supported
@@ -202,7 +203,8 @@ EEG.CTAP.badsegev.detect.src = {Arg.method, 1};
 reportStr = sprintf(['Bad segments by ''%s'' for ''%s'':'...
     ' %d segments involving %d/%d = %3.1f prc of samples marked as bad.']...
     , Arg.method, EEG.CTAP.measurement.casename, bs_count, numbad, EEG.pnts, prcbad);
-msg = myReport({reportStr}, Cfg.env.logFile);
+msg = myReport({rept reportStr});
+%myReport(msg, Cfg.env.logFile)
 
 Cfg.ctap.detect_bad_segments = Arg;
 EEG.CTAP.history(end+1) = create_CTAP_history_entry(msg, mfilename, Arg);

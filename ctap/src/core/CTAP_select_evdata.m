@@ -160,8 +160,8 @@ sbf_log_regions(event_lat, EEG, Arg, Cfg)
 Cfg.ctap.select_evdata = Arg;
 
 msg = myReport(sprintf('Crop data from: %s -- by event: %s -- of field: %s'...
-    , EEG.setname, Arg.evtype, Arg.evfield)...
-    , Cfg.env.logFile);
+    , EEG.setname, Arg.evtype, Arg.evfield));
+%myReport(msg, Cfg.env.logFile)
 
 EEG.CTAP.history(end+1) = create_CTAP_history_entry(msg, mfilename, Arg);
 

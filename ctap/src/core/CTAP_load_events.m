@@ -117,7 +117,7 @@ end
 %% ERROR/REPORT
 Cfg.ctap.load_events = Arg;
 
-msg = myReport({msg 'Wrote events in' EEG.setname 'from source = ' Arg.src}...
-    , Cfg.env.logFile);
+msg = myReport({msg 'Wrote events in' EEG.setname 'from source = ' Arg.src});
+%myReport(msg, Cfg.env.logFile)
 
 EEG.CTAP.history(end+1) = create_CTAP_history_entry(msg, mfilename, Arg);

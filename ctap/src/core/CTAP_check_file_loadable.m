@@ -77,7 +77,8 @@ res.file = Arg.physiodata;
 Arg = joinstruct(Arg, res);
 Cfg.ctap.load_data = Arg;
 
-msg = myReport({'Checked file loadability' Arg.physiodata}, Cfg.env.logFile);
+msg = myReport({'Checked file loadability' Arg.physiodata});
+%myReport(msg, Cfg.env.logFile)
 
 EEG = add_CTAP(EEG, Cfg);
 

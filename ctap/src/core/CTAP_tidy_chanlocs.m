@@ -75,17 +75,15 @@ EEG = eeg_checkchanlocs(EEG);
 EEG.urchanlocs = EEG.chanlocs;
 
 
-%% Feedback about types
-myReport({EEG.chanlocs.type; EEG.chanlocs.labels},...
-    Cfg.env.logFile, sprintf('\t'));
-disp('WARN ^ ^ ^ ^ CAUTION - CHECK YOUR TYPE ASSIGNMENT! ^ ^ ^ ^');
-
-
 %% ERROR/REPORT
 Cfg.ctap.tidy_chanlocs = Arg;
 
-msg = myReport({'Made channel type assignment -' Arg.types}...
-    , Cfg.env.logFile );
+% Message, with feedback about types
+msg = myReport({myReport({EEG.chanlocs.type; EEG.chanlocs.labels}, '', sprintf('\t')) ...
+                'Made channel type assignment -' Arg.types ...
+                'WARN ^ ^ ^ ^ CAUTION - CHECK YOUR TYPE ASSIGNMENT! ^ ^ ^ ^'}, ...
+                '', newline);
+%myReport(msg, Cfg.env.logFile)
 
 EEG.CTAP.history(end+1) = create_CTAP_history_entry(msg, mfilename, Arg);
 

@@ -70,8 +70,8 @@ EEG = eeglab_blink2event(EEG, Eog.veog, rmfield(Arg, 'invert_polarity'));
 %% ERROR/REPORT
 Cfg.ctap.blink2event = Arg;
 
-msg = myReport(['Added blinks as events for ' EEG.subject ' - ' EEG.setname]...
-    , Cfg.env.logFile);
+msg = ['Added blinks as events for ' EEG.subject ' - ' EEG.setname];
+%myReport(msg, Cfg.env.logFile);
 
 EEG.CTAP.history(end+1) = create_CTAP_history_entry(msg, mfilename, Arg);
 

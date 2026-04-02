@@ -116,6 +116,7 @@ nchan = numel(chidx);
 
 
 %% Define directory to save stuff to
+rept = {newline};
 args = logical([Arg.plotEEGHist Arg.plotEEG Arg.plotICA Arg.logStats]);
 if any(args)
     savepath = get_savepath(Cfg, mfilename, 'qc');
@@ -123,12 +124,13 @@ if any(args)
     prepare_savepath(savepath, 'deleteExisting', Arg.overwrite);
     
     plotz = {'Histogram' 'Raw EEG' 'Independent Components' 'Channel stats'};
-    myReport(newline, Cfg.env.logFile);
-    msg = myReport(sprintf('Saving Diagnostics to ''%s''\nFor %s'...
-        , savepath, sprintf('''%s'', ', plotz{args})), Cfg.env.logFile);
+
+    rept{1} = sprintf('Saving Diagnostics to ''%s''\nFor %s'...
+        , savepath, sprintf('''%s'', ', plotz{args}));
+    %myReport(msg, Cfg.env.logFile)
 
 else
-    return;
+    rept{1} = 'No plots, only peeks created';
 end
 pipe_peeks = cellfun(@find...
            , cellfun(@(x)...
@@ -157,8 +159,8 @@ if Arg.logStats
         , Cfg.pipe.current.set...
         , Cfg.pipe.current.funAtSet);
     stalog = fullfile(tabs_dir, rptname);
-    myReport(sprintf('Writing channel-wise peek statistics for %s to %s.'...
-        , rptname, stalog), Cfg.env.logFile);
+    rept{end + 1} = sprintf(...
+        'Writing channel-wise peek statistics for %s to %s.', rptname, stalog);
     writetable(statab, stalog, 'WriteRowNames', true, 'Delimiter', 'tab')
 
 end
@@ -367,6 +369,7 @@ end
 
 
 %% ERROR/REPORT
+msg = myReport(rept, '', newline);
 EEG.CTAP.history(end+1) = create_CTAP_history_entry(msg, mfilename, Arg);
 
 end %CTAP_peek_data()

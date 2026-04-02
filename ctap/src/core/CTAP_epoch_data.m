@@ -47,8 +47,9 @@ end
 %% ASSIST
 evlist = eeglab_validate_evlist(EEG, Arg.evtype, Arg.match);
 if isempty(evlist)
-    myReport(['FAIL evtype not found: ' Arg.evtype], Cfg.env.logFile);
+    rept = myReport(['FAIL evtype not found: ' Arg.evtype]);
 else
+    rept = '';
     Arg.evtype = evlist;
 end
 
@@ -65,11 +66,12 @@ Cfg.ctap.epoch_data = params;
 
 
 if strcmp(Arg.method, 'depoc')
-    msg = myReport(sprintf('Transformed Epoched dataset to Continuous for %s',...
-        EEG.setname), Cfg.env.logFile);
+    rept{end + 1} = sprintf('Transformed Epoched dataset to Continuous for %s',...
+                            EEG.setname);
 else
-    msg = myReport(sprintf('Epoched with %s data from: %s'...
-        , Arg.method, EEG.setname), Cfg.env.logFile);
+    rept{end + 1} = sprintf('Epoched with %s data from: %s', Arg.method, EEG.setname);
 end
+msg = myReport(rept);
+%myReport(msg, Cfg.env.logFile)
 
 EEG.CTAP.history(end+1) = create_CTAP_history_entry(msg, mfilename, params);

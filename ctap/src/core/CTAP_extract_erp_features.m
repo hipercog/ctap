@@ -68,6 +68,7 @@ save(fullfile(savepath,savename), 'INFO', 'SEGMENT', 'ERP', 'ERPAREA');
 %% ERROR/REPORT
 Cfg.ctap.extract_erp_features = Arg;
 
-msg = myReport(sprintf('Extracted ERP features.'), Cfg.env.logFile);
+msg = myReport(sprintf('Extracted ERP features.'));
+%myReport(msg, Cfg.env.logFile)
 
 EEG.CTAP.history(end+1) = create_CTAP_history_entry(msg, mfilename, Arg);

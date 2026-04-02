@@ -85,6 +85,7 @@ end
 
 
 %% ASSIST %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+rept = {newline};
 if isfield(Cfg.ctap.load_chanlocs, 'assist') && Cfg.ctap.load_chanlocs.assist
     % find the chanlocs filetype from the file name
     if ~isfield(Arg, 'filetype')
@@ -158,9 +159,8 @@ if ~isempty(Arg.field)
         end
     end
     % Feedback about types
-    myReport({EEG.chanlocs.labels; EEG.chanlocs.type},...
-        Cfg.env.logFile, sprintf('\t'));
-    myReport('WARN^ ^ ^ ^ CAUTION - CHECK YOUR CHANLOCS ASSIGNMENT! ^ ^ ^ ^');
+    rept{1} = myReport({EEG.chanlocs.labels; EEG.chanlocs.type}, '', sprintf('\t'));
+    rept{end + 1} = ('WARN^ ^ ^ ^ CAUTION - CHECK YOUR CHANLOCS ASSIGNMENT! ^ ^ ^ ^');
 end
 
 
@@ -187,8 +187,7 @@ if Arg.opt_centre
                                                     deal(X{:}, Y{:}, Z{:});
 end
 if Arg.cnv_coords
-    myReport('Note: auto-converted XYZ coordinates to spherical & polar'...
-        , Cfg.env.logFile);
+    rept{end + 1} = myReport('Note: auto-converted XYZ coords to spherical & polar');
     EEG.chanlocs = convertlocs(EEG.chanlocs, 'cart2all');
 end
 
@@ -219,7 +218,7 @@ if ~isempty(Arg.field)
     msg = myReport({'SHSHMade channel type assignment -'...
         cellfun(@myReport, Arg.field, 'Un', 0)}, [], newline);
 end
-msg = myReport(sprintf('Loaded chanlocs from %s%s%s', Arg.file, newline, msg)...
-    , Cfg.env.logFile);
+msg = myReport(...
+ {rept sprintf('Loaded chanlocs from %s%s%s', Arg.file, newline, msg)}, '', newline);
 
 EEG.CTAP.history(end+1) = create_CTAP_history_entry(msg, mfilename, Arg);

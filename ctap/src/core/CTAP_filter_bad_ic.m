@@ -168,5 +168,6 @@ end
 Cfg.ctap.filter_bad_ic = Arg;
 
 msg = sprintf('FIR filtered bad IC data: %s', EEG.setname); 
-myReport(msg, Cfg.env.logFile);
+%myReport(msg, Cfg.env.logFile);
+
 EEG.CTAP.history(end+1) = create_CTAP_history_entry(msg, mfilename, Arg);

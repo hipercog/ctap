@@ -60,6 +60,7 @@ end
 Cfg.ctap.normalize_data = Arg;
 
 msg = myReport(sprintf('Normalized data with center=%s and scale=%s.',...
-    centerStr, scaleStr), Cfg.env.logFile);
+    centerStr, scaleStr));
+%myReport(msg, Cfg.env.logFile)
 
 EEG.CTAP.history(end+1) = create_CTAP_history_entry(msg, mfilename, Arg);

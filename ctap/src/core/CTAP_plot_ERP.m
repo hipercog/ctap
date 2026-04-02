@@ -97,10 +97,10 @@ h5writeatt(h5file,'/ERP','d2ID', EEG.times);
 %% ERROR/REPORT
 %... the complete parameter set from the function call ...
 Cfg.ctap.plot_ERP = Arg;
-%log outcome to console and to log file
-msg = myReport(sprintf('ERP plotted for measurement %s.',...
-    EEG.CTAP.measurement.casename), Cfg.env.logFile);
-%create an entry to the history struct
+
+msg = myReport(sprintf('ERP plotted for measurement %s.', EEG.CTAP.measurement.casename));
+%myReport(msg, Cfg.env.logFile)
+
 EEG.CTAP.history(end+1) = create_CTAP_history_entry(msg, mfilename, Arg);
 
 

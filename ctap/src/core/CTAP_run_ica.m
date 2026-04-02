@@ -99,8 +99,8 @@ end
 %% ERROR/REPORT
 Cfg.ctap.run_ica = Arg;
 
-msg = myReport( {'Made ICA components for -' EEG.setname '- by ' Arg.method}...
-    , Cfg.env.logFile );
+msg = myReport( {'Made ICA components for -' EEG.setname '- by ' Arg.method});
+%myReport(msg, Cfg.env.logFile)
 
 EEG.CTAP.history(end+1) = create_CTAP_history_entry(msg, mfilename, Arg);
 

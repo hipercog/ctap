@@ -96,6 +96,7 @@ EEG = eeg_checkset(EEG,'eventconsistency');
 Cfg.ctap.generate_cseg = Arg;
 
 msg = myReport(sprintf('%d ''%s'' events addded to EEG.event.',...
-    size(csegArr,1),Arg.csegEvent), Cfg.env.logFile);
+                        size(csegArr,1),Arg.csegEvent));
+%myReport(msg, Cfg.env.logFile)
 
 EEG.CTAP.history(end+1) = create_CTAP_history_entry(msg, mfilename, Arg);

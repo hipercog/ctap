@@ -40,7 +40,8 @@ Cfg.elapsed.clockstart = Arg.clockstart;
 
 
 %% ERROR/REPORT
-msg = myReport({'Started clock' Arg.clockstart}, Cfg.env.logFile);
+msg = myReport({'Started clock' Arg.clockstart});
+%myReport(msg, Cfg.env.logFile)
 
 EEG = add_CTAP(EEG, Cfg);
 

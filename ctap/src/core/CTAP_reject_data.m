@@ -108,14 +108,14 @@ if detected.prc > 0 && detected.prc < 100
             'badness', badness);
     else
         myReport(sprintf('FAIL Unrecognised method - ''%s''. Step %d-reject'...
-            , Arg.method, numel(EEG.CTAP.history)), Cfg.env.logFile);
+            , Arg.method, numel(EEG.CTAP.history)));
     end
 
-    msg = myReport(sprintf('%s from ''%s''.\n', result, EEG.setname)...
-        , Cfg.env.logFile);
+    rept{1} = sprintf('%s from ''%s''.\n', result, EEG.setname);
+    %myReport(msg, Cfg.env.logFile)
 else
-    msg = myReport(sprintf('WARN %s are %dprc bad: no rejection.',...
-        strrep(Arg.method, 'bad', ''), detected.prc));
+    rept{1} = sprintf('WARN %s are %dprc bad: no rejection.',...
+        strrep(Arg.method, 'bad', ''), detected.prc);
 end
 
 
@@ -125,8 +125,7 @@ if Arg.plot && detected.prc > 0
     savepath = fullfile(savepath, EEG.CTAP.measurement.casename);
     prepare_savepath(savepath)
 
-    myReport(sprintf('Plotting diagnostics to ''%s''...\n', savepath)...
-        , Cfg.env.logFile);
+    rept{end + 1} = sprintf('Plotting diagnostics to ''%s''...\n', savepath);
                         
     switch Arg.method
         case 'badchans'
@@ -168,6 +167,8 @@ end
 Arg = joinstruct(Arg, params);
     
 Cfg.ctap.reject_data = Arg;
+
+msg = myReport(rept, '', newline);
 
 EEG.CTAP.history(end+1) = create_CTAP_history_entry(msg, mfilename, Arg);
 

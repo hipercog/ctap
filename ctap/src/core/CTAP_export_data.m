@@ -99,12 +99,12 @@ switch Arg.type
         data = eeglab2leda(EEG);
         savename = fullfile(Arg.outdir, [Arg.name '.mat']);
         save(savename, 'data');
-        msg = myReport('Exporting EDA data to Ledalab', Cfg.env.logFile);
+        msg = 'Exporting EDA data to Ledalab';
 
     case 'mul'
         mul = eeglab2mul(EEG, Arg.lock_event);
         msg = myReport(['Exporting a mul-file ERP for averaged data ' ...
-            'time-locked to event ' Arg.lock_event], Cfg.env.logFile);
+            'time-locked to event ' Arg.lock_event]);
         % Make a name suitable for CBRU mul-plugin
         %TODO: export_name_root is hacked into Cfg in the pipebatch script
         %specific to NeuroEnhance project - make sure it is provided in
@@ -125,10 +125,11 @@ else
     test = exist(savename, 'file');
 end
 if all(test)
-    msg = myReport([msg '::Export successful'], Cfg.env.logFile);
+    msg = myReport([msg '::Export successful']);
 else
-    msg = myReport([msg '::Export unsuccessful'], Cfg.env.logFile);
+    msg = myReport([msg '::Export unsuccessful']);
 end
+%myReport(msg, Cfg.env.logFile)
 
 EEG.CTAP.history(end+1) = create_CTAP_history_entry(msg, mfilename, Arg);
 

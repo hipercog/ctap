@@ -57,7 +57,7 @@ EEG = pop_select(EEG, argsCellArray{:});
 
 %% ERROR/REPORT
 msg = myReport({'Selected data using pop_select with methods ',...
-                catcellstr(methodsCalled), ': ', EEG.setname},...
-                Cfg.env.logFile);
+                catcellstr(methodsCalled), ': ', EEG.setname});
+%myReport(msg, Cfg.env.logFile)
 
 EEG.CTAP.history(end+1) = create_CTAP_history_entry(msg, mfilename, Arg);

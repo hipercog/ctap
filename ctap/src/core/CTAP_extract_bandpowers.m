@@ -101,6 +101,7 @@ save(fullfile(savepath,savename), 'INFO', 'SEGMENT', 'ResBPrel', 'ResBPabs');
 %% ERROR/REPORT
 Cfg.ctap.extract_bandpowers = Arg;
 
-msg = myReport(sprintf('Extracted bandpowers from PSD.'), Cfg.env.logFile);
+msg = myReport(sprintf('Extracted bandpowers from PSD.'));
+%myReport(msg, Cfg.env.logFile)
 
 EEG.CTAP.history(end+1) = create_CTAP_history_entry(msg, mfilename, Arg);

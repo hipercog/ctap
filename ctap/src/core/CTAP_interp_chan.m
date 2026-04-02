@@ -125,7 +125,7 @@ end
 %% ERROR/REPORT
 Cfg.ctap.interp_chan = Arg;
 
-msg = myReport({'Interpolated channels -' chs_intrpd 'by' Arg.method}...
-    , Cfg.env.logFile );
+msg = myReport({'Interpolated channels -' chs_intrpd 'by' Arg.method});
+%myReport(msg, Cfg.env.logFile)
 
 EEG.CTAP.history(end+1) = create_CTAP_history_entry(msg, mfilename, Arg);

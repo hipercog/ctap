@@ -41,6 +41,7 @@ end
 
 
 %% ASSIST
+rept = {'\n'};
 if isempty(EEG.icachansind)
    error('FAIL::This dataset has not been ICA''d! Aborting...');
 else
@@ -106,42 +107,42 @@ else
 end
 
 % parse and describe results
-repstr1 = sprintf('Bad components by ''%s'' for ''%s'': ', Arg.method, EEG.setname);
-repstr2 = {result.comps};
+rept{end + 1} = sprintf('Bad components by ''%s'' for ''%s'': ', Arg.method, EEG.setname);
+rept{end + 1} = {result.comps};
 
 prcbad = 100 * numbad / numel(EEG.icachansind);
 if prcbad > 10
-    repstr1 = ['WARN ' repstr1];
+    rept{end - 1} = ['WARN ' rept{end - 1}];
 end
-repstr3 = sprintf('\nTOTAL %d/%d = %3.1f prc of components marked to reject\n'...
+rept{end + 1} = sprintf('\nTOTAL %d/%d = %3.1f prc of components marked to reject\n'...
     , numbad, numel(EEG.icachansind), prcbad);
 
 EEG.CTAP.badcomps.detect.prc = prcbad;
 
 
+%% DIAGNOSTICS
+if Arg.plot && numel(result.comps) > 0
+    rept{end + 1} = sbf_plot_bad_comps;
+else
+    rept{end + 1} = newline;
+end
+
+
 %% ERROR/REPORT
 Cfg.ctap.detect_bad_comps = params;
 
-msg = myReport({repstr1 repstr2 repstr3}, Cfg.env.logFile);
+msg = myReport(rept);
+%myReport(msg, Cfg.env.logFile)
 
 EEG.CTAP.history(end+1) = create_CTAP_history_entry(msg, mfilename, params);
-
-
-%% DIAGNOSTICS
-if Arg.plot && numel(result.comps) > 0
-    sbf_plot_bad_comps
-else
-    myReport(newline, Cfg.env.logFile);
-end
 
 
 %% Subfunctions
 
 % Visualize component rejections as contact sheet of scalp maps
-function sbf_plot_bad_comps()
+function report = sbf_plot_bad_comps()
     savepath = get_savepath(Cfg, mfilename, 'qc');
-    myReport(sprintf('Plotting diagnostics to ''%s''...\n', savepath)...
-        , Cfg.env.logFile);
+    report = myReport(sprintf('Plotting diagnostics to ''%s''...\n', savepath));
     EEGname = strrep(EEG.CTAP.measurement.casename, '_', '-');
 
     %plot scalp maps of bad components

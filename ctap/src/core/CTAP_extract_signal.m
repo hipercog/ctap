@@ -53,6 +53,7 @@ end
 
 
 %% CORE
+rept = cell(numel(chanTypes), 1);
 for i = 1:numel(chanTypes)
     switch chanTypes{i}
         case 'EEG'
@@ -75,9 +76,8 @@ for i = 1:numel(chanTypes)
         , 'outdir', savepath...
         , 'evflds', Arg.evflds);
     
-    myReport(sprintf('Exported %s from %s to location %s.',...
-        chanTypes{i}, EEG.CTAP.measurement.casename, Cfg.env.paths.exportRoot),...
-        Cfg.env.logFile);
+    rept{i} = myReport(sprintf('Exported %s from %s to location %s.',...
+        chanTypes{i}, EEG.CTAP.measurement.casename, Cfg.env.paths.exportRoot));
 end
 
 
@@ -87,7 +87,7 @@ if exist('params', 'var')
 end
 Cfg.ctap.extract_signal = Arg;
 
-msg = myReport({'Extracted DATA corresponding to channel types: ' chanTypes...
-    newline}, Cfg.env.logFile);
+msg = myReport({rept 'Extracted DATA corresponding to channel types: ' chanTypes newline});
+%myReport(msg, Cfg.env.logFile)
 
 EEG.CTAP.history(end+1) = create_CTAP_history_entry(msg, mfilename, Arg);

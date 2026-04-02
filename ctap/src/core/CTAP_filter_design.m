@@ -96,8 +96,8 @@ end
 Arg = joinstruct(Arg, params);
 Cfg.ctap.filter_design = Arg;
 
-msg = myReport(['Filtered data at ' num2str(Arg.filt) ': ' EEG.setname]...
-    , Cfg.env.logFile);
+msg = myReport(['Filtered data at ' num2str(Arg.filt) ': ' EEG.setname]);
+%myReport(msg, Cfg.env.logFile)
 
 EEG.CTAP.history(end+1) = create_CTAP_history_entry(msg, mfilename, Arg);
 
