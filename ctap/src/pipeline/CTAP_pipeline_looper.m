@@ -56,13 +56,13 @@ p.addRequired('Cfg', @isstruct);
 p.addParameter('debug', false, @islogical);
 p.addParameter('overwrite', false, @islogical);
 p.addParameter('trackfail', false, @islogical);
-p.addParameter('par_for', false, @islogical);
+p.addParameter('parafor', false, @islogical);
 p.parse(Cfg, varargin{:});
 
 overwrite = p.Results.overwrite;
 debug = p.Results.debug;
 trackfail = p.Results.trackfail;
-par_for = p.Results.par_for;
+parafor = p.Results.parafor;
 
 if ~debug
     warning('OFF', 'BACKTRACE')
@@ -142,7 +142,7 @@ end
 
 
 %% Run measurements and sets, parallel or sequential
-if par_for && numMC > 1
+if parafor && numMC > 1
     MCpar = parallel.pool.Constant(MCSub);
     parfor n = 1:numMC
         meas_n = MCpar.Value.measurement(n);
