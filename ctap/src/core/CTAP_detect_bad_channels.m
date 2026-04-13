@@ -204,10 +204,12 @@ msg = myReport(rept);
 
 EEG.CTAP.history(end+1) = create_CTAP_history_entry(msg, mfilename, params);
 
-sbf_report_bad_data(); %store detected channels for later review
+if ~Cfg.parafor
+    sbf_report_bad_data() % this will not work under parallel processing
+end
 
 
-%% sbf_report_bad_data
+%% sbf_report_bad_data - store detected channels for later review
 function sbf_report_bad_data
 
     func = sprintf('s%df%d', Cfg.pipe.current.set, Cfg.pipe.current.funAtSet);
