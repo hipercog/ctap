@@ -226,7 +226,9 @@ EEG.CTAP.history(end+1) = create_CTAP_history_entry(msg, mfilename, Arg);
                 e = n_samples;           % no more ends -> use end of data
                 aaaand_were_done = true; % given starts are sorted, we cover all data
             end
-            pair_lats(end+1,:) = [max(1,s), min(n_samples, e)]; %#ok<AGROW>
+            s = max(1,s);
+            e = min(n_samples, e);
+            pair_lats(end+1,:) = [s e]; %#ok<AGROW>
             match_samps(s:e) = true;
             if aaaand_were_done
                 break

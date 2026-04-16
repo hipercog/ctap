@@ -60,7 +60,7 @@ end
 
 
 %% ASSIST
-rept = {'n'};
+rept = {''};
 if ~isfield(Arg, 'channels')
     chidx = get_eeg_inds(EEG, Arg.channelType);
     Arg.channels = {EEG.chanlocs(chidx).labels};
@@ -161,7 +161,7 @@ rept{end + 1} = {'TOTAL : ' EEG.CTAP.badchans.(Arg.method).chans}; %all by Arg.m
 if numel(rept{end}) == numel(rept{end - 1})
     rept{end} = '';
 end
-prcbad = 100 * numbad / EEG.nbchan;
+prcbad = 100 * numbad / sum(ismember({EEG.chanlocs.type}, 'EEG'));
 if prcbad > 10
     rept{end - 2} = ['WARN ' rept{end - 2}];
 end

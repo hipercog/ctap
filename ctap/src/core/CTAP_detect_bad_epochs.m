@@ -46,7 +46,7 @@ if isfield(Cfg.ctap, 'detect_bad_epochs')
 end
 
 %% ASSIST
-rept = {'\n'};
+rept = {''};
 if ~isfield(Arg, 'channels')
     chidx = get_eeg_inds(EEG, Arg.channelType);
     Arg.channels = {EEG.chanlocs(chidx).labels};

@@ -41,7 +41,7 @@ end
 
 
 %% ASSIST
-rept = {'\n'};
+rept = {''};
 if isempty(EEG.icachansind)
    error('FAIL::This dataset has not been ICA''d! Aborting...');
 else
