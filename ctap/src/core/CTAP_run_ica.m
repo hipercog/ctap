@@ -39,7 +39,8 @@ function [EEG, Cfg] = CTAP_run_ica(EEG, Cfg)
 Arg.method = 'fastica';
 Arg.channelTypes = {'EEG' 'EOG'};
 Arg.overwrite = true;
-Arg.plot = Cfg.grfx.on; % plot settings follow the global flag, unless specified by user!
+Arg.plot = Cfg.grfx.on; %plot settings follow global flag, unless specified by user!
+Arg.filter = '';
 
 % Override defaults with user parameters
 if isfield(Cfg.ctap, 'run_ica')
@@ -55,6 +56,18 @@ if Arg.overwrite && ~isempty(EEG.icaweights)
     EEG.icasphere = [];
     EEG.icawinv = [];
     EEG.icachansind = [];
+end
+
+if ~isempty(Arg.filter)
+    EEGtmp = EEG;
+    EEG = pop_eegfiltnew(EEG...
+                        , 'locutoff', Arg.filter.locutoff...
+                        , 'hicutoff', Arg.filter.hicutoff...
+                        , 'filtorder', Arg.filter.filtorder...
+                        , 'revfilt', Arg.filter.revfilt...
+                        , 'plotfreqz', Arg.filter.plotfreqz...
+                        , 'minphase', Arg.filter.minphase...
+                        , 'usefftfilt', Arg.filter.usefftfilt);
 end
 
 % Convert Arg struct to key-value pairs for pop_runica
@@ -93,6 +106,10 @@ switch Arg.method
     case 'otherwise'
         % Pass additional arguments dynamically to pop_runica and roll the dice!!
         EEG = pop_runica(EEG, 'icatype', Arg.method, 'chanind', chind, pass_args{:});
+end
+
+if exist('EEGtmp', 'var')
+    EEG = EEGtmp;
 end
 
 
