@@ -65,7 +65,7 @@ chan_num;chan_biosemi;chan_10_10;ROI;hemisphere
 64;B32;FCC4h;central;right
 65;C1;FCC2h;central;midline
 66;C2;FCC2;fronto-central;midline
-67;C3;FCC4h;frontal ;midline
+67;C3;FC4h;frontal ;midline
 68;C4;F4;frontal ;right
 69;C5;F6;frontal ;right
 70;C6;F8h;frontal ;right
@@ -97,7 +97,7 @@ chan_num;chan_biosemi;chan_10_10;ROI;hemisphere
 96;C32;AFF5h;frontal ;left
 97;D1;FCC1h;central;midline
 98;D2;FCC1;fronto-central;midline
-99;D3;FCC3h;frontal ;midline
+99;D3;FC3h;frontal ;midline
 100;D4;F3;frontal ;left
 101;D5;F5;frontal ;left
 102;D6;F7h;frontal ;left

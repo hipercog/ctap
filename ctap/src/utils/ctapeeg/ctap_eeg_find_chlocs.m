@@ -34,11 +34,24 @@ elseif isfolder(Cfg.eeg.chanlocs)
 elseif iscell(Cfg.eeg.chanlocs) 
     % If all chanlocs filepaths have been provided separately, as cell str array
     % Indexing by .subjectnr which should be same as 1:num_subjs
-    Cfg.eeg.chanlocs = Cfg.eeg.chanlocs{Cfg.subject.subjectnr};
+    idx = isStructMember(Cfg.MC.measurement, 'subject', Cfg.measurement.subject) &...
+        isStructMember(Cfg.MC.measurement, 'session', Cfg.measurement.session) &...
+      isStructMember(Cfg.MC.measurement, 'measurement', Cfg.measurement.measurement);
+    Cfg.eeg.chanlocs = Cfg.eeg.chanlocs{idx};
     locstr = ctap_eeg_find_chlocs(Cfg);
     
 end
 
 
+end
 
+function tf = isStructMember(S, f, q)
+% isStructMember  Return logical vector: true if q appears in S.f
+%   S - struct array with some field 'f' (numeric, char, string, or cell)
+%   f - field to look within
+%   q - query scalar or array to test for membership
+
+    % build cell of string arrays from the struct array field
+    cell_arr = arrayfun(@(s) string(s.(f)), S, 'UniformOutput', false);
+    tf = any(ismember(cell_arr, string(q)));
 end

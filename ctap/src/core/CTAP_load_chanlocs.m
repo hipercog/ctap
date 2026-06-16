@@ -5,7 +5,8 @@ function [EEG, Cfg] = CTAP_load_chanlocs(EEG, Cfg)
 %   Load channel locations based on specification in Cfg.eeg.chanlocs.
 %   Cfg.ctap.load_chanlocs specifies how to read custom Cfg.eeg.chanlocs
 %   Can also define new chanlocs field values, and delete any channels
-%   desired. NOTE: users should be very careful when defining indices for new 
+%   desired. 
+%  NOTE: users should be very careful when defining indices for new 
 %   fields, because eeg_checkchanlocs() is called after loading new chanlocs.
 %   This function can delete channels which are, e.g. defined as not data.
 %   TIP: try to load chanlocs once to check the outcome (e.g. by debugging after 
