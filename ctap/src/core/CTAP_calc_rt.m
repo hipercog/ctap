@@ -114,7 +114,7 @@ for ix = 1:numel(Arg.evtype)
         newline ['Events which ' desc ' strings:'] Arg.evtype(ix)...
             newline 'Were aggregated under new label:' Arg.newevs(ix)});
 end
-myReport(msg, Cfg.env.logFile);
+%myReport(msg, Cfg.env.logFile);
 
 EEG.CTAP.history(end+1) = create_CTAP_history_entry(msg, mfilename, Arg);
 

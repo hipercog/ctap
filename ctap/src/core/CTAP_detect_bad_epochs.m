@@ -46,6 +46,7 @@ if isfield(Cfg.ctap, 'detect_bad_epochs')
 end
 
 %% ASSIST
+rept = {''};
 if ~isfield(Arg, 'channels')
     chidx = get_eeg_inds(EEG, Arg.channelType);
     Arg.channels = {EEG.chanlocs(chidx).labels};
@@ -58,9 +59,9 @@ end
 
 % Check that given channels are EEG channels
 if isempty(Arg.channels) || ~all(ismember({EEG.chanlocs(chidx).type}, 'EEG'))
-    myReport(['WARN ' mfilename ':: '...
+    rept{1} = myReport(['WARN ' mfilename ':: '...
         'EEG channel type has not been well defined,'...
-        ' or given channels are not all EEG!'], Cfg.env.logFile);
+        ' or given channels are not all EEG!']);
 end
 
 % Don't pay attention to any bad or deliberately-excluded channels
@@ -114,15 +115,14 @@ else
 end
 
 % parse and describe results
-repstr1 = sprintf('Bad epochs by ''%s'' for ''%s'': '...
-    , Arg.method, EEG.setname);
-repstr2 = {EEG.CTAP.badepochs.(Arg.method).epochs};
+rept{end + 1} = sprintf('Bad epochs by ''%s'' for ''%s'': ', Arg.method, EEG.setname);
+rept{end + 1} = {EEG.CTAP.badepochs.(Arg.method).epochs};
 
 prcbad = 100 * numbad / numel(EEG.epoch);
 if prcbad > 10
-    repstr1 = ['WARN ' repstr1];
+    rept{end - 1} = ['WARN ' rept{end - 1}];
 end
-repstr3 = sprintf('\nTOTAL %d/%d = %3.1f prc of epochs marked to reject\n'...
+rept{end + 1} = sprintf('\nTOTAL %d/%d = %3.1f prc of epochs marked to reject\n'...
     , numbad, numel(EEG.epoch), prcbad);
 
 EEG.CTAP.badepochs.detect.prc = prcbad;
@@ -133,7 +133,8 @@ EEG.CTAP.badepochs.detect.prc = prcbad;
 
 Cfg.ctap.detect_bad_epochs = params;
 
-msg = myReport({repstr1 repstr2 repstr3}, Cfg.env.logFile);
+msg = myReport(rept);
+%myReport(msg, Cfg.env.logFile)
 
 EEG.CTAP.history(end+1) = create_CTAP_history_entry(msg, mfilename, params);
 

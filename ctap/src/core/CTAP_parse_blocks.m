@@ -83,7 +83,7 @@ end
 % Arg = joinstruct(Arg, params);
 Cfg.ctap.parse_blocks = Arg;
 
-msg = myReport({'Parse block specs for ' EEG.CTAP.measurement.casename}...
-    , Cfg.env.logFile);
+msg = myReport({'Parse block specs for ' EEG.CTAP.measurement.casename});
+%myReport(msg, Cfg.env.logFile)
 
 EEG.CTAP.history = create_CTAP_history_entry(msg, mfilename, Arg);

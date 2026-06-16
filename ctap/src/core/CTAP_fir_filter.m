@@ -92,7 +92,8 @@ Arg.b = b;
 Cfg.ctap.filter_data = Arg;
 
 msg = sprintf('FIR filtered data using pop_eegfiltnew(): %s', EEG.setname); 
-myReport(msg, Cfg.env.logFile);
+%myReport(msg, Cfg.env.logFile);
+
 EEG.CTAP.history(end+1) = create_CTAP_history_entry(msg, mfilename, Arg);
 
 if Cfg.grfx.on
@@ -114,14 +115,13 @@ if Cfg.grfx.on
     
     
     % firfilt plugin default plots
-    fg = figure('Visible','off');
-    set(fg, 'Tag', 'plotfiltresp');
-    plotfresp(b, [], [], EEG.srate);
-    qcfile = fullfile(get_savepath(Cfg, mfilename, 'qc'),...
-          sprintf('filter_properties_%s.png', EEG.CTAP.measurement.casename));
-    saveas(fg, qcfile)
-    close(fg);
-    
-    
-    
+    qcfile = fullfile(get_savepath(Cfg, mfilename, 'qc'), 'filter_properties.png');
+    if ~exist(qcfile, "file")
+        fg = figure('Visible','off');
+        set(fg, 'Tag', 'plotfiltresp');
+        plotfresp(b, [], [], EEG.srate);
+        saveas(fg, qcfile)
+        close(fg);
+    end
+
 end

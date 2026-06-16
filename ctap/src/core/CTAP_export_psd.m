@@ -73,6 +73,7 @@ save(savename, 'Psd');
 %% ERROR/REPORT
 Cfg.ctap.export_psd = Arg;
 
-msg = myReport(sprintf('Exported PSD values to %s', savename), Cfg.env.logFile);
+msg = myReport(sprintf('Exported PSD values to %s', savename));
+%myReport(msg, Cfg.env.logFile)
 
 EEG.CTAP.history(end+1) = create_CTAP_history_entry(msg, mfilename, Arg);

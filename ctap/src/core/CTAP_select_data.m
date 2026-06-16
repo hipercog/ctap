@@ -14,7 +14,7 @@ function [EEG, Cfg] = CTAP_select_data(EEG, Cfg)
 %   Cfg.ctap.select_data:
 %   .<method>   <method> is one of those below, see pop_select() for details:
 % 
-%       {'time','rmtime','point','rmpoint','trial','rmtrial','channel','rmchannel'}
+%       {'time','notime','point','nopoint','trial','notrial','channel','nochannel'}
 % 
 %               Field contains the things to (un)select, i.e. mapping is
 % 
@@ -57,7 +57,7 @@ EEG = pop_select(EEG, argsCellArray{:});
 
 %% ERROR/REPORT
 msg = myReport({'Selected data using pop_select with methods ',...
-                catcellstr(methodsCalled), ': ', EEG.setname},...
-                Cfg.env.logFile);
+                catcellstr(methodsCalled), ': ', EEG.setname});
+%myReport(msg, Cfg.env.logFile)
 
 EEG.CTAP.history(end+1) = create_CTAP_history_entry(msg, mfilename, Arg);

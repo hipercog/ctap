@@ -113,8 +113,8 @@ end
 %% ERROR/REPORT
 Cfg.ctap.event_modify = Arg;
 
-msg = myReport(sprintf('ERP plotted for measurement %s.',...
-    EEG.CTAP.measurement.casename), Cfg.env.logFile);
+msg = myReport(sprintf('Events modified for %s.', EEG.CTAP.measurement.casename));
+%myReport(msg, Cfg.env.logFile)
 
 EEG.CTAP.history(end+1) = create_CTAP_history_entry(msg, mfilename, Arg);
 

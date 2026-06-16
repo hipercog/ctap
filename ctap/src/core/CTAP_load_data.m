@@ -72,7 +72,8 @@ end
 Arg = joinstruct(Arg, params);
 Cfg.ctap.load_data = Arg;
 
-msg = myReport({'Load data, add CTAP, for ' Arg.physiodata}, Cfg.env.logFile);
+msg = myReport({'Load data, add CTAP, for ' Arg.physiodata});
+%myReport(msg, Cfg.env.logFile)
 
 EEG = add_CTAP(EEG, Cfg,...
     'time', result.time,...

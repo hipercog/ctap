@@ -87,7 +87,8 @@ Arg.b = b;
 Cfg.ctap.filter_data = Arg;
 
 msg = sprintf('FIR notch filtered data using pop_eegfiltnew(): %s', EEG.setname); 
-myReport(msg, Cfg.env.logFile);
+%myReport(msg, Cfg.env.logFile);
+
 EEG.CTAP.history(end+1) = create_CTAP_history_entry(msg, mfilename, Arg);
 
 if Cfg.grfx.on

@@ -55,7 +55,8 @@ Cfg.elapsed.elapsed = elapsed;
 
 
 %% ERROR/REPORT
-msg = myReport({'Elapsed ' Arg.elapsed}, Cfg.env.logFile);
+msg = myReport({'Elapsed ' Arg.elapsed});
+%myReport(msg, Cfg.env.logFile)
 
 EEG = add_CTAP(EEG, Cfg);
 

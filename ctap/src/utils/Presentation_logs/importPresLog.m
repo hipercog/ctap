@@ -35,11 +35,16 @@ vars = matlab.lang.makeUniqueStrings(matlab.lang.makeValidName([B{:}]));
 
 T2 = readtable(file_name...
     , 'NumHeaderLines', ix + 5, 'Delimiter', '\t', "FileType", "text");
-T2.Properties.VariableNames = strrep(strrep(strip(lower(vars), '_')...
+if numel(T2.Properties.VariableNames) == numel(vars)
+    T2.Properties.VariableNames = strrep(strrep(strip(lower(vars), '_')...
                                                 , '_str', ''), '_num', '');
-ix = find(contains(T2.code, 'End task'));
-out2 = T2(1:ix, :);
-
+end
+if any(ismember(T2.Properties.VariableNames, 'code'))
+    ix = find(contains(T2.code, 'End task'));
+    out2 = T2(1:ix, :);
+else
+    out2 = T2;
+end
 
 %% All legacy code below was adapted to read CENT Presentation logs.
 % % Tobias Otto, tobias.otto@ruhr-uni-bochum.de

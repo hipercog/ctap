@@ -4,9 +4,10 @@ function [EEG, Cfg] = CTAP_load_events(EEG, Cfg)
 % Description:
 %   Loads events from a given source into EEG.
 %   Source can be:
-%       a file, read automagically from measurement info spreadsheet into 
-%               ''Cfg.measurement.measurementlog''
-%       a folder, where exists a log file with name matching the EEG file
+%       a file,    read automagically from measurement info spreadsheet into 
+%                   ''Cfg.measurement.measurementlog''
+%       a folder,  where exists a log file with name matching the EEG file
+%       EEG.event, existing event struct, to modify by some custom function (default)
 %
 % Syntax:
 %   [EEG, Cfg] = CTAP_load_events(EEG, Cfg);
@@ -43,6 +44,8 @@ function [EEG, Cfg] = CTAP_load_events(EEG, Cfg)
 Arg.method = 'importevent';
 if isfield(Cfg.measurement, 'measurementlog')
     Arg.src = Cfg.measurement.measurementlog;
+else
+    Arg.src = 'EEG.event';
 end
 Arg.log_ext = {'log', 'txt'};
 
@@ -56,40 +59,42 @@ end
 msg = '';
 errmsg = 'Log file is needed to load events!';
 if ~strcmpi(Arg.src, 'EEG.event')
-% Try locating the folder of the EEG file
-if ~isfield(Arg, 'src') || isempty(Arg.src)
-    if isfield(EEG, 'filepath') && ~isempty(EEG.filepath)
-        Arg.src = EEG.filepath;
-    elseif ~isempty(EEG.comments)
-        [Arg.src, ~, ~] = ...
-            fileparts(strrep(EEG.comments, 'Original file: ', ''));
+    % Try locating the folder of the EEG file
+    if ~isfield(Arg, 'src') || isempty(Arg.src)
+        if isfield(EEG, 'filepath') && ~isempty(EEG.filepath)
+            Arg.src = EEG.filepath;
+        elseif ~isempty(EEG.comments)
+            [Arg.src, ~, ~] = ...
+                fileparts(strrep(EEG.comments, 'Original file: ', ''));
+        end
+        if isempty(Arg.src) && ~isempty(EEG.filename)
+            [Arg.src, ~, ~] = fileparts(EEG.filename);
+        end
+        if ~isfolder(Arg.src)
+            msg = 'WARN No source given, was this intended?';
+        end
     end
-    if isempty(Arg.src) && ~isempty(EEG.filename)
-        [Arg.src, ~, ~] = fileparts(EEG.filename);
+    % Try locating the log file in the EEG folder
+    if (ischar(Arg.src) || iscellstr(Arg.src)) && isfolder(Arg.src)
+        % Find filename containing subject number
+        m{1} = find_filematch_bynum(Cfg.measurement.subject, Arg.src, Arg.log_ext);
+        % Find filename closest matching to EEG filename
+        m{2} = find_closest_file(Cfg.measurement.physiodata, Arg.src, Arg.log_ext);
+        if strcmp(m{1}, m{2})
+            Arg.src = m{1};
+            msg = 'SUCCESS! ';
+        elseif any(~cellfun(@isempty, m))
+            Arg.src = m{~cellfun(@isempty, m)};
+            msg = 'WARN ';
+        else
+            error('CTAP_load_events:no_log', '%s :: No file match found', errmsg)
+        end
+    % ...or test if a file exists according to the Arg.src string
+    elseif ischar(Arg.src) && ~exist(Arg.src, 'file') == 2
+        error('CTAP_load_events:no_log', '%s :: Bad filename or not a file', errmsg)
     end
-    if ~isfolder(Arg.src)
-        msg = 'WARN No source given, was this intended?';
-    end
-end
-% Try locating the log file in the EEG folder
-if (ischar(Arg.src) || iscellstr(Arg.src)) && isfolder(Arg.src)
-    % Find filename containing subject number
-    m{1} = find_filematch_bynum(Cfg.measurement.subject, Arg.src, Arg.log_ext);
-    % Find filename closest matching to EEG filename
-    m{2} = find_closest_file(Cfg.measurement.physiodata, Arg.src, Arg.log_ext);
-    if strcmp(m{1}, m{2})
-        Arg.src = m{1};
-        msg = 'SUCCESS! ';
-    elseif any(~cellfun(@isempty, m))
-        Arg.src = m{~cellfun(@isempty, m)};
-        msg = 'WARN ';
-    else
-        error('CTAP_load_events:no_log', '%s :: No file match found', errmsg)
-    end
-% ...or test if a file exists according to the Arg.src string
-elseif ischar(Arg.src) && ~exist(Arg.src, 'file') == 2
-    error('CTAP_load_events:no_log', '%s :: Bad filename or not a file', errmsg)
-end
+else
+    Arg = rmfield(Arg, 'log_ext');
 end
 
 
@@ -112,7 +117,7 @@ end
 %% ERROR/REPORT
 Cfg.ctap.load_events = Arg;
 
-msg = myReport({msg 'Wrote events in' EEG.setname 'from source = ' Arg.src}...
-    , Cfg.env.logFile);
+msg = myReport({msg 'Wrote events in' EEG.setname 'from source = ' Arg.src});
+%myReport(msg, Cfg.env.logFile)
 
 EEG.CTAP.history(end+1) = create_CTAP_history_entry(msg, mfilename, Arg);

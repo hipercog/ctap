@@ -14,7 +14,7 @@ function [EEG, Cfg] = CTAP_generate_cseg(EEG, Cfg)
 %   Cfg.ctap.generate_cseg:
 %   .csegEvent      string, Event type string for the events, 
 %                   default: 'cseg'
-%   .regev          boolean, Create regular events (true) or event-locked events
+%   .regev          boolean, Create regular events. If not, create event-locked csegs
 %                   default: true
 %   Depending on value or .regev, other arguments should match:
 %       eeg_add_regular_events()
@@ -69,8 +69,9 @@ replabsInds = ismember(labs, replabs);
 
 %% ERROR/REPORT
 Cfg.ctap.generate_cseg = Arg;
+
 nEvents = sum(ismember({EEG.event.type}, Arg.csegEvent));
-msg = myReport(sprintf('%d ''%s'' events addded to EEG.event.',...
-               nEvents,Arg.csegEvent), Cfg.env.logFile);
+msg = myReport(sprintf('%d ''%s'' events addded to EEG.event.', nEvents, Arg.csegEvent));
+%myReport(msg, Cfg.env.logFile)
 
 EEG.CTAP.history(end+1) = create_CTAP_history_entry(msg, mfilename, Arg);

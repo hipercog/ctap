@@ -1,129 +1,129 @@
-chan_num,chan_biosemi,chan_10_10,ROI,hemisphere
-83,C19,AFz,anterio-frontal,midline
-78,C14,AFF4h,anterio-frontal,midline
-91,C27,AFF3h,anterio-frontal,midline
-18,A18,CMS,biosemi,midline
-31,A31,DRL,biosemi,midline
-52,B20,C2,central,midline
-53,B21,C4h,central,right
-54,B22,C4,central,right
-55,B23,C6h,central,right
-64,B32,FCC4h,central,right
-109,D13,FCC3h,central,left
-110,D14,C1,central,midline
-114,D18,C3h,central,left
-115,D19,C3,central,left
-116,D20,C5h,central,left
-49,B17,CP6h,central,right
-50,B18,CP4,central,right
-51,B19,CP4h,central,right
-113,D17,CP3h,central,left
-123,D27,CP5h,central,left
-124,D28,CP3,central,left
-62,B30,FC6h,central,right
-63,B31,FC4,central,right
-107,D11,FC5h,central,left
-108,D12,FC3,central,left
-1,A1,Cz,central,midline
-2,A2,CCPz,central,midline
-33,B1,CCP2h,central,midline
-65,C1,FCC2h,central,midline
-97,D1,FCC1h,central,midline
-111,D15,CCP1h,central,midline
-3,A3,CPz,centro-parietal,midline
-34,B2,CP2,centro-parietal,midline
-112,D16,CP1,centro-parietal,midline
-56,B24,C6,centro-temporal,right
-117,D21,C5,centro-temporal,left
-48,B16,CP6,centro-temporal,right
-122,D26,CP5,centro-temporal,left
-61,B29,FC6,centro-temporal,right
-106,D10,FC5,centro-temporal,left
-96,C32,AFF5h,frontal ,left
-101,D5,F5,frontal ,left
-76,C12,F2,frontal ,midline
-77,C13,F4h,frontal ,midline
-84,C20,AFFz,frontal ,midline
-85,C21,Fz,frontal ,midline
-86,C22,FFCz,frontal ,midline
-89,C25,F1,frontal ,midline
-90,C26,F3h,frontal ,midline
-75,C11,FC2,frontal ,midline
-88,C24,FC1,frontal ,midline
-67,C3,FCC4h,frontal ,midline
-99,D3,FCC3h,frontal ,midline
-68,C4,F4,frontal ,right
-100,D4,F3,frontal ,left
-72,C8,AF8,frontal ,right
-94,C30,AF7,frontal ,left
-73,C9,AFF6,frontal ,right
-74,C10,AFF6h,frontal ,right
-95,C31,AFF5,frontal ,left
-69,C5,F6,frontal ,right
-70,C6,F8h,frontal ,right
-71,C7,F8,frontal ,right
-102,D6,F7h,frontal ,left
-103,D7,F7,frontal ,left
-66,C2,FCC2,fronto-central,midline
-98,D2,FCC1,fronto-central,midline
-87,C23,FCz,fronto-central,midline
-13,A13,I1,occipital,midline
-14,A14,OI1,occipital,midline
-15,A15,O1,occipital,midline
-16,A16,POO3,occipital,midline
-22,A22,POOz,occipital,midline
-23,A23,Oz,occipital,midline
-24,A24,OIz,occipital,midline
-25,A25,Iz,occipital,midline
-26,A26,I2,occipital,midline
-27,A27,OI2,occipital,midline
-28,A28,O2,occipital,midline
-29,A29,POO4,occipital,midline
-45,B13,P6,parietal,right
-125,D29,P5,parietal,left
-9,A9,PPO5,parietal,left
-38,B6,PPO6,parietal,right
-10,A10,PO7,parietal,left
-11,A11,PO9h,parietal,left
-12,A12,PO9,parietal,left
-39,B7,PO8,parietal,right
-40,B8,PO10h,parietal,right
-41,B9,PO10,parietal,right
-4,A4,CPPz,parietal,midline
-5,A5,P1,parietal,midline
-6,A6,CPP3h,parietal,midline
-19,A19,Pz,parietal,midline
-20,A20,PPOz,parietal,midline
-32,A32,P2,parietal,midline
-35,B3,CPP4h,parietal,midline
-7,A7,P3,parietal,left
-36,B4,P4,parietal,right
-8,A8,PPO5h,parietal,left
-37,B5,PPO6h,parietal,right
-42,B10,P10h,parietal,right
-43,B11,P8,parietal,right
-44,B12,P8h,parietal,right
-126,D30,P7h,parietal,left
-127,D31,P7,parietal,left
-128,D32,P9h,parietal,left
-17,A17,PO3,parieto-occipital,midline
-21,A21,POz,parieto-occipital,midline
-30,A30,PO4,parieto-occipital,midline
-79,C15,AF4,prefrontal,midline
-82,C18,AFpz,prefrontal,midline
-92,C28,AF3,prefrontal,midline
-80,C16,Fp2,prefrontal,midline
-81,C17,Fpz,prefrontal,midline
-93,C29,Fp1,prefrontal,midline
-59,B27,FT8,temporal,right
-60,B28,FT8h,temporal,right
-104,D8,FT7,temporal,left
-105,D9,FT7h,temporal,left
-57,B25,T8h,temporal,right
-58,B26,T8,temporal,right
-118,D22,T7h,temporal,left
-119,D23,T7,temporal,left
-46,B14,TP8,temporal,right
-47,B15,TP8h,temporal,right
-120,D24,TP7,temporal,left
-121,D25,TP7h,temporal,left
+chan_num;chan_biosemi;chan_10_10;ROI;hemisphere
+1;A1;Cz;central;midline
+2;A2;CCPz;central;midline
+3;A3;CPz;centro-parietal;midline
+4;A4;CPPz;parietal;midline
+5;A5;P1;parietal;midline
+6;A6;CPP3h;parietal;midline
+7;A7;P3;parietal;left
+8;A8;PPO5h;parietal;left
+9;A9;PPO5;parietal;left
+10;A10;PO7;parietal;left
+11;A11;PO9h;parietal;left
+12;A12;PO9;parietal;left
+13;A13;I1;occipital;midline
+14;A14;OI1;occipital;midline
+15;A15;O1;occipital;midline
+16;A16;POO3;occipital;midline
+17;A17;PO3;parieto-occipital;midline
+18;A18;CMS;biosemi;midline
+19;A19;Pz;parietal;midline
+20;A20;PPOz;parietal;midline
+21;A21;POz;parieto-occipital;midline
+22;A22;POOz;occipital;midline
+23;A23;Oz;occipital;midline
+24;A24;OIz;occipital;midline
+25;A25;Iz;occipital;midline
+26;A26;I2;occipital;midline
+27;A27;OI2;occipital;midline
+28;A28;O2;occipital;midline
+29;A29;POO4;occipital;midline
+30;A30;PO4;parieto-occipital;midline
+31;A31;DRL;biosemi;midline
+32;A32;P2;parietal;midline
+33;B1;CCP2h;central;midline
+34;B2;CP2;centro-parietal;midline
+35;B3;CPP4h;parietal;midline
+36;B4;P4;parietal;right
+37;B5;PPO6h;parietal;right
+38;B6;PPO6;parietal;right
+39;B7;PO8;parietal;right
+40;B8;PO10h;parietal;right
+41;B9;PO10;parietal;right
+42;B10;P10h;parietal;right
+43;B11;P8;parietal;right
+44;B12;P8h;parietal;right
+45;B13;P6;parietal;right
+46;B14;TP8;temporal;right
+47;B15;TP8h;temporal;right
+48;B16;CP6;centro-temporal;right
+49;B17;CP6h;central;right
+50;B18;CP4;central;right
+51;B19;CP4h;central;right
+52;B20;C2;central;midline
+53;B21;C4h;central;right
+54;B22;C4;central;right
+55;B23;C6h;central;right
+56;B24;C6;centro-temporal;right
+57;B25;T8h;temporal;right
+58;B26;T8;temporal;right
+59;B27;FT8;temporal;right
+60;B28;FT8h;temporal;right
+61;B29;FC6;centro-temporal;right
+62;B30;FC6h;central;right
+63;B31;FC4;central;right
+64;B32;FCC4h;central;right
+65;C1;FCC2h;central;midline
+66;C2;FCC2;fronto-central;midline
+67;C3;FC4h;frontal ;midline
+68;C4;F4;frontal ;right
+69;C5;F6;frontal ;right
+70;C6;F8h;frontal ;right
+71;C7;F8;frontal ;right
+72;C8;AF8;frontal ;right
+73;C9;AFF6;frontal ;right
+74;C10;AFF6h;frontal ;right
+75;C11;FC2;frontal ;midline
+76;C12;F2;frontal ;midline
+77;C13;F4h;frontal ;midline
+78;C14;AFF4h;anterio-frontal;midline
+79;C15;AF4;prefrontal;midline
+80;C16;Fp2;prefrontal;midline
+81;C17;Fpz;prefrontal;midline
+82;C18;AFpz;prefrontal;midline
+83;C19;AFz;anterio-frontal;midline
+84;C20;AFFz;frontal ;midline
+85;C21;Fz;frontal ;midline
+86;C22;FFCz;frontal ;midline
+87;C23;FCz;fronto-central;midline
+88;C24;FC1;frontal ;midline
+89;C25;F1;frontal ;midline
+90;C26;F3h;frontal ;midline
+91;C27;AFF3h;anterio-frontal;midline
+92;C28;AF3;prefrontal;midline
+93;C29;Fp1;prefrontal;midline
+94;C30;AF7;frontal ;left
+95;C31;AFF5;frontal ;left
+96;C32;AFF5h;frontal ;left
+97;D1;FCC1h;central;midline
+98;D2;FCC1;fronto-central;midline
+99;D3;FC3h;frontal ;midline
+100;D4;F3;frontal ;left
+101;D5;F5;frontal ;left
+102;D6;F7h;frontal ;left
+103;D7;F7;frontal ;left
+104;D8;FT7;temporal;left
+105;D9;FT7h;temporal;left
+106;D10;FC5;centro-temporal;left
+107;D11;FC5h;central;left
+108;D12;FC3;central;left
+109;D13;FCC3h;central;left
+110;D14;C1;central;midline
+111;D15;CCP1h;central;midline
+112;D16;CP1;centro-parietal;midline
+113;D17;CP3h;central;left
+114;D18;C3h;central;left
+115;D19;C3;central;left
+116;D20;C5h;central;left
+117;D21;C5;centro-temporal;left
+118;D22;T7h;temporal;left
+119;D23;T7;temporal;left
+120;D24;TP7;temporal;left
+121;D25;TP7h;temporal;left
+122;D26;CP5;centro-temporal;left
+123;D27;CP5h;central;left
+124;D28;CP3;central;left
+125;D29;P5;parietal;left
+126;D30;P7h;parietal;left
+127;D31;P7;parietal;left
+128;D32;P9h;parietal;left

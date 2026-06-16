@@ -13,8 +13,7 @@ function [EEG, Cfg] = CTAP_detect_bad_channels(EEG, Cfg)
 %   Cfg         struct, CTAP configuration structure
 %   Cfg.ctap.detect_bad_channels:
 %   .channels       cellstring, A list of channels which should be
-%                   analyzed, overrides .channelType, default: field does
-%                   not exist
+%                   analyzed, overrides .channelType, default: inherits channelType
 %   .channelType    string or cellstring, A list of channel type string that
 %                   specify which channels are to be analyzed, default: 'EEG'
 %   .orig_ref       cellstring, Original reference channels, needed by some
@@ -61,6 +60,7 @@ end
 
 
 %% ASSIST
+rept = {''};
 if ~isfield(Arg, 'channels')
     chidx = get_eeg_inds(EEG, Arg.channelType);
     Arg.channels = {EEG.chanlocs(chidx).labels};
@@ -73,9 +73,9 @@ end
 
 % Check that given channels are EEG channels
 if isempty(Arg.channels) || ~all(ismember({EEG.chanlocs(chidx).type}, 'EEG'))
-    myReport(['WARN ' mfilename ':: '...
+    rept{1} = myReport(['WARN ' mfilename ':: '...
         'EEG channel type has not been well defined,'...
-        ' or given channels are not all EEG!'], Cfg.env.logFile);
+        ' or given channels are not all EEG!']);
 end
 
 % Don't pay attention to any deliberately-excluded channels
@@ -155,17 +155,17 @@ else
 end
 
 % Describe results
-rept1 = sprintf('Bad channels by ''%s'' for ''%s'': ', Arg.method, EEG.setname);
-rept2 = {'JUST FOUND : ' result.chans}; %just found bad chans
-rept3 = {'TOTAL : ' EEG.CTAP.badchans.(Arg.method).chans}; %all by Arg.method
-if numel(rept3) == numel(rept2)
-    rept3 = '';
+rept{end + 1} = sprintf('Bad channels by ''%s'' for ''%s'': ', Arg.method, EEG.setname);
+rept{end + 1} = {'JUST FOUND : ' result.chans}; %just found bad chans
+rept{end + 1} = {'TOTAL : ' EEG.CTAP.badchans.(Arg.method).chans}; %all by Arg.method
+if numel(rept{end}) == numel(rept{end - 1})
+    rept{end} = '';
 end
-prcbad = 100 * numbad / EEG.nbchan;
+prcbad = 100 * numbad / sum(ismember({EEG.chanlocs.type}, 'EEG'));
 if prcbad > 10
-    rept1 = ['WARN ' rept1];
+    rept{end - 2} = ['WARN ' rept{end - 2}];
 end
-rept4 = sprintf('\nTOTAL %d/%d = %3.1f prc of channels marked to reject\n'...
+rept{end + 1} = sprintf('\nTOTAL %d/%d = %3.1f prc of channels marked to reject\n'...
     , numbad, EEG.nbchan, prcbad);
 
 EEG.CTAP.badchans.detect.prc = prcbad;
@@ -199,14 +199,17 @@ end
 %% ERROR/REPORT
 Cfg.ctap.detect_bad_channels = params;
 
-msg = myReport({rept1 rept2 rept3 rept4}, Cfg.env.logFile);
+msg = myReport(rept);
+%myReport(msg, Cfg.env.logFile)
 
 EEG.CTAP.history(end+1) = create_CTAP_history_entry(msg, mfilename, params);
 
-sbf_report_bad_data(); %store detected channels for later review
+if ~Cfg.parafor
+    sbf_report_bad_data() % this will not work under parallel processing
+end
 
 
-%% sbf_report_bad_data
+%% sbf_report_bad_data - store detected channels for later review
 function sbf_report_bad_data
 
     func = sprintf('s%df%d', Cfg.pipe.current.set, Cfg.pipe.current.funAtSet);

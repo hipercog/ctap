@@ -15,11 +15,13 @@ function Cfg = get_meas_cfg_MC(Cfg, srcfile, varargin)
 % 
 %   varargin:
 %   sbj_filt    cell | vector | empty, some index of subjects to choose,
-%               default = 'all' (returns all available)
+%               default = returns all available
+%   meas_filt   char, string matching measurements to be selected
+%               default = returns all available
 %   eeg_ext     char, file-type of the EEG data if using directory as 'srcfile'
 %               default = ''
 %   fname_filt  char, string to require in the filenames to be selected
-%               default = 'all' (returns all available)
+%               default = returns all available
 %
 % Outputs:
 %   Cfg         struct, Cfg struct is updated by a valid Measurement Config
@@ -45,6 +47,7 @@ p.addRequired('Cfg', @isstruct)
 p.addRequired('srcfile', @ischar)
 
 p.addParameter('sbj_filt', 'all', @(x) iscell(x) || isvector(x) || isempty(x))
+p.addParameter('meas_filt', '', @ischar)
 p.addParameter('eeg_ext', '', @ischar)
 p.addParameter('fname_filt', '', @ischar)
 
@@ -104,17 +107,16 @@ Filt.subject = {MC.subject.subject};
 [~, fx] = name_filter(cell2struct({MC.subject.subject}, 'name'), Arg.sbj_filt);
 Filt.subject = Filt.subject(fx);
 % Select measurements to process, matching to contents of Arg.fname_filt
-if ~isempty(Arg.fname_filt)
+if ~isempty(Arg.meas_filt)
     Filt.measurement = {MC.measurement.measurement};
     [~, fx] = name_filter(cell2struct({MC.measurement.measurement}, 'name')...
-        , Arg.fname_filt);
+        , Arg.meas_filt);
     Filt.measurement = Filt.measurement(fx);
 end
-runMC = get_measurement_id(MC, Filt);
 
 
 %% RETURN
 Cfg.MC = MC;
-Cfg.pipe.runMeasurements = runMC;
+Cfg.pipe.runMeasurements = get_measurement_id(MC, Filt);
 
 end

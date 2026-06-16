@@ -104,8 +104,8 @@ save(fullfile(savepath, savename)...
 %% ERROR/REPORT
 Cfg.ctap.extract_PSDindices = Arg;
 
-msg = myReport(sprintf('Extracted engagement/workload indices from PSD.')...
-    , Cfg.env.logFile);
+msg = myReport(sprintf('Extracted engagement/workload indices from PSD.'));
+%myReport(msg, Cfg.env.logFile)
 
 EEG.CTAP.history(end+1) = create_CTAP_history_entry(msg, mfilename, Arg);
 

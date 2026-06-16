@@ -64,7 +64,7 @@ EEG.setname = strrep(EEG.setname, ' resampled', '');
 %% ERROR/REPORT
 Cfg.ctap.resample_data = Arg;
 
-msg = myReport(sprintf('Resampled data to: ''%d'' for %s.'...
-                                , Arg.newsrate, EEG.setname), Cfg.env.logFile);
+msg = myReport(sprintf('Resampled data to: ''%d'' for %s.', Arg.newsrate, EEG.setname));
+%myReport(msg, Cfg.env.logFile)
 
 EEG.CTAP.history(end+1) = create_CTAP_history_entry(msg, mfilename, Arg);

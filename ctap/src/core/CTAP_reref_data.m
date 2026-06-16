@@ -80,7 +80,7 @@ end
 Cfg.ctap.reref_data = Arg;
 
 msg = myReport(sprintf('Rereferenced data to: ''%s'' for %s.',...
-            strjoin({EEG.chanlocs(chaninds).labels},', '),...
-            EEG.setname), Cfg.env.logFile);
+            strjoin({EEG.chanlocs(chaninds).labels},', '), EEG.setname));
+%myReport(msg, Cfg.env.logFile)
 
 EEG.CTAP.history(end+1) = create_CTAP_history_entry(msg, mfilename, Arg);

@@ -55,9 +55,8 @@ if ~all(match_fields)
         , 'EEG.event does not have the requested fields: %s'...
         , strjoin(event_fnames(~match_fields), ', '))
 end
-if ischar(event)
-    event = struct('type', event);
-end
+
+
 
 
 %% Extract each field to be matched and test it
@@ -79,6 +78,6 @@ end
 ephits = false(1, EEG.trials);
 ephits(unique([EEG.event(evhits).epoch])) = 1;
 
-lock_evname = myToString(event);
+lock_evname = catcellstr(struct2cell(event));
 
 end

@@ -18,6 +18,7 @@ function [EEG, varargout] = ctapeeg_detect_bad_comps(EEG, varargin)
 %                             replaces eegthresh()
 %             'abnormal_spectra' - detect abnormal spectra
 %             'blink_template' - detect blink related IC's based on "blink ERP"
+%             'recu_blink_tmpl' - recursive use of blink template method.
 %
 %   FOR 'FASTER' method
 %   'bounds'      sigma thresholds to detect bad components with FASTER method

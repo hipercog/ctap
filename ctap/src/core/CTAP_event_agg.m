@@ -67,8 +67,8 @@ end
 
 %% ASSIST
 if numel(Arg.evtype) ~= numel(Arg.newevs)
-    myReport({'FAIL list of old events different size to list of new events: '...
-                numel(Arg.evtype) numel(Arg.newevs)}, Cfg.env.logFile, newline);
+    msg = myReport({'FAIL old and new events lists are different sizes: '...
+                numel(Arg.evtype) numel(Arg.newevs)}, '', newline); %#ok<*NASGU>
 end
 
 
@@ -78,7 +78,7 @@ evix = cell(numel(Arg.evtype), 1);
 for ix = 1:numel(Arg.evtype)
     evlist = eeglab_validate_evlist(EEG, Arg.evtype{ix}, Arg.match);
     if isempty(evlist)
-        myReport(['FAIL evtype not found: ' Arg.evtype{ix}], Cfg.env.logFile);
+        msg = myReport(['FAIL evtype not found: ' Arg.evtype{ix}]);
     end
     evix{ix} = ismember({EEG.event.type}, evlist);
 end
@@ -130,7 +130,7 @@ for ix = 1:numel(Arg.evtype)
         newline ['Events which ' desc ' strings:'] Arg.evtype(ix)...
             newline 'Were aggregated under new label:' Arg.newevs(ix)});
 end
-myReport(msg, Cfg.env.logFile);
+%myReport(msg, Cfg.env.logFile)
 
 EEG.CTAP.history(end+1) = create_CTAP_history_entry(msg, mfilename, Arg);
 
