@@ -61,7 +61,7 @@ end
 if ~isempty(Arg.filter)
     EEGtmp = EEG;
     filt_params = struct2pairs(Arg.filter);
-    EEG = pop_eegfiltnew(EEG, filt_params);
+    EEG = pop_eegfiltnew(EEG, filt_params{:});
 end
 
 % Convert Arg struct to key-value pairs for pop_runica
@@ -103,6 +103,11 @@ switch Arg.method
 end
 
 if exist('EEGtmp', 'var')
+    EEGtmp.icaweights = EEG.icaweights;
+    EEGtmp.icasphere = EEG.icasphere;
+    EEGtmp.icawinv = EEG.icawinv;
+    EEGtmp.icachansind = EEG.icachansind;
+    EEGtmp.icaact = [];
     EEG = EEGtmp;
 end
 
