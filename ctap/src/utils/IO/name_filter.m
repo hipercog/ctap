@@ -3,6 +3,7 @@ function [fltnames, nameidx] = name_filter(rawnames, name_filt, varargin)
 %       names  : being equal to (or uniquely containing) one given string, or
 %       indices: logical vector indexing the files to keep, or
 %       numbers: having a rawname containing one of given numbers
+%
 %   CAN MIX NAMES AND SUBJECT NUMBERS IN ONE CELL ARRAY
 % 
 %   Can also do inverse filtering, same modes as above but flipped logic:

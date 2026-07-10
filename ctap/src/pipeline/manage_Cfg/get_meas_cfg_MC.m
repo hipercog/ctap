@@ -18,7 +18,7 @@ function Cfg = get_meas_cfg_MC(Cfg, srcfile, varargin)
 %               default = returns all available
 %   ssn_filt    cell | vector | string, some index of sessions to choose,
 %               default = returns all available
-%   meas_filt   char, string matching measurements to be selected
+%   meas_filt   cell | vector | string, string matching measurements to be selected
 %               default = returns all available
 %   eeg_ext     char, file-type of the EEG data if using directory as 'srcfile'
 %               default = ''
@@ -50,7 +50,7 @@ p.addRequired('srcfile', @ischar)
 
 p.addParameter('sbj_filt', 'all', @(x) iscell(x) || isvector(x) || isempty(x))
 p.addParameter('ssn_filt', 'all', @(x) iscell(x) || isvector(x) || isempty(x))
-p.addParameter('meas_filt', 'all', @ischar)
+p.addParameter('meas_filt', 'all', @(x) iscell(x) || isvector(x) || isempty(x))
 p.addParameter('eeg_ext', '', @ischar)
 p.addParameter('fname_filt', '', @ischar)
 
