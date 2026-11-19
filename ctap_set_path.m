@@ -9,8 +9,8 @@
 
 % Add CTAP
 [ctap_path, ~, ~] = fileparts(mfilename('fullpath'));
-sbf_addrepopath(fullfile(ctap_path, 'ctap'), '-end');
-sbf_addrepopath(fullfile(ctap_path, 'dependencies'), '-end');
+sbf_addrepopath(fullfile(ctap_path, 'ctap'));
+sbf_addrepopath(fullfile(ctap_path, 'dependencies'));
 
     function sbf_addrepopath(pin)
         if ~isfolder(pin)

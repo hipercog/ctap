@@ -138,7 +138,7 @@ end
 if isfield(Arg.time, 'dataStartOffsetSamp')
     EEG.CTAP.time.dataStartOffsetSamp = Arg.time.dataStartOffsetSamp;
 else
-    EEG.CTAP.time.dataStartOffsetSamp = NaN;
+    EEG.CTAP.time.dataStartOffsetSamp = 1;
 end
 
 

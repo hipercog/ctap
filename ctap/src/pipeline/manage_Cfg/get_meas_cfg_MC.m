@@ -120,7 +120,11 @@ Filt.measurement = Filt.measurement(fx);
 
 
 %% RETURN
-Cfg.MC = MC;
-Cfg.pipe.runMeasurements = get_measurement_id(MC, Filt);
+if isfield(Cfg, 'MC')
+    Cfg.MC = joinstruct(Cfg.MC, MC);
+else
+    Cfg.MC = MC;
+end
+Cfg.pipe.runMeasurements = get_measurement_id(Cfg.MC, Filt);
 
 end

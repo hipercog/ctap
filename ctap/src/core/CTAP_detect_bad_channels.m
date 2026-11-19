@@ -82,6 +82,16 @@ if isfield(Arg, 'badchannels')
     Arg.channels = setdiff(Arg.channels, Arg.badchannels);
 end
 
+% re-reference if requested
+% TODO: check if temp ref field is specified
+if isfield(Arg, 'orig_ref') && ~isempty(Arg.orig_ref)
+    EEG = pop_reref(EEG, [], 'refloc', EEG.chanlocs(ismember(...
+        {EEG.chanlocs.labels}, Arg.orig_ref)));
+end
+
+% remove blink segments if requested and blink events exist
+% TODO
+
 
 %% CORE
 if strcmpi(Arg.method, 'given')
