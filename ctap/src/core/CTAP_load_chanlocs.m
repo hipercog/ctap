@@ -69,7 +69,7 @@ function [EEG, Cfg] = CTAP_load_chanlocs(EEG, Cfg)
 
 
 %% Set optional arguments
-if ~Cfg.eeg.chanlocs
+if isempty(Cfg.eeg.chanlocs) || (islogical(Cfg.eeg.chanlocs) && ~Cfg.eeg.chanlocs)
     return
 end
 Arg.file = ctap_eeg_find_chlocs(Cfg);

@@ -14,9 +14,11 @@ function Cfg = get_meas_cfg_MC(Cfg, srcfile, varargin)
 %   srcfile     char, path to a spreadsheet, sqlite, or directory to read MC
 % 
 %   varargin:
-%   sbj_filt    cell | vector | empty, some index of subjects to choose,
+%   sbj_filt    cell | vector | string, some index of subjects to choose,
 %               default = returns all available
-%   meas_filt   char, string matching measurements to be selected
+%   ssn_filt    cell | vector | string, some index of sessions to choose,
+%               default = returns all available
+%   meas_filt   cell | vector | string, string matching measurements to be selected
 %               default = returns all available
 %   eeg_ext     char, file-type of the EEG data if using directory as 'srcfile'
 %               default = ''
@@ -26,7 +28,7 @@ function Cfg = get_meas_cfg_MC(Cfg, srcfile, varargin)
 % Outputs:
 %   Cfg         struct, Cfg struct is updated by a valid Measurement Config
 %
-% Notes: 
+% Notes:        See name_filter.m for details on filtering
 %
 % Copyright(c) 2018 :
 % Benjamin Cowley (ben.cowley@helsinki.fi)
@@ -47,7 +49,8 @@ p.addRequired('Cfg', @isstruct)
 p.addRequired('srcfile', @ischar)
 
 p.addParameter('sbj_filt', 'all', @(x) iscell(x) || isvector(x) || isempty(x))
-p.addParameter('meas_filt', '', @ischar)
+p.addParameter('ssn_filt', 'all', @(x) iscell(x) || isvector(x) || isempty(x))
+p.addParameter('meas_filt', 'all', @(x) iscell(x) || isvector(x) || isempty(x))
 p.addParameter('eeg_ext', '', @ischar)
 p.addParameter('fname_filt', '', @ischar)
 
@@ -64,13 +67,13 @@ end
 %% FIND
 % first create measurement structure from given dir and file extension
 switch ext
-    case 'sqlite'                                  %read from a database file
+    case 'sqlite' %read from a database file
         MC = read_measinfo_sqlite(srcfile);
 
-    case {'xls' 'xlsx'}                           %read from a spreadsheet file
+    case {'xls' 'xlsx'} %read from a spreadsheet file
         MC = read_measinfo_spreadsheet(srcfile);
 
-    case ''                                        %read from a directory
+    case '' %read from a directory
         f_arr = path2filearr(srcfile, Arg.eeg_ext, Arg.fname_filt, p.Unmatched);
         if isempty(Arg.eeg_ext)%Get only EEG files of one type in file array
             [~, ~, es] = cellfun(@fileparts, f_arr, 'Un', 0);
@@ -84,7 +87,7 @@ switch ext
         end
         MC = filearr2measconf(f_arr, p.Unmatched);
         
-    otherwise                                      %read from a wildcard filename
+    otherwise %read from a wildcard filename
 % FIXME - SUPPORT USER TO ENTER WILDCARD SOURCE NAME WITH FIXED PART THAT
 % MATCHES FILES...E.G. *conditionA*.bdf
         if contains(name, '*') && ismember(ext, ctapeeg_supported_types)
@@ -102,21 +105,26 @@ end
 if isempty(MC) || (isstruct(MC) && isempty(fieldnames(MC)))
     error('get_meas_cfg_MC:no_MC', 'No measurement configuration was found')
 end
-% Select measurements to process, matching to contents of Arg.sbj_filt
+% Select subjects to process, matching to contents of Arg.sbj_filt
 Filt.subject = {MC.subject.subject};
 [~, fx] = name_filter(cell2struct({MC.subject.subject}, 'name'), Arg.sbj_filt);
 Filt.subject = Filt.subject(fx);
-% Select measurements to process, matching to contents of Arg.fname_filt
-if ~isempty(Arg.meas_filt)
-    Filt.measurement = {MC.measurement.measurement};
-    [~, fx] = name_filter(cell2struct({MC.measurement.measurement}, 'name')...
-        , Arg.meas_filt);
-    Filt.measurement = Filt.measurement(fx);
-end
+% Select subjects to process, matching to contents of Arg.sbj_filt
+Filt.session = {MC.measurement.session};
+[~, fx] = name_filter(cell2struct({MC.measurement.session}, 'name'), Arg.ssn_filt);
+Filt.session = Filt.session(fx);
+% Select measurements to process, matching to contents of Arg.meas_filt
+Filt.measurement = {MC.measurement.measurement};
+[~, fx] = name_filter(cell2struct(Filt.measurement, 'name'), Arg.meas_filt);
+Filt.measurement = Filt.measurement(fx);
 
 
 %% RETURN
-Cfg.MC = MC;
-Cfg.pipe.runMeasurements = get_measurement_id(MC, Filt);
+if isfield(Cfg, 'MC')
+    Cfg.MC = joinstruct(Cfg.MC, MC);
+else
+    Cfg.MC = MC;
+end
+Cfg.pipe.runMeasurements = get_measurement_id(Cfg.MC, Filt);
 
 end

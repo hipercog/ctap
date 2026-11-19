@@ -20,8 +20,11 @@ function [EEG, Cfg] = CTAP_detect_bad_channels(EEG, Cfg)
 %                   methods that rereference the data, default: Cfg.eeg.reference
 %   .refChannel     cellstring, reference channel name for FASTER
 %                   default: get_refchan_inds(EEG, 'frontal')
-%   .method         string, Detection method, see
-%                   ctapeeg_detect_bad_channels.m for available methods.
+%   .method         string, Detection method, either use 'given' for method and set 
+%                   .source parameter (see below), or else read available methods in
+%                       ctapeeg_detect_bad_channels.m
+%   .source         string, either name of a csv file that lives at your dataRoot,
+%                   or name of a field in your measurement config file
 %
 % Outputs:
 %   EEG         struct, EEGLAB structure modified by this function
@@ -42,16 +45,12 @@ function [EEG, Cfg] = CTAP_detect_bad_channels(EEG, Cfg)
 
 %% Set optional arguments
 Arg.channelType = 'EEG';
+Arg.source = NaN;
 
 Arg.plot_detections = Cfg.grfx.on;
 if isfield(Cfg.eeg, 'reference')
     Arg.orig_ref = Cfg.eeg.reference;
 end
-%NOTE: removed the default refchan here since it is replicated (where
-%      needed) in 'ctapeeg_detect_bad_channels'
-% if isfield(Cfg.eeg, 'chanlocs')
-%     Arg.refChannel = {EEG.chanlocs(get_refchan_inds(EEG, 'frontal')).labels};
-% end
 
 % Override defaults with user parameters
 if isfield(Cfg.ctap, 'detect_bad_channels')
@@ -83,41 +82,56 @@ if isfield(Arg, 'badchannels')
     Arg.channels = setdiff(Arg.channels, Arg.badchannels);
 end
 
+% re-reference if requested
+% TODO: check if temp ref field is specified
+if isfield(Arg, 'orig_ref') && ~isempty(Arg.orig_ref)
+    EEG = pop_reref(EEG, [], 'refloc', EEG.chanlocs(ismember(...
+        {EEG.chanlocs.labels}, Arg.orig_ref)));
+end
+
+% remove blink segments if requested and blink events exist
+% TODO
+
 
 %% CORE
 if strcmpi(Arg.method, 'given')
-    if isfield(Arg, 'badChanCsv')
-        gch = readtable(Arg.badChanCsv...
+    if exist(Arg.source, 'file')
+        gch = readtable(Arg.source...
             , 'delimiter', ',', 'ReadRowNames', 1, 'ReadVariableNames', 0);
+        idx = cellfun(@(x) contains(Cfg.measurement.subject, x), gch.Properties.RowNames);
+        if sum(idx) > 1
+            error('CTAP_detect_bad_channels:bad_channel_data_duplicate'...
+                , 'Subj:%s matched %d rows in given data; ABORTING!'...
+                , Cfg.measurement.subject, sum(idx))
+        elseif sum(idx) == 1
+            gch = strsplit(gch{idx, :}{:});
+        else
+            gch = '';
+        end
+    elseif isfield(Cfg.measurement, Arg.source)
+        gch = strsplit(Cfg.measurement.(Arg.source));
     else
         error('CTAP_detect_bad_channels:insufficient_parameters'...
-            , 'You must pass a valid CSV file of bad channels to this method')
+            , ['You must pass a valid source of bad channels to this method'...
+              ': either CSV file or measurement config field'])
     end
-    idx = cellfun(@(x) contains(Cfg.measurement.subject, x), gch.Properties.RowNames);
-    if ~any(idx)
+    if isempty(gch)
         warning('CTAP_detect_bad_channels:no_bad_channel_data'...
             , 'No entry for subj:%s in given data', Cfg.measurement.subject)
-        gch = '';
-    elseif sum(idx) > 1
-        warning('CTAP_detect_bad_channels:bad_channel_data_duplicate'...
-            , 'Subj:%s matched %d rows in given data; using first BUT CHECK!'...
-            , Cfg.measurement.subject, sum(idx))
-        gch = strsplit(gch{find(idx, 1), :}{:});
     else
-        gch = strsplit(gch{idx, :}{:});
-    end
-    % First check if all exist as labels in EEG.chanlocs
-    idx = ismember(gch, {EEG.chanlocs(chidx).labels});
-    if any(idx)
-        result.chans = gch(idx);
-    elseif ~any(isnan(str2double(gch))) && any(ismember(str2double(gch), chidx))
-        %all are numbers - treat as indices
-        gch = str2double(gch);
-        result.chans = {EEG.chanlocs(gch(ismember(gch, chidx))).labels};
-    else
-        result.chans = '';
-        warning('CTAP_detect_bad_channels:check_bad_chan_file'...
-            , 'Given bad channels do not index any existing channels!')
+        % First check if all exist as labels in EEG.chanlocs
+        idx = ismember(gch, {EEG.chanlocs(chidx).labels});
+        if any(idx)
+            result.chans = gch(idx);
+        elseif ~any(isnan(str2double(gch))) && any(ismember(str2double(gch), chidx))
+            %all are numbers - treat as indices
+            gch = str2double(gch);
+            result.chans = {EEG.chanlocs(gch(ismember(gch, chidx))).labels};
+        else
+            result.chans = '';
+            warning('CTAP_detect_bad_channels:check_bad_chan_file'...
+                , 'Given bad channels do not index any existing channels!')
+        end
     end
     result.method_data = 'user_given_bad_channels';
     result.scores = table(ismember({EEG.chanlocs(chidx).labels}, gch)'...

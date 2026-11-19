@@ -17,6 +17,15 @@ if ~isfield(Cfg.eeg, 'chanlocs') || islogical(Cfg.eeg.chanlocs)
         , Cfg.env.logFile);
     locstr = '-UNSPECIFIED-';
 
+elseif iscell(Cfg.eeg.chanlocs) 
+    % If all chanlocs filepaths have been provided separately, as cell str array
+    % Indexing by .subjectnr which should be same as 1:num_subjs
+    idx = isStructMember(Cfg.MC.measurement, 'subject', Cfg.measurement.subject) &...
+        isStructMember(Cfg.MC.measurement, 'session', Cfg.measurement.session) &...
+      isStructMember(Cfg.MC.measurement, 'measurement', Cfg.measurement.measurement);
+    Cfg.eeg.chanlocs = Cfg.eeg.chanlocs{idx};
+    locstr = ctap_eeg_find_chlocs(Cfg);
+
 elseif exist(Cfg.eeg.chanlocs, 'file') == 2
     [p, ~, ~] = fileparts(Cfg.eeg.chanlocs);
     if isempty(p)
@@ -30,15 +39,6 @@ elseif isfolder(Cfg.eeg.chanlocs)
     exts = {'locs', 'loc', 'sph', 'sfp', 'xyz', 'asc', 'elc', 'elp', 'ced'};
     loc = find_closest_file(Cfg.measurement.physiodata, Cfg.eeg.chanlocs, exts);
     locstr = fullfile(Cfg.eeg.chanlocs, loc);
-
-elseif iscell(Cfg.eeg.chanlocs) 
-    % If all chanlocs filepaths have been provided separately, as cell str array
-    % Indexing by .subjectnr which should be same as 1:num_subjs
-    idx = isStructMember(Cfg.MC.measurement, 'subject', Cfg.measurement.subject) &...
-        isStructMember(Cfg.MC.measurement, 'session', Cfg.measurement.session) &...
-      isStructMember(Cfg.MC.measurement, 'measurement', Cfg.measurement.measurement);
-    Cfg.eeg.chanlocs = Cfg.eeg.chanlocs{idx};
-    locstr = ctap_eeg_find_chlocs(Cfg);
     
 end
 
@@ -50,8 +50,6 @@ function tf = isStructMember(S, f, q)
 %   S - struct array with some field 'f' (numeric, char, string, or cell)
 %   f - field to look within
 %   q - query scalar or array to test for membership
-
-    % build cell of string arrays from the struct array field
-    cell_arr = arrayfun(@(s) string(s.(f)), S, 'UniformOutput', false);
-    tf = any(ismember(cell_arr, string(q)));
+    cell_arr = arrayfun(@(s) string(s.(f)), S);
+    tf = ismember(cell_arr, string(q));
 end

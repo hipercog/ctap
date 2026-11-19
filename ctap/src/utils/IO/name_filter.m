@@ -1,8 +1,9 @@
-function [fltnames, nameidx] = name_filter(rawnames, subj_filt, varargin)
+function [fltnames, nameidx] = name_filter(rawnames, name_filt, varargin)
 %NAME_FILTER returns those elements from rawnames that match by:
-%       names: being equal to (or uniquely containing) one given string, or
+%       names  : being equal to (or uniquely containing) one given string, or
 %       indices: logical vector indexing the files to keep, or
-%       subject numbers: having a filename containing one of given numbers
+%       numbers: having a rawname containing one of given numbers
+%
 %   CAN MIX NAMES AND SUBJECT NUMBERS IN ONE CELL ARRAY
 % 
 %   Can also do inverse filtering, same modes as above but flipped logic:
@@ -16,7 +17,7 @@ function [fltnames, nameidx] = name_filter(rawnames, subj_filt, varargin)
 % 
 % Input:
 %   rawnames    struct, array with .name field; as return-value of dir()
-%   subj_filt   cell, cell array of string names (or name parts) of files
+%   name_filt   cell, cell array of string names (or name parts) of files
 %                  AND/OR row vector of file indices
 %                  OR vector of numbers occurring in file names
 % Varargin
@@ -29,50 +30,50 @@ p = inputParser;
 p.KeepUnmatched = true; 
 
 p.addRequired('rawnames', @isstruct)
-p.addRequired('subj_filt'...
+p.addRequired('name_filt'...
     , @(x) iscell(x) || isnumeric(x) || ischar(x) || islogical(x))
 
 p.addParameter('subst', [ones(1, numel(rawnames)); strlength({rawnames.name})]...
     , @isnumeric)
 
-p.parse(rawnames, subj_filt, varargin{:})
+p.parse(rawnames, name_filt, varargin{:})
 Arg = p.Results;
 
 
 %% Return all or none
-if strcmp('all', subj_filt)
+if strcmp('all', name_filt)
     fltnames = rawnames;
     nameidx = true(numel(rawnames), 1);
     return
-elseif isempty(subj_filt)
+elseif isempty(name_filt)
     fltnames = struct('name', {});
     nameidx = false(numel(rawnames), 1);
     return
-elseif islogical(subj_filt)
-    fltnames = rawnames(subj_filt);
-    nameidx = find(subj_filt);
+elseif islogical(name_filt)
+    fltnames = rawnames(name_filt);
+    nameidx = find(name_filt);
     return
 end
 
 
 %% Parse filters
-if ~iscell(subj_filt)
-    subj_filt = {subj_filt};
+if ~iscell(name_filt)
+    name_filt = {name_filt};
 end
 
 num_filt = [];
-testchar = cellfun(@ischar, subj_filt);
-str_filt = subj_filt(testchar);
+testchar = cellfun(@ischar, name_filt);
+str_filt = name_filt(testchar);
 if ~all(testchar)
-    testcell = cellfun(@iscell, subj_filt);
+    testcell = cellfun(@iscell, name_filt);
     if any(testcell)
-        if all(cellfun(@ischar, subj_filt{testcell}))%test for cell strings
-            str_filt = [str_filt(:)' subj_filt{testcell}];
+        if all(cellfun(@ischar, name_filt{testcell}))%test for cell strings
+            str_filt = [str_filt(:)' name_filt{testcell}];
         end
     end
-    testnum = cellfun(@isnumeric, subj_filt);
+    testnum = cellfun(@isnumeric, name_filt);
     if any(testnum)
-        num_filt = [subj_filt{testnum}];
+        num_filt = [name_filt{testnum}];
     end
 end
 
